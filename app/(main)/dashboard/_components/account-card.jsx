@@ -22,7 +22,7 @@ const AccountCard = ({account}) => {
         type, 
         balance, 
         id, 
-        isDefault // initially this is false
+        isDefault, // initially this is false
     } = account;
 
     const { 
@@ -55,26 +55,30 @@ const AccountCard = ({account}) => {
 
     useEffect(() => {
         if (error) {
-            toast.success(error.message || "Failed to update default account");
+            toast.error(error.message || "Failed to update default account");
         }
     }, [error]);
 
   return (
-    <Card className="hover:shadow-md transition-shadow group relative">
+    <Card className="hover:shadow-md transition-shadow group relative border border-gray-800">
         <Link href={`/account/${id}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium capitalize">{name}</CardTitle>
-                <Switch checked={isDefault} 
+                <CardTitle className="text-sm font-medium capitalize">
+                    {/* {name} */}
+                </CardTitle>
+                {/* <Switch checked={isDefault} 
                 onClick={handleDefaultChange}
-                disabled={updateDefaultLoading} />
+                disabled={updateDefaultLoading} /> */}
             </CardHeader>
 
             <CardContent>
             <div className="text-2xl font-bold">
-                    ₱{parseFloat(balance).toFixed(2)}
+                    {/* ₱{parseFloat(balance).toFixed(2)} */}
+                    {name}
             </div>
             <p className="text-xs text-muted-foreground">
-                    {type.charAt(0) + type.slice(1).toLowerCase()} Account
+                    {type.charAt(0) + type.slice(1).toLowerCase()} 
+                    {/* Account */}
             </p>
             </CardContent>
 

@@ -10,25 +10,16 @@ import DashboardOverview from './_components/transaction-overview';
 
 async function DashboardPage () {
   const accounts = await getUserAccounts();
+  console.log("The account",accounts)
+  
 
-  const defaultAccount = accounts?.find((account) => account.isDefault);
-
-  let budgetData = null;
-  if (defaultAccount) {
-    budgetData = await getCurrentBudget(defaultAccount.id);
-  }
 
   const transactions = await getDashboardData();
 
-  return (
-    <div className='px-8'>
-       {/* BUDGET PROGRESS */}
-      {defaultAccount && (
-        <BudgetProgress
-          initialBudget = {budgetData?.budget}
-          currentExpenses={budgetData?.currentExpenses || 0}
-        />
-      )}
+
+  return ( 
+    <div className='space-y-8'>
+
 
        {/* OVERVIEW */}
          <Suspense fallback={"Loading overview..."}>
@@ -41,7 +32,7 @@ async function DashboardPage () {
        {/* ACCOUNTS GRID */}
        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
             <CreateAccountDrawer>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed">
+                <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border border-green-900">
                     <CardContent className="flex flex-col items-center justify-center text-muted-foreground h-full pt-5">
                         <Plus className='h-10 w-10 mb-2'/>
                         <p className="text-sm font-medium ">Add New Account</p>

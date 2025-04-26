@@ -3,10 +3,10 @@
 import { db } from "@/lib/prisma";
 import { subDays } from "date-fns";
 
-const ACCOUNT_ID = "33831410-f39a-47f2-8823-dad694865d4c";
-const USER_ID = "27120541-a560-4934-a085-ad37e7f0ba76";
+const ACCOUNT_ID = "bcdeb3b3-eb18-4c9d-8bf3-f854420a465c";
+const USER_ID = "aaee8487-6282-4f06-88f7-8a36f48fa014";
 
-// Categories with their typical amount ranges
+// Categories with their typical amount ranges 
 const CATEGORIES = {
   INCOME: [
     { name: "salary", range: [5000, 8000] },
@@ -41,6 +41,20 @@ function getRandomCategory(type) {
   return { category: category.name, amount };
 }
 
+// Helper to get random activity type
+function getRandomActivityType() {
+  const activityTypes = ["OPERATION", "INVESTMENT", "FINANCING"];
+  return activityTypes[Math.floor(Math.random() * activityTypes.length)];
+}
+
+function generateRefNumber(index, date) {
+  const randomNumber = Math.floor(Math.random() * (999 - 100) + 100); // Generate a random number between 84756 and 100000
+  // const randomSuffix = String(index).padStart(3, "0"); // Ensure a 3-digit suffix
+  const randomNumber2 = Math.floor(Math.random() * (999 - 100) + 100); // Generate a random number between 84756 and 100000
+  const randomNumber3 = Math.floor(Math.random() * (9 - 1) + 1); // Generate a random number between 84756 and 100000
+  return `${randomNumber}${randomNumber2}${randomNumber3}`;
+}
+
 export async function seedTransactions() {
   try {
     // Generate 90 days of transactions
@@ -57,6 +71,9 @@ export async function seedTransactions() {
         // 40% chance of income, 60% chance of expense
         const type = Math.random() < 0.4 ? "INCOME" : "EXPENSE";
         const { category, amount } = getRandomCategory(type);
+        const activity = getRandomActivityType(); // Get random activity type
+        const refNumber = generateRefNumber();
+
 
         const transaction = {
           id: crypto.randomUUID(),
@@ -72,6 +89,8 @@ export async function seedTransactions() {
           accountId: ACCOUNT_ID,
           createdAt: date,
           updatedAt: date,
+          Activity: activity,
+          refNumber,
         };
 
         totalBalance += type === "INCOME" ? amount : -amount;
@@ -90,12 +109,6 @@ export async function seedTransactions() {
       await tx.transaction.createMany({
         data: transactions,
       });
-
-      // Update account balance
-      await tx.account.update({
-        where: { id: ACCOUNT_ID },
-        data: { balance: totalBalance },
-      });
     });
 
     return {
@@ -103,7 +116,7 @@ export async function seedTransactions() {
       message: `Created ${transactions.length} transactions`,
     };
   } catch (error) {
-    console.error("Error seeding transactions:", error);
+    console.error("Error seeding transactions:", error.message);
     return { success: false, error: error.message };
   }
 }

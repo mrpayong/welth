@@ -2,35 +2,35 @@ export const defaultCategories = [
     // Income Categories
     {
       id: "salary",
-      name: "Salary",
+      name: "salary",
       type: "INCOME",
       color: "#22c55e", // green-500
       icon: "Wallet",
     },
     {
       id: "freelance",
-      name: "Freelance",
+      name: "freelance",
       type: "INCOME",
       color: "#06b6d4", // cyan-500
       icon: "Laptop",
     },
     {
       id: "investments",
-      name: "Investments",
+      name: "investments",
       type: "INCOME",
       color: "#6366f1", // indigo-500
       icon: "TrendingUp",
     },
     {
       id: "business",
-      name: "Business",
+      name: "business",
       type: "INCOME",
       color: "#ec4899", // pink-500
       icon: "Building",
     },
     {
       id: "rental",
-      name: "Rental",
+      name: "rental",
       type: "INCOME",
       color: "#f59e0b", // amber-500
       icon: "Home",
@@ -46,7 +46,7 @@ export const defaultCategories = [
     // Expense Categories
     {
       id: "housing",
-      name: "Housing",
+      name: "housing",
       type: "EXPENSE",
       color: "#ef4444", // red-500
       icon: "Home",
@@ -54,7 +54,7 @@ export const defaultCategories = [
     },
     {
       id: "transportation",
-      name: "Transportation",
+      name: "transportation",
       type: "EXPENSE",
       color: "#f97316", // orange-500
       icon: "Car",
@@ -62,14 +62,14 @@ export const defaultCategories = [
     },
     {
       id: "groceries",
-      name: "Groceries",
+      name: "groceries",
       type: "EXPENSE",
       color: "#84cc16", // lime-500
       icon: "Shopping",
     },
     {
       id: "utilities",
-      name: "Utilities",
+      name: "utilities",
       type: "EXPENSE",
       color: "#06b6d4", // cyan-500
       icon: "Zap",
@@ -77,7 +77,7 @@ export const defaultCategories = [
     },
     {
       id: "entertainment",
-      name: "Entertainment",
+      name: "entertainment",
       type: "EXPENSE",
       color: "#8b5cf6", // violet-500
       icon: "Film",
@@ -85,14 +85,14 @@ export const defaultCategories = [
     },
     {
       id: "food",
-      name: "Food",
+      name: "food",
       type: "EXPENSE",
       color: "#f43f5e", // rose-500
       icon: "UtensilsCrossed",
     },
     {
       id: "shopping",
-      name: "Shopping",
+      name: "shopping",
       type: "EXPENSE",
       color: "#ec4899", // pink-500
       icon: "ShoppingBag",
@@ -100,7 +100,7 @@ export const defaultCategories = [
     },
     {
       id: "healthcare",
-      name: "Healthcare",
+      name: "healthcare",
       type: "EXPENSE",
       color: "#14b8a6", // teal-500
       icon: "HeartPulse",
@@ -108,7 +108,7 @@ export const defaultCategories = [
     },
     {
       id: "education",
-      name: "Education",
+      name: "education",
       type: "EXPENSE",
       color: "#6366f1", // indigo-500
       icon: "GraduationCap",
@@ -116,7 +116,7 @@ export const defaultCategories = [
     },
     {
       id: "personal",
-      name: "Personal Care",
+      name: "personal Care",
       type: "EXPENSE",
       color: "#d946ef", // fuchsia-500
       icon: "Smile",
@@ -124,14 +124,14 @@ export const defaultCategories = [
     },
     {
       id: "travel",
-      name: "Travel",
+      name: "travel",
       type: "EXPENSE",
       color: "#0ea5e9", // sky-500
       icon: "Plane",
     },
     {
       id: "insurance",
-      name: "Insurance",
+      name: "insurance",
       type: "EXPENSE",
       color: "#64748b", // slate-500
       icon: "Shield",
@@ -139,14 +139,14 @@ export const defaultCategories = [
     },
     {
       id: "gifts",
-      name: "Gifts & Donations",
+      name: "gifts & donations",
       type: "EXPENSE",
       color: "#f472b6", // pink-400
       icon: "Gift",
     },
     {
       id: "bills",
-      name: "Bills & Fees",
+      name: "bills & fees",
       type: "EXPENSE",
       color: "#fb7185", // rose-400
       icon: "Receipt",
@@ -154,7 +154,7 @@ export const defaultCategories = [
     },
     {
       id: "other-expense",
-      name: "Other Expenses",
+      name: "other expenses",
       type: "EXPENSE",
       color: "#94a3b8", // slate-400
       icon: "MoreHorizontal",

@@ -35,32 +35,12 @@ export async function createAccount(data) {
          
 
         // Convert balance to float before save
-        const balanceFloat = parseFloat(data.balance)
-        if(isNaN(balanceFloat)){
-            throw new Error("Invalid balance amount");
-        }
-
-        // check if this is the user's 1st account
-        const existingAccounts = await db.account.findMany({
-            where: {userId: user.id},
-        });
-
-        const shouldBeDefault = existingAccounts.length === 0 ? true : data.isDefault;
-
-        // if this account should be default, unset other def accounts
-        if (shouldBeDefault) {
-            await db.account.updateMany({
-                where: {userId: user.id, isDefault: true},
-                data: {isDefault: false},
-            });
-        }
+       
 
         const account = await db.account.create({
             data: {
                 ...data,
-                balance: balanceFloat,
                 userId: user.id,
-                isDefault: shouldBeDefault,
             },
         });
 
@@ -93,7 +73,7 @@ export async function getUserAccounts() {
         where: {userId: user.id }, //find acc that belongs to a user
         orderBy: { createdAt: "desc" }, //order by descending to when the acc is created
         include: { //include the count of all transacs
-            _count: {
+            _count: {   
                 select: {
                     transactions: true,
                 },

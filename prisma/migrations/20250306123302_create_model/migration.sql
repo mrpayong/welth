@@ -10,6 +10,9 @@ CREATE TYPE "RecurringInterval" AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY')
 -- CreateEnum
 CREATE TYPE "TransactionStatus" AS ENUM ('PENDING', 'COMPLETED', 'FAILED');
 
+-- CreateEnum
+CREATE TYPE "activityType" AS ENUM ('OPERATION', 'INVESTMENT', 'FINANCING');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
@@ -46,6 +49,7 @@ CREATE TABLE "transactions" (
     "date" TIMESTAMP(3) NOT NULL,
     "category" TEXT NOT NULL,
     "receiptUrl" TEXT,
+    "Activity" "activityType" NOT NULL,
     "isRecurring" BOOLEAN NOT NULL DEFAULT false,
     "recurringInterval" "RecurringInterval",
     "nextRecurringDate" TIMESTAMP(3),
@@ -53,6 +57,7 @@ CREATE TABLE "transactions" (
     "status" "TransactionStatus" NOT NULL DEFAULT 'COMPLETED',
     "userId" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
+    "cashFlowId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -63,12 +68,29 @@ CREATE TABLE "transactions" (
 CREATE TABLE "budgets" (
     "id" TEXT NOT NULL,
     "amount" DECIMAL(65,30) NOT NULL,
-    "lastAlertSent" TIMESTAMP(3),
+    "lastAlertSent" TIMESTAMP(3) NOT NULL,
     "userId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "budgets_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Cashflow" (
+    "id" TEXT NOT NULL,
+    "activityTotal" DECIMAL(65,30) NOT NULL,
+    "netChange" DECIMAL(65,30) NOT NULL,
+    "startBalance" DECIMAL(65,30) NOT NULL,
+    "endBalance" DECIMAL(65,30) NOT NULL,
+    "description" TEXT,
+    "date" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Cashflow_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -92,6 +114,15 @@ CREATE UNIQUE INDEX "budgets_userId_key" ON "budgets"("userId");
 -- CreateIndex
 CREATE INDEX "budgets_userId_idx" ON "budgets"("userId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Cashflow_date_key" ON "Cashflow"("date");
+
+-- CreateIndex
+CREATE INDEX "Cashflow_accountId_idx" ON "Cashflow"("accountId");
+
+-- CreateIndex
+CREATE INDEX "Cashflow_userId_idx" ON "Cashflow"("userId");
+
 -- AddForeignKey
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -102,4 +133,13 @@ ALTER TABLE "transactions" ADD CONSTRAINT "transactions_userId_fkey" FOREIGN KEY
 ALTER TABLE "transactions" ADD CONSTRAINT "transactions_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "transactions" ADD CONSTRAINT "transactions_cashFlowId_fkey" FOREIGN KEY ("cashFlowId") REFERENCES "Cashflow"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "budgets" ADD CONSTRAINT "budgets_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Cashflow" ADD CONSTRAINT "Cashflow_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Cashflow" ADD CONSTRAINT "Cashflow_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;

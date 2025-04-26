@@ -10,6 +10,55 @@ import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner';
 
 const BudgetProgress = ({initialBudget, currentExpenses }) => {
+  //   const [isEditing, setIsEditing] = useState(false);
+  // const [newBudget, setNewBudget] = useState(
+  //   initialBudget?.amount?.toString() || ""
+  // );
+
+  // const {
+  //   loading: isLoading,
+  //   fn: updateBudgetFn, 
+  //   data: updatedBudget,
+  //   error,
+  // } = useFetch(updateBudget);
+
+  // const percentUsed = initialBudget
+  //   ? (currentExpenses / initialBudget.amount) * 100
+  //   : 0;
+
+  // const handleUpdateBudget = async () => {
+  //   const amount = parseFloat(newBudget);
+  //   if ( amount <= 0) {
+  //     toast.error("Please enter a valid amount");
+  //     return;
+  //   }
+  
+  //   // Ensure a valid object is passed
+  //   const payload = { amount };
+  //   console.log("Calling updateBudgetFn with payload:", payload);
+  //   await updateBudgetFn(payload);
+  // };
+
+  // const handleCancel = () => {
+  //   setNewBudget(initialBudget?.amount?.toString() || "");
+  //   setIsEditing(false);
+  // };
+
+  // useEffect(() => {
+  //   if (updatedBudget?.success) {
+  //     setIsEditing(false);
+  //     toast.success("Budget updated successfully");
+  //   }
+  // }, [updatedBudget]);
+
+  // useEffect(() => {
+  //   if (error) {
+  //     toast.error(error.message || "Failed to update budget");
+  //   }
+  // }, [error]);
+
+
+
     const [isEditing, setIsEditing] = useState(false);
     const [newBudget, setNewBudget] = useState(
         initialBudget?.amount?.toString() || ""
@@ -30,13 +79,41 @@ const BudgetProgress = ({initialBudget, currentExpenses }) => {
         console.log("handleUpdateBudget called.");
         const amount = parseFloat(newBudget);
 
+        console.log("Parsed amount:", amount);
+        console.log("handleUpdateBudget called.(2)");
         if (isNaN(amount) || amount <= 0) {
             toast.error("Please Enter a valid amount.");
             return;
         }
+        
+        console.log("handleUpdateBudget called.(4)");
         await updateBudgetFn(amount);
+       
+        if(updateBudgetFn.success){console.log("handleUpdateBudget called.(5)");}
     };
     
+    // const {
+    //     loading: isLoading,
+    //     fn: updateBudgetFn,
+    //     data: updatedBudget,
+    //     error
+    //   } = useFetch(updateBudget);
+    
+    //   const percentUsed = initialBudget
+    //     ? (currentExpenses / initialBudget.amount) * 100
+    //     : 0;
+    
+    //   const handleUpdateBudget = async () => {
+    //     console.log(newBudget)
+    //     const amount = parseFloat(newBudget);
+    
+    //     if (isNaN(amount) || amount <= 0) {
+    //       toast.error("Please enter a valid amount");
+    //       return;
+    //     }
+    //     console.log(amount," Data Type: ", typeof amount)
+    //     await updateBudgetFn(amount);
+    //   };
 
     useEffect(() => {
         if (updatedBudget?.success) {
@@ -45,17 +122,23 @@ const BudgetProgress = ({initialBudget, currentExpenses }) => {
         }
     }, [updatedBudget]);
 
-    useEffect(() => {
-        if (error) {
-            toast.error(error.message || "Failed to updated budget.");
-        }
-    }, [error]);
+    // useEffect(() => {
+    //     if (error) {
+    //         toast.error( "Failed to updated budget.");
+    //         console.error(error.message)
+    //     }
+    // }, [error]);
 
     const handleCancel = () => {
         setNewBudget(initialBudget?.amount?.toString() || "");
         setIsEditing(false);
         console.log("cancel button clicked.");
     }
+
+
+
+
+    
 
   return (
     <div>
@@ -66,7 +149,8 @@ const BudgetProgress = ({initialBudget, currentExpenses }) => {
             <CardTitle>Monthly Budget (default account)</CardTitle>
             <div className='flex items-center gap-2 mt-1'>
                 {isEditing
-                    ? (<div className='flex items-center gap-2'>
+                    ? (
+                    <div className='flex items-center gap-2'>
                         <Input 
                             type="number"
                             value={newBudget}
@@ -92,7 +176,8 @@ const BudgetProgress = ({initialBudget, currentExpenses }) => {
 
                                 <X className="h-4 w-4 text-red-500"/>
                         </Button>
-                    </div>)
+                    </div>
+                    )
                     : (
                         <>
                             <CardDescription>
@@ -115,23 +200,24 @@ const BudgetProgress = ({initialBudget, currentExpenses }) => {
             
         </CardHeader>
         <CardContent>
-            {initialBudget &&  (
-                <div className="space-y-2">
-                    <Progress 
-                    value={percentUsed}
-                    extraStyles={`${
-                        percentUsed >= 90
-                            ? "bg-red-500"
-                            : percentUsed >= 75
-                                ? "bg-yellow-500"
-                                : "bg-green-500"
-                    }`}/>
-                <p className="text-xs text-muted-foreground text-right">
-                    {percentUsed.toFixed(1)}% used
-                </p>
-                </div>
-            )}
-        </CardContent>
+        {initialBudget && (
+          <div className="space-y-2">
+            <Progress
+              value={percentUsed}
+              indicatorColor={
+                percentUsed >= 90
+                    ? "rgb(239 68 68)"
+                    : percentUsed >= 75
+                        ? "rgb(251 191 36)"
+                        : "rgb(74 222 128)"
+            }
+            />
+            <p className="text-xs text-muted-foreground text-right">
+              {percentUsed.toFixed(1)}% used
+            </p>
+          </div>
+        )}
+      </CardContent>
       </Card>
     </div>
   )

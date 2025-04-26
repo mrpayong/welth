@@ -13,7 +13,7 @@ const NotFound = () => {
             Oops! The you're looking for doesn't exist
             or has been moved.
         </p>
-        <Link href='/'>
+        <Link href='/dashboard'>
             <Button>Return Home</Button>
         </Link>
     </div>

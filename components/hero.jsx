@@ -8,6 +8,8 @@ const HeroSection = () => {
 
     const imageRef = useRef();
 
+    
+
     useEffect(() => {
         const imageElement = imageRef.current;
 
