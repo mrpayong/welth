@@ -1,4 +1,4 @@
-import { getCashflow, getLatestCashflow } from "@/actions/cashflow";
+import { getCashflow } from "@/actions/cashflow";
 import CashflowList from "../_components/Cashflow";
 import CashflowFilter from "../_components/Cashflow_filter";
 
