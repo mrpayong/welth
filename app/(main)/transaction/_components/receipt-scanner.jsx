@@ -33,7 +33,7 @@ const ReceiptScanner = ({onScanComplete}) => {
     useEffect(() => {
         if(scannedData && !scanReceiptLoading) {
             onScanComplete(scannedData);
-            toast.success("Receipt scanned successfully");
+            toast.success("Receipt scanned successfully. File size is less than 15MB");
         }
     }, [scanReceiptLoading, scannedData]);
 

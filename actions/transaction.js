@@ -215,6 +215,7 @@ export async function scanReceipt(file){
     const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
 
     // converts file into ArrayBuffer
+    console.log("IN BACKEND SCANNING: ", file)
     const arrayBuffer = await file.arrayBuffer();
     
     // convert arrayBuffer to base64
