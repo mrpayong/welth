@@ -23,7 +23,7 @@ const ReceiptScanner = ({onScanComplete}) => {
 
     const handleReceiptScan = async(file) => {
         if(file.size > 15 * 1024 *1024) {
-            toast.error("File size should be less than 15MB.");
+            toast.error(`File size should be less than 15MB. Your file is ${file.size} MB`);
             return;
         }
 
