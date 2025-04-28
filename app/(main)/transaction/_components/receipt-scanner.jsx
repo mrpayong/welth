@@ -19,11 +19,12 @@ const ReceiptScanner = ({onScanComplete}) => {
         loading: scanReceiptLoading,
         fn: scanReceiptFn,
         data: scannedData,
+        error: scanError
     } = useFetch(scanReceipt);
 
     const handleReceiptScan = async(file) => {
-        if(file.size > 15 * 1024 *1024) {
-            toast.error(`File size should be less than 15MB. Your file is ${file.size} MB`);
+        if(file.size > 50 * 1024 *1024) {
+            toast.error(`File size should be less than 50MB. Your file is ${file.size} MB`);
             return;
         }
 
@@ -33,12 +34,17 @@ const ReceiptScanner = ({onScanComplete}) => {
     useEffect(() => {
         if(scannedData && !scanReceiptLoading) {
             onScanComplete(scannedData);
-            toast.success("Receipt scanned successfully. File size is less than 15MB");
+            toast.success("Receipt scanned successfully. File size is less than 50MB");
         }
     }, [scanReceiptLoading, scannedData]);
 
 
-
+    useEffect(() => {
+        if(scanError && !scanReceiptLoading) {
+            toast.error(scanError.message);
+            console.log("Error scanning receipt: ", scanError);
+        }
+    }, [scanError])
 
 
 

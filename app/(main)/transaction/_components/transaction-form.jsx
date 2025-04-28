@@ -134,13 +134,17 @@ const AddTransactionForm = ({
     //     }
     // };
     const handleScanComplete = (scannedData) => {
+
         if (scannedData) {
           setValue("amount", scannedData.amount.toString());
           console.log("amount scanning success")
+
           setValue("date", new Date(scannedData.date));
           console.log("date scanning success")
+          
           setValue("refNumber",scannedData.refNumber);
           setValue("particular", scannedData.particular);
+
           if (scannedData.description) {
             setValue("description", scannedData.description);
             console.log("description scanning success")
