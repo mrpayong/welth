@@ -1,4 +1,5 @@
-import { getCashFlow } from "@/actions/getCashFlow";
+import { getCashflow } from "@/actions/cashflow";
+
 
 export async function GET(req) {
   try {
@@ -9,7 +10,7 @@ export async function GET(req) {
       return Response.json({ message: "User ID is required" }, { status: 400 });
     }
 
-    const cashFlows = await getCashFlow(userId);
+    const cashFlows = await getCashflow(userId);
 
     if (!cashFlows.length) {
       return Response.json({ message: "No cashflow statements found" }, { status: 404 });

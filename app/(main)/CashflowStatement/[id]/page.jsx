@@ -1,4 +1,4 @@
-// import { getCashflow } from "@/actions/cashflow";
+import { getCashflow } from "@/actions/cashflow";
 import CashflowList from "../_components/Cashflow";
 import CashflowFilter from "../_components/Cashflow_filter";
 
@@ -6,7 +6,7 @@ import CashflowFilter from "../_components/Cashflow_filter";
 async function CashflowPage ({ params }) {
     const {id} = await params;
     
-    // const cashflows = await getCashflow(id)
+    const cashflows = await getCashflow(id)
 
 
     if (!cashflows || cashflows.length === 0) {
