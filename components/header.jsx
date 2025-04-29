@@ -3,7 +3,7 @@ import React from 'react'
 import Image from "next/image"
 import Link from 'next/link'
 import { Button } from './ui/button'
-import { ArrowLeft, Layout, LayoutDashboard, PenBox } from 'lucide-react'
+import { ArrowLeft, House, Layout, LayoutDashboard, PenBox } from 'lucide-react'
 import { checkUser } from '@/lib/checkUser'
 
 
@@ -30,8 +30,16 @@ const Header = async ({isAdminPage = false}) => {
             <span className='text-xs font-extralight'>Admin</span>
           )}
         </Link>
+  
+               
       
         <div className="flex items-center space-x-4">
+        <Link href={"/"} className="text-gray-600 hover:text-blue-600 flex items-center gap-2"> 
+            <Button variant="outline">
+              <House size={18}/>
+              <span className='hidden md:inline'>Home</span>
+            </Button>
+        </Link>
           {isAdminPage 
             ? (
                 <Link href={"/dashboard"} className="text-gray-600 hover:text-blue-600 flex items-center gap-2"> 
@@ -44,6 +52,7 @@ const Header = async ({isAdminPage = false}) => {
 
             : (
                 <SignedIn>
+
                   <Link href={"/dashboard"} className="text-gray-600 hover:text-blue-600 flex items-center gap-2"> 
                       <Button variant="outline">
                       <LayoutDashboard size={18}/>
@@ -75,9 +84,16 @@ const Header = async ({isAdminPage = false}) => {
 
 
         <SignedOut>
-          <span className="text-gray-600 hidden md:inline">
-            <strong>Welcome!</strong>
-          </span>
+          <SignInButton>
+            <Link href={"/sign-in"} className="text-gray-600 hover:text-blue-600 flex items-center gap-2"> 
+              <Button>
+                Log In
+              </Button>
+              <span className="text-gray-600 hidden md:inline">
+                <strong>Welcome!</strong>
+              </span>
+            </Link>
+          </SignInButton>
         </SignedOut>
 
 

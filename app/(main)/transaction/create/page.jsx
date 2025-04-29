@@ -29,7 +29,7 @@ const AddTransactionPage = async ({ searchParams }) => {
         accounts={accounts} 
         categories={defaultCategories}
         editMode={!!editId}
-        initialData={initialData }
+        initialData={initialData}
       />
     </div>
   )

@@ -66,7 +66,7 @@ const AddTransactionForm = ({
             }
             : {
             type: "EXPENSE",
-            refNumber: "1234567",
+            refNumber: "",
             particular: "",
             Activity: "OPERATION",
             amount: "",
@@ -231,7 +231,7 @@ const AddTransactionForm = ({
                         <p className="text-sm text-red-500">{errors.type.message}</p>
                     )}
                 </div>
-                {/* 
+                
                 <div className='space-y-2'>
                     <label className='text-sm font-medium'>Reference Number</label>
                     <Input
@@ -244,7 +244,7 @@ const AddTransactionForm = ({
                         <p className="text-sm text-red-500">{errors.type.message}</p>
                     )}
                 </div> 
-                */}
+               
 
                 <div className='space-y-2'>
                     <label className='text-sm font-medium'>Company Name</label>
@@ -280,7 +280,7 @@ const AddTransactionForm = ({
                         <p className="text-sm text-red-500">{errors.accountId.message}</p>
                     )}
             </div>
-            {/* <div className='space-y-2'>
+            <div className='space-y-2'>
                     <label className='text-sm font-medium'>Particular</label>
                     <Input
                         type="text" 
@@ -291,7 +291,7 @@ const AddTransactionForm = ({
                     {errors.type && (
                         <p className="text-sm text-red-500">{errors.type.message}</p>
                     )}
-                </div> */}
+                </div>
             </div>
         )}
 

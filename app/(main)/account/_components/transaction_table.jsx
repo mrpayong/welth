@@ -910,204 +910,204 @@ const rowsPerPage = 10; // Default rows per page
 
 
       {/* TRANSACTIONS */}
-      <Tabs>
+      <Tabs defaultValue='transactions'>
         <TabsList className="flex flex-col sm:flex-row sm:justify-start border-b border-gray-200 mb-4 space-y-2 sm:space-y-0 sm:space-x-4">
           <TabsTrigger value="transactions" className="w-full sm:w-auto">Transactions tab</TabsTrigger>
           <TabsTrigger value="subAccounts" className="w-full sm:w-auto">Grouped transactions tab</TabsTrigger>
         </TabsList>
         <TabsContent value="transactions">
-  <div className="rounded-md border overflow-x-auto">
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[50px] text-center">
-            <Checkbox
-              onCheckedChange={handleSelectAll}
-              checked={
-                paginatedTransactions.every((t) => selectedIds.includes(t.id)) &&
-                paginatedTransactions.length > 0
-              }
-            />
-          </TableHead>
-          <TableHead className="text-left cursor-pointer"
-             onClick={() => handleSort("date")}
-          ><div className="flex items-center">
-          Date
-          {sortConfig.field === "date" &&
-            (sortConfig.direction === "asc" ? (
-              <ArrowUpWideNarrow className="ml-1 h-4 w-4" />
-            ) : (
-              <ArrowDownNarrowWide className="ml-1 h-4 w-4" />
-            ))}
-        </div>
-          </TableHead>
-          <TableHead className="text-left">Description</TableHead>
-          <TableHead className="text-left cursor-pointer"
-            onClick={() => handleSort("category")}
-            >
-              <div className="flex items-center">
-                  Account title
-                  {sortConfig.field === "category" &&
+          <div className="rounded-md border overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px] text-center">
+                    <Checkbox
+                      onCheckedChange={handleSelectAll}
+                      checked={
+                        paginatedTransactions.every((t) => selectedIds.includes(t.id)) &&
+                        paginatedTransactions.length > 0
+                      }
+                    />
+                  </TableHead>
+                  <TableHead className="text-left cursor-pointer"
+                    onClick={() => handleSort("date")}
+                  ><div className="flex items-center">
+                  Date
+                  {sortConfig.field === "date" &&
                     (sortConfig.direction === "asc" ? (
                       <ArrowUpWideNarrow className="ml-1 h-4 w-4" />
                     ) : (
                       <ArrowDownNarrowWide className="ml-1 h-4 w-4" />
                     ))}
                 </div>
-          </TableHead>
-          <TableHead className="text-center w-[150px]">Activity type</TableHead>
-          <TableHead className="text-right cursor-pointer"
-            onClick={() => handleSort("amount")}>
-              <div className="flex items-center justify-end">
-                  Amount
-                  {sortConfig.field === "amount" &&
-                    (sortConfig.direction === "asc" ? (
-                      <ArrowUpWideNarrow className="ml-1 h-4 w-4" />
-                    ) : (
-                      <ArrowDownNarrowWide className="ml-1 h-4 w-4" />
-                    ))}
-                </div>
-          </TableHead>
-          <TableHead className="text-center">
-            {/* Recurring */}
-            </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {paginatedTransactions.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={7} className="text-center text-muted-foreground">
-              No Transactions Found
-            </TableCell>
-          </TableRow>
-        ) : (
-          paginatedTransactions.map((transaction) => (
-            <TableRow key={transaction.id}>
-              <TableCell className="text-center">
-                <Checkbox
-                  onCheckedChange={() => handleSelect(transaction.id)}
-                  checked={selectedIds.includes(transaction.id)}
-                />
-              </TableCell>
-              <TableCell className="text-left">{formatDate(transaction.date)}</TableCell>
-              <TableCell className="text-left">{transaction.description}</TableCell>
-              <TableCell className="text-left">{transaction.category}</TableCell>
-              
-              <TableCell
-                   className={cn(
-                        "text-center font-medium",
-                        {
-                        OPERATION: "text-blue-500",
-                        INVESTMENT: "text-yellow-500",
-                        FINANCING: "text-purple-500",
-                        }[transaction.Activity] || "text-gray-500" // Default color if no match
-                    )}
-                  >{transaction.Activity.charAt(0).toUpperCase() + transaction.Activity.slice(1).toLowerCase()}</TableCell>
-              <TableCell className={cn(
-                      "text-right font-medium",
-                      transaction.type === "EXPENSE"
-                        ? "text-red-500"
-                        : "text-green-500"
-                    )}>
-                {transaction.type === "EXPENSE" ? "-" : "+"}
-                ₱{transaction.amount.toFixed(2)}
-              </TableCell>
-              <TableCell className="text-center">
-                {/* {transaction.isRecurring ? (
-                  <Badge variant="outline" className="gap-1 bg-purple-100 text-purple-700">
-                    Recurring
-                  </Badge>
+                  </TableHead>
+                  <TableHead className="text-left">Description</TableHead>
+                  <TableHead className="text-left cursor-pointer"
+                    onClick={() => handleSort("category")}
+                    >
+                      <div className="flex items-center">
+                          Account title
+                          {sortConfig.field === "category" &&
+                            (sortConfig.direction === "asc" ? (
+                              <ArrowUpWideNarrow className="ml-1 h-4 w-4" />
+                            ) : (
+                              <ArrowDownNarrowWide className="ml-1 h-4 w-4" />
+                            ))}
+                        </div>
+                  </TableHead>
+                  <TableHead className="text-center w-[150px]">Activity type</TableHead>
+                  <TableHead className="text-right cursor-pointer"
+                    onClick={() => handleSort("amount")}>
+                      <div className="flex items-center justify-end">
+                          Amount
+                          {sortConfig.field === "amount" &&
+                            (sortConfig.direction === "asc" ? (
+                              <ArrowUpWideNarrow className="ml-1 h-4 w-4" />
+                            ) : (
+                              <ArrowDownNarrowWide className="ml-1 h-4 w-4" />
+                            ))}
+                        </div>
+                  </TableHead>
+                  <TableHead className="text-center">
+                    {/* Recurring */}
+                    </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedTransactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      No Transactions Found
+                    </TableCell>
+                  </TableRow>
                 ) : (
-                  <Badge variant="outline" className="gap-1">
-                    One-time
-                  </Badge>
-                )} */}
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() =>
-                            router.push(
-                              `/transaction/create?edit=${transaction.id}`
-                            )
-                          }
-                          className="text-yellow-400">Edit</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
-    <PaginationControls
-      currentPage={currentTransactionPage}
-      totalPages={totalTransactionPages}
-      onPageChange={setCurrentTransactionPage}
-    />
-  </div>
-</TabsContent>
-
-<TabsContent value="subAccounts">
-  <div className="rounded-md border overflow-x-auto">
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[50px]">
-            <Checkbox
-              onCheckedChange={handleSelectAllSubAccounts}
-              checked={
-                paginatedSubAccounts.every((subAccount) =>
-                  selectedSubAccountIds.includes(subAccount.id)
-                ) && paginatedSubAccounts.length > 0
-              }
+                  paginatedTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="text-center">
+                        <Checkbox
+                          onCheckedChange={() => handleSelect(transaction.id)}
+                          checked={selectedIds.includes(transaction.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="text-left">{formatDate(transaction.date)}</TableCell>
+                      <TableCell className="text-left">{transaction.description}</TableCell>
+                      <TableCell className="text-left">{transaction.category}</TableCell>
+                      
+                      <TableCell
+                          className={cn(
+                                "text-center font-medium",
+                                {
+                                OPERATION: "text-blue-500",
+                                INVESTMENT: "text-yellow-500",
+                                FINANCING: "text-purple-500",
+                                }[transaction.Activity] || "text-gray-500" // Default color if no match
+                            )}
+                          >{transaction.Activity.charAt(0).toUpperCase() + transaction.Activity.slice(1).toLowerCase()}</TableCell>
+                      <TableCell className={cn(
+                              "text-right font-medium",
+                              transaction.type === "EXPENSE"
+                                ? "text-red-500"
+                                : "text-green-500"
+                            )}>
+                        {transaction.type === "EXPENSE" ? "-" : "+"}
+                        ₱{transaction.amount.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {/* {transaction.isRecurring ? (
+                          <Badge variant="outline" className="gap-1 bg-purple-100 text-purple-700">
+                            Recurring
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="gap-1">
+                            One-time
+                          </Badge>
+                        )} */}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() =>
+                                    router.push(
+                                      `/transaction/create?edit=${transaction.id}`
+                                    )
+                                  }
+                                  className="text-yellow-400">Edit</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+            <PaginationControls
+              currentPage={currentTransactionPage}
+              totalPages={totalTransactionPages}
+              onPageChange={setCurrentTransactionPage}
             />
-          </TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead className="text-right">Amount</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {paginatedSubAccounts.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={3} className="text-center text-muted-foreground">
-              No group found
-            </TableCell>
-          </TableRow>
-        ) : (
-          paginatedSubAccounts.map((subAccount) => (
-            <TableRow key={subAccount.id}>
-              <TableCell>
-                <Checkbox
-                  onCheckedChange={() => handleSelectSubAccount(subAccount.id)}
-                  checked={selectedSubAccountIds.includes(subAccount.id)}
-                />
-              </TableCell>
-              <TableCell>{subAccount.name}</TableCell>
-              <TableCell className="text-right font-medium">
-                ₱{subAccount.balance?.toFixed(2) || "0.00"}
-              </TableCell>
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
-    <PaginationControls
-      currentPage={currentSubAccountPage}
-      totalPages={totalSubAccountPages}
-      onPageChange={setCurrentSubAccountPage}
-    />
-  </div>
-</TabsContent>
+          </div>
+        </TabsContent>
 
-        </Tabs>
+        <TabsContent value="subAccounts">
+          <div className="rounded-md border overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">
+                    <Checkbox
+                      onCheckedChange={handleSelectAllSubAccounts}
+                      checked={
+                        paginatedSubAccounts.every((subAccount) =>
+                          selectedSubAccountIds.includes(subAccount.id)
+                        ) && paginatedSubAccounts.length > 0
+                      }
+                    />
+                  </TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedSubAccounts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                      No group found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedSubAccounts.map((subAccount) => (
+                    <TableRow key={subAccount.id}>
+                      <TableCell>
+                        <Checkbox
+                          onCheckedChange={() => handleSelectSubAccount(subAccount.id)}
+                          checked={selectedSubAccountIds.includes(subAccount.id)}
+                        />
+                      </TableCell>
+                      <TableCell>{subAccount.name}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        ₱{subAccount.balance?.toFixed(2) || "0.00"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+            <PaginationControls
+              currentPage={currentSubAccountPage}
+              totalPages={totalSubAccountPages}
+              onPageChange={setCurrentSubAccountPage}
+            />
+          </div>
+        </TabsContent>
+
+      </Tabs>
       
       
     </div>

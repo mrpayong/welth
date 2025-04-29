@@ -5,6 +5,7 @@ import { ClerkProvider, RedirectToSignIn, SignedIn, SignedOut } from "@clerk/nex
 import { Toaster } from "sonner";
 import { SignIn } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
+import LogInPage from "./signINpage";
 
 const inter = Inter({subsets:["latin"]});
 
@@ -25,16 +26,15 @@ export default function RootLayout({ children }) {
       <body
         className={`${inter.className}`}
       >
-         <Header />
-       
-        <main className="min-h-screen">
-          {children}
-        </main>
+          <Header />
+            <main className="min-h-screen relative z-0">
+              {children}
+            </main>
         <Toaster richColors/>
         
         <footer className="bg-blue-50 py-12">
           <div className="container mx-auto px-4 text-center text-gray-600">
-            <p>Footer</p>
+            <p>© 2025 Financial Management System. All rights reserved.</p>
           </div>
 
          {/* <SignedOut>

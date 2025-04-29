@@ -27,8 +27,10 @@ const ReceiptScanner = ({onScanComplete}) => {
             toast.error(`File size should be less than 50MB. Your file is ${file.size} MB`);
             return;
         }
-
+        console.log("File size: ", file.size, "<", 50 * 1024 *1024);
+       
         await scanReceiptFn(file);
+         toast.info("File size: ", `${file.size}`)
     };
 
     useEffect(() => {
@@ -41,8 +43,8 @@ const ReceiptScanner = ({onScanComplete}) => {
 
     useEffect(() => {
         if(scanError && !scanReceiptLoading) {
-            toast.error(scanError.message);
-            console.log("Error scanning receipt: ", scanError);
+            toast.error("1: ",scanError.message);
+            console.log("Error scanning receipt 2: ", scanError);
         }
     }, [scanError])
 

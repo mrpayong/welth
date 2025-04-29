@@ -1,6 +1,6 @@
 import { getCashflow } from "@/actions/cashflow";
-import CashflowList from "../_components/Cashflow";
 import CashflowFilter from "../_components/Cashflow_filter";
+import CashflowList from "../_components/Cashflow";
 
 
 async function CashflowPage ({ params }) {

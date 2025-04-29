@@ -280,101 +280,101 @@
 
 
 
-// 'use client';
+'use client';
 
-// import { useRouter } from 'next/navigation';
-// import { useMemo, useState } from 'react';
-// import { ArrowDownWideNarrow, ArrowUpWideNarrow } from 'lucide-react';
-// import {
-//     Card,
-//     CardContent,
-//     CardFooter,
-//     CardHeader,
-//     CardTitle,
-// } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import { ArrowDownWideNarrow, ArrowUpWideNarrow } from 'lucide-react';
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 
-// function CashflowList({ cashflows }) {
-//     const router = useRouter(); // For navigation
-//     const [sortConfig, setSortConfig] = useState({
-//         field: 'createdAt',
-//         direction: 'desc',
-//     });
+function CashflowList({ cashflows }) {
+    const router = useRouter(); // For navigation
+    const [sortConfig, setSortConfig] = useState({
+        field: 'createdAt',
+        direction: 'desc',
+    });
 
-//     const handleSort = (field) => {
-//         setSortConfig((current) => ({
-//             field,
-//             direction:
-//                 current.field === field && current.direction === 'asc'
-//                     ? 'desc'
-//                     : 'asc',
-//         }));
-//     };
+    const handleSort = (field) => {
+        setSortConfig((current) => ({
+            field,
+            direction:
+                current.field === field && current.direction === 'asc'
+                    ? 'desc'
+                    : 'asc',
+        }));
+    };
 
-//     const sortedCashflows = useMemo(() => {
-//         let result = [...cashflows];
+    const sortedCashflows = useMemo(() => {
+        let result = [...cashflows];
 
-//         // Apply Sorting
-//         result.sort((a, b) => {
-//             let comparison = 0;
+        // Apply Sorting
+        result.sort((a, b) => {
+            let comparison = 0;
 
-//             switch (sortConfig.field) {
-//                 case 'createdAt':
-//                     comparison = new Date(a.createdAt) - new Date(b.createdAt);
-//                     break;
+            switch (sortConfig.field) {
+                case 'createdAt':
+                    comparison = new Date(a.createdAt) - new Date(b.createdAt);
+                    break;
 
-//                 default:
-//                     comparison = 0;
-//             }
+                default:
+                    comparison = 0;
+            }
 
-//             return sortConfig.direction === 'asc' ? comparison : -comparison;
-//         });
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
 
-//         return result;
-//     }, [cashflows, sortConfig]);
+        return result;
+    }, [cashflows, sortConfig]);
 
-//     if (!cashflows || cashflows.length === 0) {
-//         return <p>No cashflow statements found.</p>;
-//     }
+    if (!cashflows || cashflows.length === 0) {
+        return <p>No cashflow statements found.</p>;
+    }
 
-//     return (
-//         <div className="p-4">
-//             <div
-//                 className="cursor-pointer flex items-center gap-2 mb-4"
-//                 onClick={() => handleSort('createdAt')}
-//             >
-//                 <span>Sort Date Created</span>
-//                 {sortConfig.field === 'createdAt' &&
-//                     (sortConfig.direction === 'asc' ? (
-//                         <ArrowUpWideNarrow className="h-4 w-4" />
-//                     ) : (
-//                         <ArrowDownWideNarrow className="h-4 w-4" />
-//                     ))}
-//             </div>
-//             {sortedCashflows.map((cfs) => (
-//                 <div
-//                     key={cfs.id}
-//                     onClick={() => router.push(`/CashflowStatement/${cfs.accountId}/${cfs.id}`)} // Navigate to cashflow details
-//                     className="mb-2"
-//                 >
-//                     <Card className="p-2 sm:p-3 border rounded-md cursor-pointer hover:bg-gray-100 flex flex-col sm:flex-row justify-between">
-//                         <CardHeader className="flex-1">
-//                             <CardTitle className="text-base sm:text-lg">
-//                                 {cfs.account.name}
-//                             </CardTitle>
-//                         </CardHeader>
-//                         <CardContent className="mt-2 sm:mt-0 flex-1">
-//                             <span className="text-sm">Cashflow ID: {cfs.id}</span>
-//                         </CardContent>
-//                         <CardFooter className="mt-2 sm:mt-0 flex-1">
-//                             <span className="text-xs sm:text-sm">
-//                                 Created On: {new Date(cfs.createdAt).toLocaleDateString()}
-//                             </span>
-//                         </CardFooter>
-//                     </Card>
-//                 </div>
-//             ))}
-//         </div>
-//     );
-// }
+    return (
+        <div className="p-4">
+            <div
+                className="cursor-pointer flex items-center gap-2 mb-4"
+                onClick={() => handleSort('createdAt')}
+            >
+                <span>Sort Date Created</span>
+                {sortConfig.field === 'createdAt' &&
+                    (sortConfig.direction === 'asc' ? (
+                        <ArrowUpWideNarrow className="h-4 w-4" />
+                    ) : (
+                        <ArrowDownWideNarrow className="h-4 w-4" />
+                    ))}
+            </div>
+            {sortedCashflows.map((cfs) => (
+                <div
+                    key={cfs.id}
+                    onClick={() => router.push(`/CashflowStatement/${cfs.accountId}/${cfs.id}`)} // Navigate to cashflow details
+                    className="mb-2"
+                >
+                    <Card className="p-2 sm:p-3 border rounded-md cursor-pointer hover:bg-gray-100 flex flex-col sm:flex-row justify-between">
+                        <CardHeader className="flex-1">
+                            <CardTitle className="text-base sm:text-lg">
+                                {cfs.account.name}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="mt-2 sm:mt-0 flex-1">
+                            <span className="text-sm">Cashflow ID: {cfs.id}</span>
+                        </CardContent>
+                        <CardFooter className="mt-2 sm:mt-0 flex-1">
+                            <span className="text-xs sm:text-sm">
+                                Created On: {new Date(cfs.createdAt).toLocaleDateString()}
+                            </span>
+                        </CardFooter>
+                    </Card>
+                </div>
+            ))}
+        </div>
+    );
+}
 
-// export default CashflowList;
+export default CashflowList;
