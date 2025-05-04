@@ -442,6 +442,9 @@ export async function createSubAccount(transactionIds, data) {
     console.log("Validated transaction type:", validationResult.type);
     console.log("Calculated balanceFloat:", balanceFloat);
 
+
+
+
     // Use a transaction to ensure all operations succeed or fail together
     return await db.$transaction(async (tx) => {
       // Find the parent SubAccount if parentName is provided
@@ -456,25 +459,6 @@ export async function createSubAccount(transactionIds, data) {
         }
       }
 
-      
-      //  console.log("this is parent data: ",parentSubAccount)
-      //  try {
-      //    if (parentSubAccount && transactionIds && transactionIds.length > 0) {
-      //   const activityValidation = await validateTransactionActivity(
-      //     parentSubAccount.id,
-      //     transactions,
-      //     tx
-      //   );
-
-      //   if (activityValidation.success == false) {
-      //     throw new Error("Check the Activity Type.");
-      //   }
-      // }
-      //  } catch (error) {
-      //   console.error("Error validating transaction Activity:", error.message);
-      //   throw new Error("MALING MALI: ",error.message);
-      //   return { success: false, error: error.message };
-      //  }
       if (parentSubAccount && transactionIds && transactionIds.length > 0) {
               const parentTransactions = await tx.subAccountTransaction.findMany({
         where: { subAccountId: parentSubAccount.id },
@@ -500,6 +484,34 @@ export async function createSubAccount(transactionIds, data) {
       if (parentActivity !== transactionActivity) {
         throw new Error(`The ${transactionActivity} activities does not match the ${parentActivity} activities.`);
       }
+      }
+
+
+      if (parentSubAccount && transactionIds && transactionIds.length > 0) {
+          const parentTransactions = await tx.subAccountTransaction.findMany({
+          where: { subAccountId: parentSubAccount.id },
+          include: {
+            transaction: {
+              select: { type: true },
+            },
+          },
+        });
+
+        // Check if the parent sub-account has no transactions
+        if (parentTransactions.length === 0) {
+          console.log("Parent sub-account has no transactions. Skipping type validation.");
+          return { success: true }; // Skip validation and proceed
+        }
+
+        const parentType = parentTransactions[0]?.transaction.type;
+
+        // Extract the type of the passed-in transactions (already fetched earlier)
+        const transactiontype = transactions[0]?.type;
+
+        // Compare the type of the parent sub-account and the passed-in transactions
+        if (parentType !== transactiontype) {
+          throw new Error(`The ${transactiontype} activities does not match the ${parentType} activities.`);
+        }
       }
 
      

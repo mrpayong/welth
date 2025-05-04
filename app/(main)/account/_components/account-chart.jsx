@@ -22,6 +22,13 @@ const DATE_RANGES ={
 const AccountChart = ({transactions}) => {
     const [dateRange, setDateRange] = useState("1M");
 
+    const formatAmount = (amount) => {
+        return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "PHP",
+        }).format(amount);
+    };
+
 
    const filteredData = useMemo(() => {
     const range = DATE_RANGES[dateRange];
@@ -56,68 +63,68 @@ const AccountChart = ({transactions}) => {
         );
    }, [transactions, dateRange]);
 
-   const totals = useMemo(() => {
-    return filteredData.reduce(
-        (acc, day) => ({
-            income: acc.income + day.income,
-            expense: acc.expense + day.expense,
-        }), 
-        {income: 0, expense: 0}
-    );
-   }, [filteredData])
+//    const totals = useMemo(() => {
+//     return filteredData.reduce(
+//         (acc, day) => ({
+//             income: acc.income + day.income,
+//             expense: acc.expense + day.expense,
+//         }), 
+//         {income: 0, expense: 0}
+//     );
+//    }, [filteredData])
 
 
-    // const [rangeDate, setRangeDate] = useState({
-    // from: startOfDay(new Date(new Date().setDate(new Date().getDate() - 30))), // Default to last 30 days
-    // to: endOfDay(new Date()),
-    // });
-    // const [popoverOpen, setPopoverOpen] = useState({ from: false, to: false });
+    const [rangeDate, setRangeDate] = useState({
+    from: startOfDay(new Date(new Date().setDate(new Date().getDate() - 30))), // Default to last 30 days
+    to: endOfDay(new Date()),
+    });
+    const [popoverOpen, setPopoverOpen] = useState({ from: false, to: false });
 
-    // const handleDateChange = (which, date) => {
-    //     setRangeDate(prev => ({
-    //         ...prev,
-    //         [which]: date ? (which === 'from' ? startOfDay(date) : endOfDay(date)) : undefined, // Ensure startOfDay and endOfDay
-    //     }));
-    //     setPopoverOpen(prev => ({ ...prev, [which]: false })); // Close popover after selection
-    // };
+    const handleDateChange = (which, date) => {
+        setRangeDate(prev => ({
+            ...prev,
+            [which]: date ? (which === 'from' ? startOfDay(date) : endOfDay(date)) : undefined, // Ensure startOfDay and endOfDay
+        }));
+        setPopoverOpen(prev => ({ ...prev, [which]: false })); // Close popover after selection
+    };
 
-    // const filteringData = useMemo(() => {
-    //     const { from, to } = rangeDate;
+    const filteringData = useMemo(() => {
+        const { from, to } = rangeDate;
 
-    //     // Filter transactions within date range
-    //     const filtering = transactions.filter(t => {
-    //         const transactionDate = new Date(t.date);
-    //         return (!from || transactionDate >= from) && (!to || transactionDate <= to);
-    //     });
+        // Filter transactions within date range
+        const filtering = transactions.filter(t => {
+            const transactionDate = new Date(t.date);
+            return (!from || transactionDate >= from) && (!to || transactionDate <= to);
+        });
 
-    //     const grouped = filtering.reduce((acc, transaction) => {
-    //         const date = format(new Date(transaction.date), "MMM dd");
+        const grouped = filtering.reduce((acc, transaction) => {
+            const date = format(new Date(transaction.date), "MMM dd");
 
-    //         if (!acc[date]) {
-    //             acc[date] = { date, income: 0, expense: 0 };
-    //         }
+            if (!acc[date]) {
+                acc[date] = { date, income: 0, expense: 0 };
+            }
 
-    //         if (transaction.type === "INCOME") {
-    //             acc[date].income += transaction.amount;
-    //         } else {
-    //             acc[date].expense += transaction.amount;
-    //         }
-    //         return acc;
-    //     }, {});
+            if (transaction.type === "INCOME") {
+                acc[date].income += transaction.amount;
+            } else {
+                acc[date].expense += transaction.amount;
+            }
+            return acc;
+        }, {});
 
-    //     //  convert to array and sort by date
-    //     return Object.values(grouped).sort((a, b) => new Date(a.date) - new Date(b.date));
-    // }, [transactions, rangeDate]);
+        //  convert to array and sort by date
+        return Object.values(grouped).sort((a, b) => new Date(a.date) - new Date(b.date));
+    }, [transactions, rangeDate]);
 
-    // const totals = useMemo(() => {
-    //     return filteringData.reduce(
-    //         (acc, day) => ({
-    //             income: acc.income + day.income,
-    //             expense: acc.expense + day.expense,
-    //         }),
-    //         { income: 0, expense: 0 }
-    //     );
-    // }, [filteringData])
+    const totals = useMemo(() => {
+        return filteringData.reduce(
+            (acc, day) => ({
+                income: acc.income + day.income,
+                expense: acc.expense + day.expense,
+            }),
+            { income: 0, expense: 0 }
+        );
+    }, [filteringData])
 
 
 
@@ -145,7 +152,7 @@ const AccountChart = ({transactions}) => {
   <Card>
     <CardHeader className="flex lg:flex-row md:flex-row items-center justify-between space-y-4 pb-7">
         <CardTitle className="text-base font-normal">Transaction Overview</CardTitle>
-        {/* <div className="flex flex-col sm:flex-row items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-4">
                     <Popover open={popoverOpen.from} onOpenChange={(open) => setPopoverOpen(prev => ({ ...prev, from: open }))}>
                         <PopoverTrigger asChild>
                             <Button
@@ -199,8 +206,8 @@ const AccountChart = ({transactions}) => {
                             />
                         </PopoverContent>
                     </Popover>
-                </div> */}
-        <Select
+                </div>
+        {/* <Select
             defaultValue={dateRange} 
             onValueChange={setDateRange}>
                 <SelectTrigger className="w-[140px]">
@@ -214,7 +221,7 @@ const AccountChart = ({transactions}) => {
                     })}
                 </SelectContent>
 
-        </Select>
+        </Select> */}
     </CardHeader>
     <CardContent>
         <div className='lg:flex md:flex sm:flex lg:flex-row md:flex-row sm:flex-col justify-around mb-6 text-sm'>
@@ -222,7 +229,7 @@ const AccountChart = ({transactions}) => {
             <div className="text-center">
                 <p className="text-muted-foreground">Total Income</p>
                 <p className="text-lg font-bold text-green-500">
-                    ₱{totals.income.toFixed(2)}
+                    {formatAmount(totals.income.toFixed(2))}
                 </p>
             </div>
 
@@ -230,7 +237,7 @@ const AccountChart = ({transactions}) => {
             <div className="text-center">
                 <p className="text-muted-foreground">Total Expenses</p>
                 <p className="text-lg font-bold text-red-500">
-                    ₱{totals.expense.toFixed(2)}
+                    {formatAmount(totals.expense.toFixed(2))}
                 </p>
             </div>
 
@@ -242,7 +249,7 @@ const AccountChart = ({transactions}) => {
                         ? "text-green-500"
                         : "text-red-500"
                 }`}>
-                    ₱{(totals.income - totals.expense).toFixed(2)}
+                    {formatAmount((totals.income - totals.expense).toFixed(2))}
                 </p>
             </div>
         </div>
@@ -261,11 +268,11 @@ const AccountChart = ({transactions}) => {
             
                     <ResponsiveContainer 
                     width="100%" height="100%"
-                    // className="sm:scale-[1.5] sm:origin-top-left md:scale-[1.5] md:origin-top-left lg:scale-100"
+                    className="sm:scale-[1.5] sm:origin-top-left md:scale-[1.5] md:origin-top-left lg:scale-100"
                     >
                         <BarChart
                         
-                        data={filteredData} //if want date picker, change to filteringDate
+                        data={filteringData} //if want date picker, change to filteringDate
                         margin={{
                             top: 10,
                             right: 10,

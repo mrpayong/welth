@@ -108,7 +108,7 @@ const SideNavBar = ({ accountId }) => {
               {loadingLink === "cashflow" ? (
                     <div className="flex items-center gap-2">
                     <Loader2 className="animate-spin w-4 h-4 text-neutral-500" />
-                    <span className="text-neutral-500">(icon)Cashflow Statement</span>
+                    <span className="text-neutral-500">Cashflow Statement</span>
                     </div>
                 ) : (
                     "Cashflow Statement"

@@ -19,16 +19,27 @@ const Header = async ({isAdminPage = false}) => {
   return (
     <div className='fixed top-0 w-full bg-gradient-to-r from-sky-300 to-white backdrop-blur-md z-50 border-b'>
       <nav className='container max-auto px-4 py-4 flex items-center justify-between'>
-        <Link href={isAdminPage ? "/admin" : '/dashboard'} className='flex items-center'>
-        <Image
-          className="h-16 w-auto object-contain" 
-          src={'/try2.png'}
-          alt='TA logo'
-          width={60}
-          height={200}/>
-          {isAdminPage && (
-            <span className='text-xs font-extralight'>Admin</span>
-          )}
+        <Link href={isAdminPage ? "/admin" : '/'} className='flex items-center'>
+          <div className="flex items-center gap-1">
+            <Image
+              className="h-16 w-auto object-contain"
+              src={'/try2.png'}
+              alt="TA logo"
+              width={60}
+              height={200}
+            />
+            <div className="flex flex-col items-start">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 via-gray-300 to-gray-500 bg-clip-text text-transparent">
+                Teruel
+              </h1>
+              <h1 className="text-xl font-semibold bg-gradient-to-r from-gray-400 via-gray-300 to-yellow-500 bg-clip-text text-transparent">
+                Accounting
+              </h1>
+            </div>
+          </div>
+            {isAdminPage && (
+              <span className='text-xs font-extralight'>Admin</span>
+            )}
         </Link>
   
                
@@ -61,21 +72,14 @@ const Header = async ({isAdminPage = false}) => {
                   </Link>
 
 
-                  {!isAdmin 
-                    ? (<Link href={"/transaction/create"}> 
-                          <Button className="flex items-center gap-2">
-                            <PenBox size={18} />
-                            <span className='hidden md:inline'>Add Transaction</span>
-                          </Button>
-                        </Link>) 
-                        
-                    :(<Link href={"/admin"}> 
+                  {isAdmin &&
+                    <Link href={"/admin"}> 
                         <Button variant="outline" className="flex items-center gap-2">
                           <Layout size={18} />
                           <span className='hidden md:inline'>Admin Portal</span>
                         </Button>
                       </Link>
-                    )}
+                    }
 
                 </SignedIn>
               )

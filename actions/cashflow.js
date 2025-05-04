@@ -269,6 +269,31 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
     }));
     console.log("sub accounts: ", subAccounts);
 
+    const transactionDates = transactions.map((t) => new Date(t.date));
+    const earliestDate = new Date(Math.min(...transactionDates));
+    const latestDate = new Date(Math.max(...transactionDates));
+    const dateRangeInDays = (latestDate - earliestDate) / (1000 * 60 * 60 * 24);
+
+    let periodCashFlow;
+
+    switch (true) {
+      case dateRangeInDays <= 1:
+        periodCashFlow = "DAILY";
+        break;
+      case dateRangeInDays <= 7:
+        periodCashFlow = "WEEKLY";
+        break;
+      case dateRangeInDays <= 31:
+        periodCashFlow = "MONTHLY";
+        break;
+      case dateRangeInDays >= 120:
+        periodCashFlow = "QUARTERLY";
+        break;
+      default:
+        periodCashFlow = "FISCAL_YEAR"; // Default classification for longer ranges
+        break;
+    }
+    
 
     // filter by Activity type
     const OpeTransactions = TransactionformattedAmount.filter(
@@ -429,6 +454,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
               startBalance: Number(beginningBalance.toFixed(3)),
               endBalance: Number(endingBalance.toFixed(3)),
               createdAt: new Date(),
+              periodCashFlow,
 
               description: NeededData?.description,
               date: new Date(),

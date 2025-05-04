@@ -1,5 +1,6 @@
 "use server";
 import aj from "@/lib/arcjet";
+import { ValidationError } from "@/lib/errors";
 import { db } from "@/lib/prisma";
 import { request }  from "@arcjet/next";
 import { auth } from "@clerk/nextjs/server";
@@ -149,6 +150,8 @@ export async function createTransaction(data) {
       throw new Error("Reference number already exists.");
     }
 
+    
+
     // Calculate new balance
     // const balanceChange = data.type === "EXPENSE" 
     //   ? -data.amount 
@@ -228,9 +231,14 @@ export async function scanReceipt(file){
         - Description or items purchased (brief summary)
         - Merchant/store name
         - reference number
+        - suggest the type of transaction
+        - suggested type of transaction (one of: EXPENSE, INCOME)
+        - suggest the Activity type of transaction
+        - suggested Activity of transaction (one of: OPERATION, INVESTEMENT, FINANCING)
         - suggest a particular name for the purpose of the transaction, this is for the recording in the Cash Receipt Book or Disbursement Book.
         - Suggested category (one of: housing,transportation,groceries,utilities,entertainment,food,shopping,healthcare,education,personal care,travel,insurance,gifts,bills,other-expense )
         - Include travel route in receipt of Transportation 
+        - BIR Authority to Print number, this is a mandatory requirement.
         
         Only respond with valid JSON in this exact format:
         {
@@ -240,9 +248,13 @@ export async function scanReceipt(file){
           "description": "string",
           "merchantName": "string",
           "category": "string"
-          "particular": "string
+          "particular": "string"
+          "type": "string"
+          "Activity": "string"
+          "printNumber": "string
         }
 
+     
         If it's not a receipt, return an empty object`;
 
     const result = await model.generateContent([
@@ -260,8 +272,14 @@ export async function scanReceipt(file){
     const text = response.text();
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
-    try {
+    
+
+
       const data = JSON.parse(cleanedText);
+      console.log("Parsed data:", data);
+      if (!data.printNumber || data.printNumber.trim() === "") {
+        throw new ValidationError("System: No BIR Authority to Print number detected.");
+      }
       return{
         amount: parseFloat(data.amount),
         refNumber: data.refNumber,
@@ -269,15 +287,19 @@ export async function scanReceipt(file){
         description: data.description,
         category: data.category,
         merchantName: data.merchantName,
-        particular: data.particular
+        particular: data.particular,
+        type: data.type,
+        Activity: data.Activity,
+        printNumber: data.printNumber,
       }
-    } catch (parseError) {
-      console.error("Error parsing JSON response:", parseError);
-      throw new Error("Invalid response format from Gemini");
-    }
+    
   } catch (error) {
+    if (error instanceof ValidationError) {
+      console.error("Validation Error:", error.message);
+      throw error; // Re-throw the custom error
+    }
     console.error("Error scanning the receipt:", error.message);
-    throw new Error("Failed to scan receipt");
+    throw new Error("System: Failed to scan receipt");
   }
 }
 

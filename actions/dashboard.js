@@ -32,8 +32,14 @@ export async function createAccount(data) {
         if (!user) {
             throw new Error("User not Found");
         }
-         
 
+        const existingAccount = await db.account.findUnique({
+            where: { name: data.name },
+        });
+         
+        if (existingAccount) {
+            throw new Error("Company name already exists.");
+        }
         // Convert balance to float before save
        
 

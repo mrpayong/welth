@@ -40,14 +40,15 @@ model User {
 
 model Account {
   id                      String  @id @default(uuid())
-  name                    String
+  name                    String  @unique
   type                    AccountType
   isIndividual            Boolean @default(false)
   userId                  String    
   createdAt               DateTime    @default(now())
   updatedAt               DateTime    @updatedAt
   
-  street                  String 
+  street                  String
+  buildingNumber          String
   town                    String
   city                    String
   zip                     String 
@@ -100,10 +101,10 @@ model Transaction {
   description           String?
   date                  DateTime
   category              String
-  particular           String?
+  particular            String?
   receiptUrl            String?
   Activity              activityType
-  // orNumber              String    @unique
+  printNumber           String   
   refNumber             String    @unique 
   // isDebit               Boolean   @default(false) //true if it is a debit transaction
 

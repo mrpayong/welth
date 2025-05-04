@@ -154,13 +154,27 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
     new Date(transaction.date)
   )
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString); // Parse the date string
+    const utcYear = date.getUTCFullYear();
+    const utcMonth = date.getUTCMonth(); // Month is zero-based
+    const utcDay = date.getUTCDate();
+  
+    // Format the date as "Month Day, Year"
+    return new Date(Date.UTC(utcYear, utcMonth, utcDay)).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   const startDate =  new Date(Math.min(...transactionDates));
   const endDate = new Date(Math.max(...transactionDates));
 
   const timeFrame = deterimeTimeFrame(startDate, endDate);
 
-  const formattedStartDate = format(startDate, 'MMMM dd, yyyy');
-  const formattedEndDate = format(endDate, 'MMMM dd, yyyy')
+  const formattedStartDate = formatDate(startDate, 'MMMM dd, yyyy');
+  const formattedEndDate = formatDate(endDate, 'MMMM dd, yyyy')
  
   const latestCashflow = cashflow;
   const transactionsIn = transactions;

@@ -21,12 +21,15 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import ReceiptScanner from './receipt-scanner';
 import { cn } from '@/lib/utils';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 const AddTransactionForm = ({
     accounts, 
     categories,
     editMode =  false,
     initialData = null,
+    accountId
 }) => {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -36,6 +39,19 @@ const AddTransactionForm = ({
     useEffect(() => {
         setIsClient(false)
       }, [])
+
+    const getPhilippinesDate = () => {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat("en-US", {
+            timeZone: "Asia/Manila",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+        });
+
+        const [month, day, year] = formatter.format(now).split("/");
+        return new Date(`${year}-${month}-${day}`);
+    };
 
     const {
         register,
@@ -57,6 +73,7 @@ const AddTransactionForm = ({
                 description: initialData.description,
                 accountId: initialData.accountId,
                 category: initialData.category,
+                printNumber: initialData.printNumber,
                 particular: initialData.particular,
                 date: new Date(initialData.date),
                 isRecurring: initialData.isRecurring,
@@ -65,18 +82,21 @@ const AddTransactionForm = ({
                 }),
             }
             : {
-            type: "EXPENSE",
+            type: "",
             refNumber: "",
             particular: "",
-            Activity: "OPERATION",
+            Activity: "",
             amount: "",
             description: "",
             category: "",
-            accountId: accounts.find((ac) => ac.isDefault)?.id,
-            date: new Date(),
+            printNumber: "12345",
+            accountId: accountId || accounts.find((ac) => ac.id)?.id,
+            date: getPhilippinesDate(),
             isRecurring: false,
         },
     });
+
+    console.log("Transaction form account:", accounts)
 
     const {
         loading: transactionLoading,
@@ -88,6 +108,8 @@ const AddTransactionForm = ({
     const activityType = watch("Activity");
     const isRecurring = watch("isRecurring");
     const date = watch("date");
+    const printNumber = watch("printNumber");
+    
 
     const filteredCategories = categories.filter(
         (category) => category.type === type
@@ -114,7 +136,7 @@ const AddTransactionForm = ({
                     : "Transaction created successfully."
                 );
             reset();
-            router.push(`/account/${transactionResult.data.accountId}`);
+            // router.push(`/account/${transactionResult.data.accountId}`);
         }
     }, [transactionResult, transactionLoading, editMode]);
 
@@ -133,8 +155,23 @@ const AddTransactionForm = ({
     //         toast.success("Receipt scanned successfully");
     //     }
     // };
-    const handleScanComplete = (scannedData) => {
 
+
+      const formatDate = (dateString) => {
+        const date = new Date(dateString); // Parse the date string
+        const utcYear = date.getUTCFullYear();
+        const utcMonth = date.getUTCMonth(); // Month is zero-based
+        const utcDay = date.getUTCDate();
+      
+        // Format the date as "Month Day, Year"
+        return new Date(Date.UTC(utcYear, utcMonth, utcDay)).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      };
+
+    const handleScanComplete = (scannedData) => {
         if (scannedData) {
           setValue("amount", scannedData.amount.toString());
           console.log("amount scanning success")
@@ -144,6 +181,9 @@ const AddTransactionForm = ({
           
           setValue("refNumber",scannedData.refNumber);
           setValue("particular", scannedData.particular);
+          setValue("type", scannedData.type || "");
+          setValue("Activity", scannedData.Activity || "");
+          setValue("printNumber", scannedData.printNumber || "");
 
           if (scannedData.description) {
             setValue("description", scannedData.description);
@@ -154,9 +194,22 @@ const AddTransactionForm = ({
             
           }console.log("category scanning success:", scannedData.category)
           console.log("scanning success:", scannedData)
-          toast.success("Receipt scanned successfully");
+          toast.success("System: Receipt scanned successfully");
         }
       };
+
+     
+
+
+
+
+    
+
+
+
+
+
+
 
 
 
@@ -178,9 +231,10 @@ const AddTransactionForm = ({
                 <label className='text-sm font-medium'>Transaction type</label>
                 <Select
                 onValueChange={(value) => setValue("type", value)}
-                defaultValue={type}>
+                value={type}
+                >
                     <SelectTrigger>
-                        <SelectValue placeholder="Select Type"/>
+                        <SelectValue placeholder="Select type"/>
                     </SelectTrigger>
 
                     <SelectContent>
@@ -197,10 +251,10 @@ const AddTransactionForm = ({
                 <label className='text-sm font-medium'>Activity type</label>
                 <Select
                 onValueChange={(value) => setValue("Activity", value)}
-                defaultValue={activityType}
+                value={activityType}
                 >
                     <SelectTrigger>
-                        <SelectValue placeholder="Select Type"/>
+                        <SelectValue placeholder="Select activity"/>
                     </SelectTrigger>
 
                     <SelectContent>
@@ -210,8 +264,8 @@ const AddTransactionForm = ({
                     </SelectContent>
                 </Select>
 
-                {errors.type && (
-                    <p className="text-sm text-red-500">{errors.type.message}</p>
+                {errors.Activity && (
+                    <p className="text-sm text-red-500">Select Activity type</p>
                 )}
             </div> 
         </div>
@@ -227,21 +281,21 @@ const AddTransactionForm = ({
                         {...register("amount")}
                     />
 
-                    {errors.type && (
-                        <p className="text-sm text-red-500">{errors.type.message}</p>
+                    {errors.amount && (
+                        <p className="text-sm text-red-500">{errors.amount.message}</p>
                     )}
                 </div>
                 
                 <div className='space-y-2'>
-                    <label className='text-sm font-medium'>Reference Number</label>
+                    <label className='text-sm font-medium'>Reference number</label>
                     <Input
                         type="text" 
-                        placeholder="Reference Number"
+                        placeholder="Reference number"
                         {...register("refNumber")}
                     />
 
-                    {errors.type && (
-                        <p className="text-sm text-red-500">{errors.type.message}</p>
+                    {errors.refNumber && (
+                        <p className="text-sm text-red-500">{errors.refNumber.message}</p>
                     )}
                 </div> 
                
@@ -252,7 +306,7 @@ const AddTransactionForm = ({
                         onValueChange={(value) => setValue("accountId", value)}
                         defaultValue={getValues("accountId")}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select Account"/>
+                            <SelectValue placeholder="Select account"/>
                         </SelectTrigger>
 
                         <SelectContent>
@@ -288,8 +342,8 @@ const AddTransactionForm = ({
                         {...register("particular")}
                     />
 
-                    {errors.type && (
-                        <p className="text-sm text-red-500">{errors.type.message}</p>
+                    {errors.particular && (
+                        <p className="text-sm text-red-500">{errors.particular.message}</p>
                     )}
                 </div>
             </div>
@@ -308,79 +362,70 @@ const AddTransactionForm = ({
 
         {isClient ? ('This is never prerendered') :(<div className='space-y-2'>
             <label className='text-sm font-medium'>Account title</label>
-            {/* <Select
-                onValueChange={(value) => setValue("category", value)}
-                defaultValue={getValues("category")}>
-                <SelectTrigger>
-                    <SelectValue placeholder={filteredCategories.find((category) => category.id === getValues("category"))?.name || "Select category"}/>
-                </SelectTrigger>
-
-                <SelectContent>
-                    {filteredCategories.map((category) => (
-                        <SelectItem
-                            key={category.id}
-                            value={category.id}>
-                                
-                                {category.name}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select> */}
             <Input
                 {...register("category")}
-                placeholder="category"
+                placeholder="Account title"
             />
-
-         
-
             {errors.category && (
                 <p className="text-sm text-red-500">{errors.category.message}</p>
             )}
         </div> )}
         {/* category */}
     
-        {isClient ? ('This is never prerendered') :(<div className='space-y-2'>
-            <label className='text-sm font-medium'>Date</label>
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button 
-                        variant="outline"
-                        className="w-full pl-3 text-left font-normal">
-                            {date 
-                                ? format(date, "PPP") 
-                                : <span>Pick a date</span>
-                            }
-                            <CalendarIcon className='ml-auto h-4 w-4 '/>
-                        </Button>
-                    </PopoverTrigger>
-
-
-                    <PopoverContent className='w-auto p-0' align="start">
-                            <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={(date) => setValue("date", date)}
-                                disabled={(date) => date > new Date() || date < new Date("1900-01-01")
-                                }
-                                initialFocus
-                            />
-                    </PopoverContent>
-                </Popover>
-
+        {isClient ? ('This is never prerendered') :(
+        <div className='space-y-2'>
+            <label className='text-sm font-medium'>Date of transaction</label>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <div className="space-y-2">
+                    {/* <label className="text-sm font-medium">Date of transaction</label> */}
+                    <DatePicker
+                    label={date ? formatDate(date) : "Pick a date"}
+                    value={date} // Watch the "date" field from react-hook-form
+                    onChange={(date) => {
+                        setValue("date", date); // Update the form state with the selected date
+                    }}
+                    
+                    />
+                    {errors.date && (
+                    <p className="text-sm text-red-500">{errors.date.message}</p>
+                    )}
+                </div>
+            </LocalizationProvider>
+            
             {errors.date && (
                 <p className="text-sm text-red-500">{errors.date.message}</p>
             )}
+
         </div>)}
+
+        {/* <div className='hidden'>
+                    <label className='text-sm font-medium'>printNumber</label>
+                    <Input
+                        type="text" 
+                        placeholder="printNumber"
+                        {...register("printNumber")}
+                    />
+
+                    {errors.printNumber && (
+                        <p className="text-sm text-red-500">{errors.printNumber.message}</p>
+                    )}
+                </div> */}
             {/* date */}
 
-            {isClient ? ('This is never prerendered') :(<div className="space-y-2">
-            <label className="text-sm font-medium">Description</label>
-            <Input placeholder="Enter Description" {...register("description")}/>
+            {isClient ? ('This is never prerendered') :(
+            <div className="space-y-2 md:col-span-2">
+                <label htmlFor="description" className="text-sm font-medium">Description</label>
+                <textarea
+                id="description"
+                placeholder="Enter a detailed description"
+                {...register("description")}
+                className="w-full h-32 p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                ></textarea>
 
-            {errors.description &&
-                <p className="text-sm text-red-500">{errors.description.message}</p>
-            }
-        </div> )}
+                {errors.description &&
+                    <p className="text-sm text-red-500">{errors.description.message}</p>
+                }
+            </div> )}
             {/* desc */}
 
             {/* {isClient ? ('This is never prerendered') :(<div className='flex items-center justify-between rounded-lg border p-3'>
@@ -442,6 +487,15 @@ const AddTransactionForm = ({
             </Button>
 
             <Button
+                type="button"
+                variant="outline"
+                className="w-full border-2 border-yellow-400 text-yellow-400"
+                onClick={() => reset()} // Reset the form fields
+            >
+                Reset
+            </Button>
+
+            <Button
                 type="submit"
                 className="w-full"
                 disabled={transactionLoading}>
@@ -457,7 +511,6 @@ const AddTransactionForm = ({
                             ? ("Update Transaction") 
                             : ("Create Transaction")
                     }
-                    
             </Button>
         </div>  )}
 

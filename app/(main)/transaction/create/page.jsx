@@ -9,7 +9,7 @@ import { getTransaction } from '@/actions/transaction';
 const AddTransactionPage = async ({ searchParams }) => {
     const accounts = await getUserAccounts();
 
-    
+    const accountId = (await searchParams)?.accountId;
     const editId = (await searchParams)?.edit;
     
     let initialData = null;
@@ -30,6 +30,7 @@ const AddTransactionPage = async ({ searchParams }) => {
         categories={defaultCategories}
         editMode={!!editId}
         initialData={initialData}
+        accountId={accountId}
       />
     </div>
   )

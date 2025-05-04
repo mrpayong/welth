@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import Swal from 'sweetalert2';
 import { useRouter } from 'next/navigation';
 import { useAccountCardContext } from '@/components/loadingCard';
+import { Button } from '@/components/ui/button';
   
 
 const AccountCard = ({account}) => { 
@@ -29,6 +30,10 @@ const AccountCard = ({account}) => {
     } = account;
 
     const router = useRouter();
+
+    const handleAddTransaction = () => {
+      router.push(`/transaction/create?accountId=${account.id}`);
+    };
 
     const { 
         //fetch hook for updating default status
@@ -77,6 +82,8 @@ const AccountCard = ({account}) => {
   const isDisabled = !!loadingAccountId; // Disable all cards if any card is loading
 
 
+  
+  
 
 
 
@@ -111,19 +118,48 @@ const AccountCard = ({account}) => {
         </p>
       </CardContent>
 
-      <CardFooter className="flex justify-between text-sm text-muted-foreground">
-        <div className="flex items-center">
-          <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
-          Income
-        </div>
-
-        <div className="flex items-center">
-          <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
-          Expenses
-        </div>
-      </CardFooter>
+    
     </Link>
+      <CardFooter className="flex justify-between text-sm text-muted-foreground">
+        
+        <Button
+        className={`bg-gradient-to-r from-blue-600 to-blue-400 
+                    hover:from-blue-700 hover:to-blue-500 
+                    text-white font-semibold 
+                    py-2 px-4 rounded-lg 
+                    shadow-md hover:shadow-lg 
+                    transition-all duration-300 
+                    w-full
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400
+                    border border-yellow-400
+                  `}
+        onClick={handleAddTransaction}
+        >
+        Add Transaction
+      </Button>
+      </CardFooter>
   </Card>
+
+
+
+  // <div className="border rounded-md p-4 shadow-sm hover:shadow-md transition-shadow">
+  //     <h3 className="text-lg font-semibold">{account.name}</h3>
+  //     <p className="text-sm text-gray-500">{account.type}</p>
+  //     <div className="flex justify-between items-center mt-4">
+  //       <p className="text-sm font-medium text-green-500">
+  //         Income: ₱{account.income?.toFixed(2) || "0.00"}
+  //       </p>
+  //       <p className="text-sm font-medium text-red-500">
+  //         Expenses: ₱{account.expenses?.toFixed(2) || "0.00"}
+  //       </p>
+  //     </div>
+  //     <Button
+  //       className="mt-4 bg-blue-500 text-white hover:bg-blue-600 w-full"
+  //       onClick={handleAddTransaction}
+  //     >
+  //       Add Transaction
+  //     </Button>
+  //   </div>
 
   )
 }

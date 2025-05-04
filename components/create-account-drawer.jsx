@@ -23,7 +23,7 @@ import RDOSelector from "./RDOselector";
 
 const CreateAccountDrawer = ({ children }) => {
   const [open, setOpen] = useState(false);
-  const [isIndividual, setIsIndividual] = useState(false);
+  const [isIndividual, setIsIndividual] = useState(null);
   const [radioSelected, setRadioSelected] = useState(false); // Track if a radio button is selected
 
 
@@ -41,6 +41,7 @@ const CreateAccountDrawer = ({ children }) => {
       type: "",
       isIndividual: false,
       street: "",
+      buildingNumber: "",
       town: "",
       city: "",
       zip: "",
@@ -60,7 +61,7 @@ const CreateAccountDrawer = ({ children }) => {
 
   const {
     data: newAccount,
-    error,
+    error: errorAccount,
     fn: createAccountFn,
     loading: createAccountLoading,
   } = useFetch(createAccount);
@@ -69,15 +70,16 @@ const CreateAccountDrawer = ({ children }) => {
     if (newAccount && !createAccountLoading) {
       toast.success("Account created successfully");
       reset();
+      setIsIndividual(null);
       setOpen(false);
     }
   }, [createAccountLoading, newAccount]);
 
   useEffect(() => {
-    if (error) {
-      toast.error(error.message || "Failed to create account");
+    if (errorAccount) {
+      console.error("Failed to create account");
     }
-  }, [error]);
+  }, [errorAccount]);
 
   const onSubmit = async (data) => {
     const formData = {
@@ -125,7 +127,7 @@ const CreateAccountDrawer = ({ children }) => {
     setValue("city", ""); // Reset City field
     setValue("region", "");
     setRadioSelected(false); // Reset the radio group selection
-    
+    setIsIndividual(null);
   } 
 
 
@@ -223,14 +225,27 @@ const CreateAccountDrawer = ({ children }) => {
           <h2 className="text-lg font-semibold">Business Addres</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <div>
-              <label htmlFor="street" className="text-sm font-medium">House/Building number<span className="text-red-600">*</span></label>
-              <Input id="street" placeholder="House/Building number" {...register("street")} />
+              <label htmlFor="buildingNumber" className="text-sm font-medium">House/Building number<span className="text-red-600">*</span></label>
+              <Input id="buildingNumber" placeholder="House/Building number" {...register("buildingNumber")} />
+              {errors.buildingNumber && <p className="text-sm text-red-500">{errors.buildingNumber.message}</p>}
+            </div>
+            <div>
+              <label htmlFor="street" className="text-sm font-medium">Street address<span className="text-red-600">*</span></label>
+              <Input id="street" 
+              placeholder="Street address" 
+              {...register("street")} 
+              />
               {errors.street && <p className="text-sm text-red-500">{errors.street.message}</p>}
             </div>
             <div>
-              <label htmlFor="town" className="text-sm font-medium">Town<span className="text-red-600">*</span></label>
-              <Input id="town" placeholder="Town" {...register("town")} />
+              <label htmlFor="town" className="text-sm font-medium">Barangay<span className="text-red-600">*</span></label>
+              <Input id="town" placeholder="Barangay" {...register("town")} />
               {errors.town && <p className="text-sm text-red-500">{errors.town.message}</p>}
+            </div>
+            
+
+            <div>
+              <CitySelector register={register} setValue={setValue} errors={errors} />
             </div>
             <div>
               <label htmlFor="zip" className="text-sm font-medium">Zip code<span className="text-red-600">*</span></label>
@@ -254,10 +269,6 @@ const CreateAccountDrawer = ({ children }) => {
                 }}
               />
               {errors.zip && <p className="text-sm text-red-500">{errors.zip.message}</p>}
-            </div>
-
-            <div>
-              <CitySelector register={register} setValue={setValue} errors={errors} />
             </div>
             <div>
               <ProvinceSelector register={register} setValue={setValue} errors={errors} />
@@ -298,7 +309,7 @@ const CreateAccountDrawer = ({ children }) => {
 
         {/* Tax Information Section */}
         <div>
-          <h2 className="text-lg font-semibold">Tax Information</h2>
+          <h2 className="text-lg font-semibold">Background Tax Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {/* Left Side */}
             <div className="space-y-4">
@@ -341,9 +352,17 @@ const CreateAccountDrawer = ({ children }) => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="type" className="text-sm font-medium flex items-center">
-                  Business type<span className="text-red-600">*</span>
+                  Business category<span className="text-red-600">*</span>
                   <RadioGroup
-                    onValueChange={handleAccountTypeChange}
+                   value={isIndividual === null 
+                            ? "" 
+                            : isIndividual 
+                                ? "individual" 
+                                : "non-individual"} // Handle null state
+                    onValueChange={(value) => {
+                      setIsIndividual(value === "individual"); // Update isIndividual state
+                      handleAccountTypeChange(value); // Call the existing handler
+                    }}
                     defaultValue=""
                     className="flex space-x-4 ml-4"
                   >
@@ -365,7 +384,7 @@ const CreateAccountDrawer = ({ children }) => {
                   disabled={!radioSelected}
                   >
                   <SelectTrigger id="type">
-                    <SelectValue placeholder={<p className="text-sm text-neutral-500">Select a business category.</p>}/>
+                    <SelectValue placeholder={<p className="text-sm text-neutral-500">Select a business type.</p>}/>
                   </SelectTrigger>
                   <SelectContent >
                     {accountTypeOptions.map((option) => (
@@ -444,7 +463,7 @@ const CreateAccountDrawer = ({ children }) => {
             )}
           </Button>
           <Button variant="outline" type="submit" onClick={handleCancelForm} className="flex-1 border-2 border-yellow-400" disabled={createAccountLoading}>
-            Restart filling out
+            Restart filling in
           </Button>
         </div>
       </form>

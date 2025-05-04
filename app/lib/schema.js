@@ -19,6 +19,7 @@ export const accountSchema = z.object({
 
     
     street: z.string().min(1, "Street is required."),
+    buildingNumber: z.string().min(1, "House/Building number is required."),
     town: z.string().min(1, "Town is required."),
     city: z.string().min(1, "City is required."),
     zip: z.string().min(1, "Zip code is required."),
@@ -41,9 +42,9 @@ export const accountSchema = z.object({
 })
 
 export const subAccountSchema = z.object({
-    name: z.string().min(1, "Sub-account name is required."),
+    name: z.string().min(1, "Group name is required."),
     description: z.string().optional(),
-    accountId: z.string().min(1, "Account is required"),
+    accountId: z.string().min(1, "Mother group is required"),
     // balance: z.string().optional().nullable(),
     parentName: z.string().optional(), // Validate parent name
   });
@@ -53,6 +54,7 @@ export const transactionSchema = z.object({
     Activity: z.enum(["OPERATION", "INVESTMENT", "FINANCING"]),
     amount: z.string().min(1, "Amount is required"),
     refNumber: z.string().min(1, "Reference number is required"),
+    printNumber: z.string().min(1, "Print number is required"),
     description: z.string().optional(),
     particular: z.string().optional(),
     date: z.date({required_error: "Date is required"}),

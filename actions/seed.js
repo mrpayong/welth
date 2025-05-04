@@ -3,8 +3,8 @@
 import { db } from "@/lib/prisma";
 import { subDays } from "date-fns";
 
-const ACCOUNT_ID = "bcdeb3b3-eb18-4c9d-8bf3-f854420a465c";
-const USER_ID = "aaee8487-6282-4f06-88f7-8a36f48fa014";
+const ACCOUNT_ID = "3984da8a-de53-4d9c-9149-80d729fbbd2f";
+const USER_ID = "87c13bc1-4b76-4761-8644-6522bf6f970e";
 
 // Categories with their typical amount ranges 
 const CATEGORIES = {
@@ -55,6 +55,11 @@ function generateRefNumber(index, date) {
   return `${randomNumber}${randomNumber2}${randomNumber3}`;
 }
 
+function generatePrintNumber(index, date) {
+  const randomNumber = Math.floor(Math.random() * (99 - 100000000) + 100000000); 
+  return `${randomNumber}`;
+}
+
 export async function seedTransactions() {
   try {
     // Generate 90 days of transactions
@@ -73,6 +78,7 @@ export async function seedTransactions() {
         const { category, amount } = getRandomCategory(type);
         const activity = getRandomActivityType(); // Get random activity type
         const refNumber = generateRefNumber();
+        const printNumber = generatePrintNumber();
 
 
         const transaction = {
@@ -91,6 +97,7 @@ export async function seedTransactions() {
           updatedAt: date,
           Activity: activity,
           refNumber,
+          printNumber,
         };
 
         totalBalance += type === "INCOME" ? amount : -amount;

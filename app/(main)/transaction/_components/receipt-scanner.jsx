@@ -24,27 +24,27 @@ const ReceiptScanner = ({onScanComplete}) => {
 
     const handleReceiptScan = async(file) => {
         if(file.size > 50 * 1024 *1024) {
-            toast.error(`File size should be less than 50MB. Your file is ${file.size} MB`);
+            toast.error(`AI scanner: File size exceeds limit.`);
             return;
         }
-        console.log("File size: ", file.size, "<", 50 * 1024 *1024);
+        console.log("File size: ", file.size,"byte", "<", 50 * 1024 *1024);
        
         await scanReceiptFn(file);
-         toast.info("File size: ", `${file.size}`)
     };
 
     useEffect(() => {
         if(scannedData && !scanReceiptLoading) {
             onScanComplete(scannedData);
-            toast.success("Receipt scanned successfully. File size is less than 50MB");
+            toast.success("AI scanner: Receipt scanned successfully");
         }
     }, [scanReceiptLoading, scannedData]);
 
 
+
     useEffect(() => {
         if(scanError && !scanReceiptLoading) {
-            toast.error("1: ",scanError.message);
-            console.log("Error scanning receipt 2: ", scanError);
+            toast.error("AI scanner: Scanning Failed.",scanError.message);
+            console.log("Error scanning receipt 2 ", scanError);
         }
     }, [scanError])
 

@@ -558,8 +558,79 @@ const rowsPerPage = 10; // Default rows per page
         });
       };
 
+      const TransactionDetailshandler = (transaction) => {
+        if (typeof window === "undefined") return;
+        const formatDateTime = (dateString) => {
+          const date = new Date(dateString);
+          return date.toLocaleString(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+        };
+        const formatAmount = (amount) => {
+          return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "PHP",
+          }).format(amount);
+        };
+        const amountColor = transaction.type === "EXPENSE" ? "text-red-500" : "text-green-500";
+
+        Swal.fire({
+          title: `<h2 class="text-lg font-semibold text-blue-600">
+                    ${transaction.particular || "Transaction Details"}
+                  </h2>`,
+          html: `
+            <div class="text-left space-y-2">
+              <p><strong>Date of transaction:</strong> ${formatDate(transaction.date)}</p>
+              <p><strong>Amount:</strong><span class="${amountColor}"> ${formatAmount(transaction.amount)}</span></p>
+              <p><strong>Type:</strong> ${transaction.type}</p>
+              <p><strong>Reference number:</strong> ${transaction.refNumber || "N/A"}</p>
+              <p><strong>Account title:</strong> ${transaction.category || "N/A"}</p>
+              <p><strong>Activity type:</strong> ${transaction.Activity || "N/A"}</p>
+              <p><strong>Description:</strong> ${transaction.description || "No description provided."}</p>
+              <p><strong>BIR authority to print number:</strong> ${transaction.printNumber || "N/A"}</p>
+              <p><strong>Recorded on:</strong> ${formatDateTime(transaction.createdAt) || "N/A"}</p>              
+            </div>
+            <div class="text-center mt-4">
+              <p class="text-xs text-neutral-400 italic">
+                digital ID: ${transaction.id || "N/A"}
+              </p>
+            </div>
+          `,
+          showCloseButton: true,
+          showConfirmButton: false,
+          customClass: {
+            popup: "max-w-lg w-full p-6 rounded-lg shadow-lg",
+            title: "text-blue-500",
+            htmlContainer: "text-gray-700",
+          },
+        });
+      };
+
+      const formatTableAmount = (amount) => {
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "PHP",
+        }).format(amount);
+      };
 
 
+      const getGerundActivity = (activity) => {
+        switch (activity) {
+          case "OPERATION":
+            return "Operating";
+          case "INVESTMENT":
+            return "Investing";
+          case "FINANCING":
+            return "Financing";
+          default:
+            return activity; // Fallback to raw data if no match
+        }
+      };
 
 
 
@@ -666,8 +737,8 @@ const rowsPerPage = 10; // Default rows per page
 
     <SelectContent>
       {/* <SelectItem value="">All Activities</SelectItem> */}
-      <SelectItem value="OPERATION">Operation</SelectItem>
-      <SelectItem value="INVESTMENT">Investment</SelectItem>
+      <SelectItem value="OPERATION">Operating</SelectItem>
+      <SelectItem value="INVESTMENT">Investing</SelectItem>
       <SelectItem value="FINANCING">Financing</SelectItem>
     </SelectContent>
   </Select>
@@ -807,6 +878,7 @@ const rowsPerPage = 10; // Default rows per page
                                           ? <Button variant="destructive" onClick={handleCancelPDFdownload}> Cancel </Button>
                                           : <Button variant="destructive" disabled={true}>Cancelling<Loader2/></Button>
                                         }
+                                        <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Save</Button>
                                     </div>
                                     
                                 
@@ -941,7 +1013,7 @@ const rowsPerPage = 10; // Default rows per page
                     ))}
                 </div>
                   </TableHead>
-                  <TableHead className="text-left">Description</TableHead>
+                  <TableHead className="text-left">Particular</TableHead>
                   <TableHead className="text-left cursor-pointer"
                     onClick={() => handleSort("category")}
                     >
@@ -969,7 +1041,7 @@ const rowsPerPage = 10; // Default rows per page
                         </div>
                   </TableHead>
                   <TableHead className="text-center">
-                    {/* Recurring */}
+                            Reference number
                     </TableHead>
                 </TableRow>
               </TableHeader>
@@ -990,7 +1062,7 @@ const rowsPerPage = 10; // Default rows per page
                         />
                       </TableCell>
                       <TableCell className="text-left">{formatDate(transaction.date)}</TableCell>
-                      <TableCell className="text-left">{transaction.description}</TableCell>
+                      <TableCell className="text-left">{transaction.particular || "No assigned particular"}</TableCell>
                       <TableCell className="text-left">{transaction.category}</TableCell>
                       
                       <TableCell
@@ -1002,7 +1074,9 @@ const rowsPerPage = 10; // Default rows per page
                                 FINANCING: "text-purple-500",
                                 }[transaction.Activity] || "text-gray-500" // Default color if no match
                             )}
-                          >{transaction.Activity.charAt(0).toUpperCase() + transaction.Activity.slice(1).toLowerCase()}</TableCell>
+                          >
+                            {getGerundActivity(transaction.Activity)}
+                          </TableCell>
                       <TableCell className={cn(
                               "text-right font-medium",
                               transaction.type === "EXPENSE"
@@ -1010,7 +1084,7 @@ const rowsPerPage = 10; // Default rows per page
                                 : "text-green-500"
                             )}>
                         {transaction.type === "EXPENSE" ? "-" : "+"}
-                        ₱{transaction.amount.toFixed(2)}
+                        {formatTableAmount(transaction.amount.toFixed(2))}
                       </TableCell>
                       <TableCell className="text-center">
                         {/* {transaction.isRecurring ? (
@@ -1022,6 +1096,7 @@ const rowsPerPage = 10; // Default rows per page
                             One-time
                           </Badge>
                         )} */}
+                        {transaction.refNumber}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -1039,6 +1114,7 @@ const rowsPerPage = 10; // Default rows per page
                                   className="text-yellow-400">Edit</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => TransactionDetailshandler(transaction)} className="text-blue-700">Details</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
