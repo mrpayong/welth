@@ -265,7 +265,25 @@ const handleSwitchChange = (checked) => {
 
 
 
-
+  const deterimeTimeFrame = (period) => {
+    switch (period) {
+      case "DAILY":
+        return "Daily";
+      case "WEEKLY":
+        return "Weekly";
+      case "MONTHLY":
+        return "Monthly";
+      case "ANNUAL":
+        return "Annual";
+      case "QUARTERLY":
+        return "Quarterly";
+      case "FISCAL_YEAR":
+        return "Fiscal"
+      default:
+        "" // Default classification for longer ranges
+        break;
+    }
+  }
 
 
 
@@ -398,8 +416,9 @@ const handleSwitchChange = (checked) => {
             onValueChange={handleTabChange}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-4 gap-2 bg-blue-50 p-1 rounded-lg mb-6">
-              {["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].map(
+            <div className="w-full overflow-x-auto md:overflow-x-visible">
+            <TabsList className="grid grid-cols-5 min-w-[500px] gap-2 bg-blue-50 p-1 rounded-lg mb-6">
+              {["DAILY", "WEEKLY", "MONTHLY", "ANNUAL", "FISCAL_YEAR"].map(
                 (period) => (
                   <TabsTrigger
                     key={period}
@@ -407,11 +426,12 @@ const handleSwitchChange = (checked) => {
                     disabled={cardClickedLoad}
                     className="!rounded-button whitespace-nowrap data-[state=active]:bg-blue-600 data-[state=active]:text-white"
                   >
-                    {period.charAt(0).toUpperCase() + period.slice(1)}
+                    {deterimeTimeFrame(period.charAt(0).toUpperCase() + period.slice(1))}
                   </TabsTrigger>
                 )
               )}
             </TabsList>
+            </div>
           </Tabs>
 
           {isLoading ? (
@@ -439,236 +459,238 @@ const handleSwitchChange = (checked) => {
                       </p>
                     </div>
                   )
-                  :(<ScrollArea className="h-[500px]">
-              <div className="space-y-4">
-                
-                    {filteredRecords.map((record) => (
-                  // <Link >
-                    <Card
-                      key={record.id}
-                      onClick={
-                        !editButtonShow // Only clickable when not editing
-                          ? () => {
-                              setCardClickedLoad(true);
-                              router.push(`/CashflowStatement/${record?.accountId}/${record?.id}`);
-                            }
-                          : undefined
-                      }
-                      className="p-6 transition-all duration-300 hover:shadow-lg cursor-pointer border border-blue-100 hover:border-blue-300 bg-white"
-                    >
-                      <div className="flex items-center justify-between">
-                        {/* LEFT SIDE */}
-                        <div className="flex items-start space-x-4">
-                          <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center bg-sky-100`}
-                          >{editButtonShow
-                            ? (<>
-                                 <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button 
-                                      className="border-0 bg-none rounded-full hover:bg-sky-100 
-                                      bg-opacity-100" 
-                                      onClick={() => handleDeleteCfsId(record.id)}
-                                      variant="ghost">
-                                        <Trash className="h-6 w-6 text-red-600 cursor-pointer"/>
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="sm:max-w-[425px]">
-                                    <DialogHeader>
-                                      <DialogTitle >
-                                        <label className="flex justify-center">
-                                          Delete this Cashflow Statement?
-                                        </label>
-                                        </DialogTitle>
-                                    </DialogHeader>
-                                    <div className="flex justify-center">
-                                    <DialogFooter>
-                                      <DialogClose asChild>
-                                        <Button 
-                                          onClick={handleCancelDeleteCfsId}
-                                          variant="outline">Cancel</Button>
-                                      </DialogClose>
-                                      <Button
-                                        disabled={deleteCFSLoading}
-                                        onClick={handleDeleteCFS}
-                                        type="button"
-                                        variant="outline"
-                                        className="w-auto
-                                        border-rose-600 hover:border-0 hover:bg-rose-600 
-                                        text-rose-600 hover:text-white"
-                                        >Delete
-                                      </Button>
-                                    </DialogFooter>
+                  :(
+                    <div className="h-[500px] w-full overflow-y-auto overflow-x-auto md:overflow-x-hidden">
+                      <div className="space-y-4 min-w-[600px] md:min-w-0">
+                      {filteredRecords.length === 0 
+                        ? (<span>THIS PERIOD IS EMPTY</span>)
+                        : (
+                            filteredRecords.map((record) => (
+                              // <Link >
+                                <Card
+                                  key={record.id}
+                                  onClick={
+                                    !editButtonShow // Only clickable when not editing
+                                      ? () => {
+                                          setCardClickedLoad(true);
+                                          router.push(`/CashflowStatement/${record?.accountId}/${record?.id}`);
+                                        }
+                                      : undefined
+                                  }
+                                  className="p-6 transition-all duration-300 hover:shadow-lg cursor-pointer border border-blue-100 hover:border-blue-300 bg-white"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    {/* LEFT SIDE */}
+                                    <div className="flex items-start space-x-4">
+                                      <div
+                                        className={`w-12 h-12 rounded-full flex items-center justify-center bg-sky-100`}
+                                      >{editButtonShow
+                                        ? (<>
+                                            <Dialog>
+                                              <DialogTrigger asChild>
+                                                <Button 
+                                                  className="border-0 bg-none rounded-full hover:bg-sky-100 
+                                                  bg-opacity-100" 
+                                                  onClick={() => handleDeleteCfsId(record.id)}
+                                                  variant="ghost">
+                                                    <Trash className="h-6 w-6 text-red-600 cursor-pointer"/>
+                                                </Button>
+                                              </DialogTrigger>
+                                              <DialogContent className="sm:max-w-[425px]">
+                                                <DialogHeader>
+                                                  <DialogTitle >
+                                                    <label className="flex justify-center">
+                                                      Delete this Cashflow Statement?
+                                                    </label>
+                                                    </DialogTitle>
+                                                </DialogHeader>
+                                                <div className="flex justify-center">
+                                                <DialogFooter>
+                                                  <DialogClose asChild>
+                                                    <Button 
+                                                      onClick={handleCancelDeleteCfsId}
+                                                      variant="outline">Cancel</Button>
+                                                  </DialogClose>
+                                                  <Button
+                                                    disabled={deleteCFSLoading}
+                                                    onClick={handleDeleteCFS}
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="w-auto
+                                                    border-rose-600 hover:border-0 hover:bg-rose-600 
+                                                    text-rose-600 hover:text-white"
+                                                    >Delete
+                                                  </Button>
+                                                </DialogFooter>
+                                                </div>
+                                              </DialogContent>
+                                            </Dialog>
+                                          
+                                          </>
+                                          )
+                                        : (
+                                          <>{record.netChange > 0 ? (
+                                            <SquareArrowUp className="text-green-600" />
+                                          ) : record.netChange < 0 ? (
+                                            <SquareArrowDown className="text-red-600" />
+                                          ) : (
+                                            <Square className="text-zinc-500" />
+                                          )}</>
+                                        )
+                                        
+                                      }
+                                          
+                                      </div>
+                                      <div className="flex flex-col py-4 justify-center">
+                                        <span className="text-sm text-blue-600">
+                                            Created On: {formatDate(record.createdAt)}
+                                          </span>
+                                      </div>
+                                          
+                                    
                                     </div>
-                                  </DialogContent>
-                                </Dialog>
-                              
-                              </>
-                              )
-                            : (
-                              <>{record.netChange > 0 ? (
-                                <SquareArrowUp className="text-green-600" />
-                              ) : record.netChange < 0 ? (
-                                <SquareArrowDown className="text-red-600" />
-                              ) : (
-                                <Square className="text-zinc-500" />
-                              )}</>
-                            )
-                            
-                           }
-                              
-                          </div>
-                          <div className="flex flex-col py-4 justify-center">
-                            <span className="text-sm text-blue-600">
-                                Created On: {formatDate(record.createdAt)}
-                              </span>
-                          </div>
-                              
-                         
-                        </div>
 
 
 
-                        {/* RIGHT SIDE */}
-                        <div className="flex items-center space-x-4">
-                          {updateBalanceField && updateCfsId === record.id
-                            ? (
-                              <input 
-                              type="number" 
-                              disabled={updateBalLoading}
-                              onChange={e => setUpdateBegBal(e.target.value)}
-                              value={updateBegBal}
-                              className="border border-gray-300 border-b-black rounded
-                              px-2 py-1 w-20 sm:w-24 md:w-28 font-mono text-xs 
-                              focus:outline-none focus:ring-2 
-                              focus:ring-blue-200 transition"
-                              />
-                              )
-                            : (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger>
-                                      <span className="text-sm font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-lg cursor-pointer">
-                                        {formatAmount(record.startBalance)}
+                                    {/* RIGHT SIDE */}
+                                    <div className="flex items-center space-x-4">
+                                      {updateBalanceField && updateCfsId === record.id
+                                        ? (
+                                          <input 
+                                          type="number" 
+                                          disabled={updateBalLoading}
+                                          onChange={e => setUpdateBegBal(e.target.value)}
+                                          value={updateBegBal}
+                                          className="border border-gray-300 border-b-black rounded
+                                          px-2 py-1 w-20 sm:w-24 md:w-28 font-mono text-xs 
+                                          focus:outline-none focus:ring-2 
+                                          focus:ring-blue-200 transition"
+                                          />
+                                          )
+                                        : (
+                                            <TooltipProvider>
+                                              <Tooltip>
+                                                <TooltipTrigger>
+                                                  <span className="text-sm font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-lg cursor-pointer">
+                                                    {formatAmount(record.startBalance)}
+                                                  </span>
+                                                </TooltipTrigger>
+                                                <TooltipContent className="bg-gradient-to-br from-blue-50 to-blue-200 text-blue-900 p-4 rounded-lg shadow-md border border-blue-300">
+                                                  <p className="text-sm font-medium">
+                                                    <strong className="text-gold-600">Beginning Balance:</strong> {formatAmount(record.startBalance)}
+                                                  </p>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            </TooltipProvider>
+                                          )
+                                      } 
+                                    
+
+                                    {/* Tooltip for Ending Balance */}
+                                    {updateBalanceField && updateCfsId === record.id
+                                        ? (
+                                          <input 
+                                          type="number" 
+                                          disabled={updateBalLoading}
+                                          onChange={e => setUpdateEndBal(e.target.value)}
+                                          value={updateEndBal}
+                                          className="border border-gray-300 border-b-black rounded
+                                          px-2 py-1 w-20 sm:w-24 md:w-28 font-mono text-xs 
+                                          focus:outline-none focus:ring-2 
+                                          focus:ring-blue-200 transition"/>
+                                          )
+                                        : (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <span className="text-sm font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-lg cursor-pointer">
+                                            {formatAmount(record.endBalance)}
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-gradient-to-br from-blue-50 to-blue-200 text-blue-900 p-4 rounded-lg shadow-md border border-blue-300">
+                                          <p className="text-sm font-medium">
+                                            <strong className="text-gold-600">Ending Balance:</strong> {formatAmount(record.endBalance)}
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider> 
+                                  )}
+                                    
+
+                                    {updateBalanceField && updateCfsId === record.id
+                                        ? (
+                                          <input 
+                                          type="number" 
+                                          disabled={updateBalLoading}
+                                          onChange={e => setUpdateNetChange(e.target.value)}
+                                          value={updateNetChange}
+                                          className="border border-gray-300 border-b-black rounded
+                                          px-2 py-1 w-20 sm:w-24 md:w-28 font-mono text-xs 
+                                          focus:outline-none focus:ring-2 
+                                          focus:ring-blue-200 transition"/>
+                                          )
+                                        : (
+                                      <span
+                                        className={`font-semibold text-lg ${
+                                          record.netChange > 0
+                                            ? "text-green-600"
+                                            : record.netChange < 0
+                                              ? "text-red-600"
+                                              : "text-black"
+                                        }`}
+                                      >
+                                        {record.netChange > 0 ? "+" : ""}
+                                        {formatAmount(record.netChange)}
                                       </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="bg-gradient-to-br from-blue-50 to-blue-200 text-blue-900 p-4 rounded-lg shadow-md border border-blue-300">
-                                      <p className="text-sm font-medium">
-                                        <strong className="text-gold-600">Beginning Balance:</strong> {formatAmount(record.startBalance)}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )
-                          } 
-                        
+                                      )}
+                                      <div className={`
+                                        flex flex-roW
+                                        ${editButtonShow ? "gap-2" : ""}
+                                        `}>
+                                        {editButtonShow
+                                          ? (
+                                            updateCfsId === record.id ? (
+                                              <>
+                                                <Button 
+                                                  variant="outline"
+                                                  disabled={updateBalLoading}
+                                                  className="border-2 border-green-300 group hover:border-white hover:bg-green-400"
+                                                  onClick={handleActiveBalanceField}>
+                                                  <Check className="h-5 w-5 text-green-400 group-hover:text-white" />
+                                                </Button>
+                                                <Button 
+                                                  disabled={updateBalLoading}
+                                                  variant="destructive"
+                                                  onClick={handleCancelEditButton}>
+                                                  <PenOff className="h-5 w-5" />
+                                                </Button>
+                                              </>
+                                            ) : (
+                                              <Button
+                                                variant="outline"
+                                                className="border-2 border-yellow-400 group text-lg hover:border-white hover:bg-yellow-400"
+                                                onClick={() => handleEditButton(record.id, record)}>
+                                                <Pen className="w-5 h-5  text-yellow-400 group-hover:text-white" />
+                                              </Button>
+                                            )
+                                          )
+                                          : ""
+                                        }
+                                        
 
-                        {/* Tooltip for Ending Balance */}
-                        {updateBalanceField && updateCfsId === record.id
-                            ? (
-                              <input 
-                              type="number" 
-                              disabled={updateBalLoading}
-                              onChange={e => setUpdateEndBal(e.target.value)}
-                              value={updateEndBal}
-                              className="border border-gray-300 border-b-black rounded
-                              px-2 py-1 w-20 sm:w-24 md:w-28 font-mono text-xs 
-                              focus:outline-none focus:ring-2 
-                              focus:ring-blue-200 transition"/>
-                              )
-                            : (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <span className="text-sm font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-lg cursor-pointer">
-                                {formatAmount(record.endBalance)}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-gradient-to-br from-blue-50 to-blue-200 text-blue-900 p-4 rounded-lg shadow-md border border-blue-300">
-                              <p className="text-sm font-medium">
-                                <strong className="text-gold-600">Ending Balance:</strong> {formatAmount(record.endBalance)}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider> 
-                      )}
-                        
-
-                        {updateBalanceField && updateCfsId === record.id
-                            ? (
-                              <input 
-                              type="number" 
-                              disabled={updateBalLoading}
-                              onChange={e => setUpdateNetChange(e.target.value)}
-                              value={updateNetChange}
-                              className="border border-gray-300 border-b-black rounded
-                              px-2 py-1 w-20 sm:w-24 md:w-28 font-mono text-xs 
-                              focus:outline-none focus:ring-2 
-                              focus:ring-blue-200 transition"/>
-                              )
-                            : (
-                          <span
-                            className={`font-semibold text-lg ${
-                              record.netChange > 0
-                                ? "text-green-600"
-                                : record.netChange < 0
-                                  ? "text-red-600"
-                                  : "text-black"
-                            }`}
-                          >
-                            {record.netChange > 0 ? "+" : ""}
-                            {formatAmount(record.netChange)}
-                          </span>
-                          )}
-                          <div className={`
-                            flex flex-roW
-                            ${editButtonShow ? "gap-2" : ""}
-                            `}>
-                            {editButtonShow
-                              ? (
-                                updateCfsId === record.id ? (
-                                  <>
-                                    <Button 
-                                      variant="outline"
-                                      disabled={updateBalLoading}
-                                      className="border-2 border-green-300 group hover:border-white hover:bg-green-400"
-                                      onClick={handleActiveBalanceField}>
-                                      <Check className="h-5 w-5 text-green-400 group-hover:text-white" />
-                                    </Button>
-                                    <Button 
-                                      disabled={updateBalLoading}
-                                      variant="destructive"
-                                      onClick={handleCancelEditButton}>
-                                      <PenOff className="h-5 w-5" />
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    className="border-2 border-yellow-400 group text-lg hover:border-white hover:bg-yellow-400"
-                                    onClick={() => handleEditButton(record.id, record)}>
-                                    <Pen className="w-5 h-5  text-yellow-400 group-hover:text-white" />
-                                  </Button>
-                                )
-                              )
-                              : ""
-                            }
-                            
-
-                            
-                          </div>
-                        </div>
+                                        
+                                      </div>
+                                    </div>
+                                  </div>
+                                </Card>
+                              // </Link>
+                            ))
+                        )
+                      }
                       </div>
-                    </Card>
-                  // </Link>
-                  
-                ))}
-                  
-                
-                
-              </div>
-            </ScrollArea>)
-          )}
+                    </div>
+                    )
+                )}
         </div>
       </div>
     </div>

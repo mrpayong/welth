@@ -135,7 +135,7 @@ const deterimeTimeFrame = (startDate, endDate) => {
     case monthsDifference === 0:
       return "Monthly";
     default:
-      return "No Transaction Selected"
+      return ""
   }
 }
 const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
@@ -153,6 +153,27 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
   const transactionDates = transactions.map((transaction) => 
     new Date(transaction.date)
   )
+
+
+  const deterimeTimeFrame = (period) => {
+    switch (period) {
+      case "DAILY":
+        return "Daily";
+      case "WEEKLY":
+        return "Weekly";
+      case "MONTHLY":
+        return "Monthly";
+      case "ANNUAL":
+        return "Annual";
+      case "QUARTERLY":
+        return "Quarterly";
+      case "FISCAL_YEAR":
+        return "Fiscal"
+      default:
+        "" // Default classification for longer ranges
+        break;
+    }
+  }
 
   const formatDate = (dateString) => {
     const date = new Date(dateString); // Parse the date string
@@ -340,7 +361,7 @@ const MyPDFaccountPage = ({ cashflow, transactions, subAccounts }) => {
               {/* Letterhead Text */}
               <View style={styles.letterheadText}>
                 <Text style={styles.title}>Teruel Accounting</Text>
-                <Text style={styles.subtitle}>{timeFrame} Cashflow Statement</Text>
+                <Text style={styles.subtitle}>{deterimeTimeFrame(cashflow.periodCashFlow)} Cashflow Statement</Text>
                 {startDate.toDateString() === endDate.toDateString()
                     ? <Text style={styles.subtitle}>As of: {formattedStartDate}</Text>
                     : <Text style={styles.subtitle}>For the period: {formattedStartDate} - {formattedEndDate}</Text>

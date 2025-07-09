@@ -82,7 +82,7 @@ const AccountCard = ({account}) => {
   const isLoading = loadingAccountId === id; // Check if this card is loading
   const isDisabled = !!loadingAccountId; // Disable all cards if any card is loading
 
-  console.log("Account:",_count)
+  
 
   
   

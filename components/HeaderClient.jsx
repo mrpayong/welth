@@ -194,9 +194,9 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
 
 
             {/* LOGGED OUT */}
-            {!isSignedIn && pathname !== "/sign-in" && (
+            {!isSignedIn && !pathname !== "/sign-in" && (
               <div className="flex flex-row items-center justify-end gap-2 pr-3">
-                <span className="text-gray-600 font-semibold animate-bounce text-2xl hidden md:inline">
+                <span className="text-gray-600 font-semibold text-2xl hidden md:inline">
                   Ready to start?
                 </span>
               <Link href={"/sign-in"}>
