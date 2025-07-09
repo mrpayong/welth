@@ -219,6 +219,11 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
               isAdminPage={isAdminPage}
               isAdmin={isAdmin}
               isSignedIn={isSignedIn}
+              isStaff={isStaff}
+              SysAdminPage={SysAdminPage} 
+              isSysAdmin={isSysAdmin} 
+              loading={loading}
+              onNavClick={() => setLoading(true)}
             />
           </div>
           {isSignedIn && (
