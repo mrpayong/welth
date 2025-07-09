@@ -480,11 +480,23 @@ import React, { useState, useMemo } from "react";
 import { Table, TableHeader, TableRow, TableCell, TableBody } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+
+const getDateString = (date) =>
+  date.toISOString().slice(0, 10);
 
 const DisbursementReceiptBook = ({ outflows = [] }) => {
+  const today = new Date();
+  const lastMonth = new Date();
+  lastMonth.setDate(today.getDate() - 30); 
+
   // State for date range filtering
-  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [dateRange, setDateRange] = useState({ 
+    start: getDateString(lastMonth),
+    end: getDateString(today),
+   });
   const [showBorders, setShowBorders] = useState(false);
   // Normalize date to remove time component
   const normalizeDate = (date) => {
@@ -548,8 +560,23 @@ const DisbursementReceiptBook = ({ outflows = [] }) => {
     });
   };
 
+    const formatAmount = (amount) => {
+      return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "PHP",
+      }).format(amount);
+  };
 
 
+
+  const router = useRouter();
+
+  const [backLoad, setBackLoad] = useState(false)
+
+  const handleBackLoad = () => {
+    setBackLoad(true);
+    router.push(`/account/${outflows[0].accountId}`);
+  };
 
 
 
@@ -601,7 +628,8 @@ const DisbursementReceiptBook = ({ outflows = [] }) => {
 
       {/* Filters Section */}
       <div className="mb-8 bg-gray-50 p-6 rounded-lg shadow-md">
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-row items-center justify-between">
+          <div className="flex flex-col lg:flex-row gap-4">
           {/* Date Range Filter */}
           <div className="flex gap-4">
             From
@@ -631,7 +659,22 @@ const DisbursementReceiptBook = ({ outflows = [] }) => {
               </button>
             </div>
             )}
+          </div>
+          <Button
+          variant="outline"
+          disabled={backLoad}
+          className="border text-black border-black"
+          onClick={handleBackLoad}>
+          {backLoad 
+            ? (<>
+              <Loader2 className="h-5 w-5 text-gray-500 animate-spin" />
+              Back
+              </>) 
+            : "Back"
+          }
+        </Button>
         </div>
+        
       </div>
 
       
@@ -646,8 +689,11 @@ const DisbursementReceiptBook = ({ outflows = [] }) => {
               <TableRow className="bg-teal-100">
                 <TableCell className="font-semibold text-slate-700">Date</TableCell>
                 <TableCell className="font-semibold text-slate-700">Description</TableCell>
-                <TableCell className="font-semibold text-slate-700">Reference number</TableCell>
-                <TableCell className="font-semibold text-slate-700">Cash in bank (CR)</TableCell>
+                <TableCell className="font-semibold text-slate-700">Particular</TableCell>
+                <TableCell className="font-semibold text-slate-700 max-w-[130px] w-[130px] truncate overflow-hidden whitespace-nowrap"
+                >Reference number</TableCell>
+                <TableCell className="font-semibold text-slate-700 max-w-[150px] w-[150px] truncate overflow-hidden whitespace-nowrap"
+                >Cash in bank (CR)</TableCell>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -656,18 +702,23 @@ const DisbursementReceiptBook = ({ outflows = [] }) => {
                   key={index}
                   className={`hover:bg-white ${index % 2 === 0 ? "bg-teal-300" : "bg-white"}`}
                 >
-                  <TableCell>{formatDate(outflow.date)}</TableCell>
-                  <TableCell>{outflow.description || "N/A"}</TableCell>
+                  <TableCell
+                    className="max-w-[120px] w-[120px] truncate overflow-hidden whitespace-nowrap"
+                  >{formatDate(outflow.date)}</TableCell>
+                  <TableCell
+                    className="max-w-[180px] truncate overflow-hidden whitespace-nowrap"
+                  >{outflow.description || "N/A"}</TableCell>
+                  <TableCell>{outflow.particular || "N/A"}</TableCell>
                   <TableCell>{outflow.refNumber || "N/A"}</TableCell>
-                  <TableCell>₱{outflow.amount?.toFixed(2) || "0.00"}</TableCell>
+                  <TableCell>{formatAmount(outflow.amount) || "0.00"}</TableCell>
                 </TableRow>
               ))}
               {/* Total Row */}
               <TableRow className="bg-white font-bold">
-                <TableCell colSpan={3} className="text-right">
+                <TableCell colSpan={4} className="text-right">
                   Total
                 </TableCell>
-                <TableCell>₱{totalCredit.toFixed(2)}</TableCell>
+                <TableCell>{formatAmount(totalCredit)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -715,7 +766,7 @@ const DisbursementReceiptBook = ({ outflows = [] }) => {
                 >
                   {categories.map((category) => (
                     <TableCell key={`${index}-${category}`} className={showBorders ? "border-r-2 border-gray-300" : ""}>
-                      {outflow.category === category ? `₱${outflow.amount?.toFixed(2) || "0.00"}` : ""}
+                      {outflow.category === category ? `${formatAmount(outflow.amount) || "0.00"}` : ""}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -724,7 +775,7 @@ const DisbursementReceiptBook = ({ outflows = [] }) => {
               <TableRow className="bg-whtie font-bold border-t border-gray-300">
                 {categories.map((category) => (
                   <TableCell key={category}>
-                    ₱{categoryTotals[category]?.toFixed(2) || "0.00"}
+                    {formatAmount(categoryTotals[category]) || "0.00"}
                   </TableCell>
                 ))}
               </TableRow>

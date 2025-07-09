@@ -2,8 +2,16 @@ import React, { Suspense } from 'react'
 import DisbursementReceiptBook from '../_components/DisbursementReceipt_Book'
 import { getCashOutflow } from '@/actions/cashflow';
 import { BarLoader } from 'react-spinners';
+import { getStaff, getUnauthUser } from '@/actions/admin';
+import NotFound from '@/app/not-found';
 
 async function DisbursementReceiptBookPage ({params}) {
+    const user = await getStaff()
+  
+    if(!user.authorized){
+      await getUnauthUser();
+      return NotFound();
+    }
     const {id} = await params;
     const outflows = await getCashOutflow(id);
     console.log(outflows)

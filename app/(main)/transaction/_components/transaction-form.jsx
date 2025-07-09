@@ -14,7 +14,7 @@ import useFetch from '@/hooks/use-fetch';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PopoverContent } from '@radix-ui/react-popover';
 import { format } from 'date-fns';
-import { CalendarIcon, Loader, Loader2 } from 'lucide-react';
+import { CalendarIcon, Camera, Loader, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form';
@@ -35,7 +35,7 @@ const AddTransactionForm = ({
     const searchParams = useSearchParams();
     const editId = searchParams.get("edit");
     const [isClient, setIsClient] = useState(true);
-
+    const [scannedReceipt, setScannedReceipt] = useState(null);
     useEffect(() => {
         setIsClient(false)
       }, [])
@@ -116,6 +116,7 @@ const AddTransactionForm = ({
     );
     
     const onSubmit = async (data) => {
+
         const formData = {
             ...data,
             amount: parseFloat(data.amount),
@@ -136,7 +137,10 @@ const AddTransactionForm = ({
                     : "Transaction created successfully."
                 );
             reset();
-            // router.push(`/account/${transactionResult.data.accountId}`);
+            editMode
+            ? router.push(`/account/${transactionResult.data.accountId}`)
+            : ""
+            
         }
     }, [transactionResult, transactionLoading, editMode]);
 
@@ -194,6 +198,7 @@ const AddTransactionForm = ({
             
           }console.log("category scanning success:", scannedData.category)
           console.log("scanning success:", scannedData)
+          setScannedReceipt(scannedData);
           toast.success("System: Receipt scanned successfully");
         }
       };
@@ -223,7 +228,7 @@ const AddTransactionForm = ({
         className='space-y-6'
         onSubmit={handleSubmit(onSubmit)}>
       {/* AI RECEIPT SCANNER */}
-      {!editMode && <ReceiptScanner onScanComplete={handleScanComplete}/>}
+      {!editMode && <ReceiptScanner scannedReceipt={scannedReceipt} onScanComplete={handleScanComplete}/>}
 
       {isClient ? ('This is never prerendered') : ( 
         <div className='grid gap-6 md:grid-cols-2'>
@@ -244,7 +249,7 @@ const AddTransactionForm = ({
                 </Select>
 
                 {errors.type && (
-                    <p className="text-sm text-red-500">{errors.type.message}</p>
+                    <p className="text-sm text-red-500">Select transaction type</p>
                 )}
             </div> 
             <div className='space-y-2'>
@@ -481,16 +486,18 @@ const AddTransactionForm = ({
             <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full border-2 border-black hover:bg-neutral-900 hover:text-white"
+                disabled={transactionLoading}
                 onClick={() => router.back()}>
-                    Cancel
+                    Back 
             </Button>
 
             <Button
                 type="button"
                 variant="outline"
+                disabled={transactionLoading}
                 className="w-full border-2 border-yellow-400 text-yellow-400"
-                onClick={() => reset()} // Reset the form fields
+                onClick={() => {reset(); setScannedReceipt(null);}} // Reset the form fields
             >
                 Reset
             </Button>
@@ -503,8 +510,8 @@ const AddTransactionForm = ({
                         ? (<>
                             <Loader2 className='mr-2 h-4 w-4 animate-spin'/>
                             {editMode 
-                                ? "Updating..."
-                                : "Creating..."
+                                ? "Updating"
+                                : "Creating"
                             }
                         </>)
                         : editMode 

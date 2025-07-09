@@ -42,12 +42,33 @@ export const accountSchema = z.object({
 })
 
 export const subAccountSchema = z.object({
-    name: z.string().min(1, "Group name is required."),
+    name: z.string().optional(),
     description: z.string().optional(),
     accountId: z.string().min(1, "Mother group is required"),
-    // balance: z.string().optional().nullable(),
+    balance: z.string().optional().nullable(),
     parentName: z.string().optional(), // Validate parent name
   });
+
+export const userSchema = z.object({
+    email: z.string().min(1, "Email is required."),
+    Fname: z.string().min(1, "First name is required"),
+    Lname: z.string().min(1, "Last name is required"),
+    username: z.string().min(5, "Please enter a username."),
+    role: z.enum(["ADMIN", "SYSADMIN", "USER", "STAFF"])
+})
+
+export const taskSchema = z.object({
+    // statusOfTask: z.enum(["COMPLETED", "PROGRESS", "PLANNING", "RESEARCH"], {
+    //     required_error: "Task status is required",
+    //     }),
+    urgency: z.enum(["LOW", "MEDIUM", "HIGH"], {
+        required_error: "Urgency is required",
+        }),
+    taskName: z.string().min(1, "Task name is required"),
+    taskCategory: z.string().min(1, "Task category is required"),
+    taskDescription: z.string().optional(),
+    dueDate: z.date({required_error: "Due date is required"}),
+});
 
 export const transactionSchema = z.object({
     type: z.enum(["INCOME", "EXPENSE"]),

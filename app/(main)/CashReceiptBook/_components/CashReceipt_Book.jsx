@@ -489,11 +489,23 @@
 import React, { useState, useMemo } from "react";
 import { Table, TableHeader, TableRow, TableCell, TableBody } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+
+const getDateString = (date) =>
+  date.toISOString().slice(0, 10);
 
 const CashReceiptBook = ({ inflows = [] }) => {
+  const today = new Date();
+  const lastMonth = new Date();
+  lastMonth.setDate(today.getDate() - 30);  
+
   // State for date range filtering
-  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [dateRange, setDateRange] = useState({
+    start: getDateString(lastMonth),
+    end: getDateString(today),
+  });
   const [showBorders, setShowBorders] = useState(false);
   // Normalize date to remove time component
   const normalizeDate = (date) => {
@@ -501,6 +513,8 @@ const CashReceiptBook = ({ inflows = [] }) => {
     normalized.setHours(0, 0, 0, 0); // Set time to 00:00:00
     return normalized;
   };
+
+
 
   // Filtered data based on the date range
   const filteredData = useMemo(() => {
@@ -557,8 +571,21 @@ const CashReceiptBook = ({ inflows = [] }) => {
     });
   };
 
+  const formatAmount = (amount) => {
+      return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "PHP",
+      }).format(amount);
+  };
 
+  const router = useRouter();
 
+  const [backLoad, setBackLoad] = useState(false)
+
+  const handleBackLoad = () => {
+    setBackLoad(true);
+    router.push(`/account/${inflows[0].accountId}`);
+  };
 
 
 
@@ -608,8 +635,10 @@ const CashReceiptBook = ({ inflows = [] }) => {
 
       {/* Filters Section */}
       <div className="mb-8 bg-gray-50 p-6 rounded-lg shadow-md">
+        <div className="flex flex-row items-center justify-between">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Date Range Filter */}
+          
           <div className="flex gap-4">
             From
             <Input
@@ -637,7 +666,21 @@ const CashReceiptBook = ({ inflows = [] }) => {
                 <span className="hidden md:inline">Clear</span> {/* Text (hidden on small screens) */}
               </button>
             </div>
-            )}
+          )}
+        </div>
+        <Button
+          variant="outline"
+          disabled={backLoad}
+          className="border text-black border-black"
+          onClick={handleBackLoad}>
+          {backLoad 
+            ? (<>
+              <Loader2 className="h-5 w-5 text-gray-500 animate-spin" />
+              Back
+              </>) 
+            : "Back"
+          }
+        </Button>
         </div>
       </div>
 
@@ -653,6 +696,7 @@ const CashReceiptBook = ({ inflows = [] }) => {
               <TableRow className="bg-lime-200">
                 <TableCell className="font-semibold text-emerald-700">Date</TableCell>
                 <TableCell className="font-semibold text-emerald-700">Description</TableCell>
+                <TableCell className="font-semibold text-emerald-700">Particular</TableCell>
                 <TableCell className="font-semibold text-emerald-700">Reference number</TableCell>
                 <TableCell className="font-semibold text-emerald-700">Cash in bank (DB)</TableCell>
               </TableRow>
@@ -668,17 +712,19 @@ const CashReceiptBook = ({ inflows = [] }) => {
                     {formatDate(inflow.date)}
                     {/* {inflow.date} */}
                   </TableCell>
-                  <TableCell>{inflow.description || "N/A"}</TableCell>
+                  <TableCell
+                    className="max-w-[180px] truncate overflow-hidden whitespace-nowrap">{inflow.description || "N/A"}</TableCell>
+                  <TableCell>{inflow.particular || "N/A"}</TableCell>
                   <TableCell>{inflow.refNumber || "N/A"}</TableCell>
-                  <TableCell>₱{inflow.amount?.toFixed(2) || "0.00"}</TableCell>
+                  <TableCell>{formatAmount(inflow.amount) || "0.00"}</TableCell>
                 </TableRow>
               ))}
               {/* Total Row */}
               <TableRow className="bg-amber-50 font-bold">
-                <TableCell colSpan={3} className="text-right">
+                <TableCell colSpan={4} className="text-right">
                   Total
                 </TableCell>
-                <TableCell>₱{totalCredit.toFixed(2)}</TableCell>
+                <TableCell>{formatAmount(totalCredit)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -709,7 +755,9 @@ const CashReceiptBook = ({ inflows = [] }) => {
             <TableHeader>
               <TableRow className="bg-lime-200">
                 {categories.map((category) => (
-                  <TableCell key={category} className="font-semibold text-emerald-700">
+                  <TableCell 
+                    key={category} 
+                    className="font-semibold text-emerald-700 max-w-[120px] w-[120px] truncate overflow-hidden whitespace-nowrap">
                     {category}
                   </TableCell>
                 ))}
@@ -726,7 +774,7 @@ const CashReceiptBook = ({ inflows = [] }) => {
                 >
                   {categories.map((category) => (
                     <TableCell key={`${index}-${category}`} className={showBorders ? "border-r-2 border-gray-300" : ""}>
-                      {inflow.category === category ? `₱${inflow.amount?.toFixed(2) || "0.00"}` : ""}
+                      {inflow.category === category ? `${formatAmount(inflow.amount) || "0.00"}` : ""}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -735,7 +783,7 @@ const CashReceiptBook = ({ inflows = [] }) => {
               <TableRow className="bg-white font-bold border-t border-gray-300">
                 {categories.map((category) => (
                   <TableCell key={category}>
-                    ₱{categoryTotals[category]?.toFixed(2) || "0.00"}
+                    {formatAmount(categoryTotals[category]) || "0.00"}
                   </TableCell>
                 ))}
               </TableRow>

@@ -5,11 +5,12 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isProtectedRoute = createRouteMatcher([
     "/admin(.*)",
+    "/admin/activityLogs(.*)",
+    "/SysAdmin(.*)",
     "/dashboard(.*)",
     "/account(.*)",
     "/transaction(.*)"
 ]);
-
 const aj = arcjet({
   key: process.env.ARCJET_KEY,
   rules: [

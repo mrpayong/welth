@@ -129,6 +129,9 @@ export async function createTransaction(data) {
     if (!user) {
       throw new Error("User not found");
     }
+    if (user.role !== "STAFF"){
+      throw new Error("Unauthorized action.")
+    }
 
 
 
@@ -186,7 +189,7 @@ export async function createTransaction(data) {
 
     return { success: true, data: serializeAmount(transaction) };
   } catch (error) {
-    console.error(error.message)
+    console.error("Error creating transaction.",error.message)
     throw new Error(error.message);
     
   }
@@ -215,6 +218,7 @@ function calculateNextRecurringDate(startDate, interval) {
 
 export async function scanReceipt(file){
   try {
+    console.log("[1]")
     const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
 
     // converts file into ArrayBuffer
@@ -222,6 +226,7 @@ export async function scanReceipt(file){
     const arrayBuffer = await file.arrayBuffer();
     
     // convert arrayBuffer to base64
+    console.log("[2]")
     const base64String = Buffer.from(arrayBuffer).toString("base64");
 
     const prompt = `
@@ -257,29 +262,31 @@ export async function scanReceipt(file){
      
         If it's not a receipt, return an empty object`;
 
+        console.log("[3]")
     const result = await model.generateContent([
       {
         inlineData: {
           data: base64String,
           mimeType: file.type,
         },
-       
       }, 
       prompt,
     ]);
-
+console.log("[4]")
     const response = await result.response;
     const text = response.text();
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
     
 
-
+console.log("[5]")
       const data = JSON.parse(cleanedText);
       console.log("Parsed data:", data);
       if (!data.printNumber || data.printNumber.trim() === "") {
         throw new ValidationError("System: No BIR Authority to Print number detected.");
       }
+
+console.log("[6]")
       return{
         amount: parseFloat(data.amount),
         refNumber: data.refNumber,
@@ -366,7 +373,9 @@ export async function updateTransaction(id, data) {
   
     if(!user) throw new Error("User not found");
 
-
+    if (user.role !== "STAFF"){
+      throw new Error("Action unavailable.")
+    }
 
 
     // Get original transaction to calculate balance change
@@ -503,3 +512,59 @@ export async function updateTransaction(id, data) {
 //     throw new Error(error.message);
 //   }
 // }
+
+export async function updateManyTransaction(transactionIds, ActivityType){
+  try {
+    console.log("[1] Auth")
+    const {userId} = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+      where: {clerkUserId: userId}
+    })
+
+    if (!user){
+      throw new Error("Action unavailable.")
+    }
+    if(user.role !== "STAFF"){
+      throw new Error("Action unavailable.")
+    }
+
+
+    console.log("[1] Auth passed")
+    console.log(transactionIds, ActivityType)
+    console.log("[2] Fetch transactions")
+    const transactions = await db.transaction.findMany({
+      where: {
+          id: { in: transactionIds},
+          userId: user.id,
+      },
+      select:{
+        Activity: true,
+      }
+    })
+    console.log("[2] Fetched")
+    console.log("[2]", transactions[0], "[...]")
+
+    console.log("[3] Update Method")
+    const updatedTransactions = await db.transaction.updateMany({
+      where: {
+        id: { in: transactionIds}, // Array of transaction IDs to update
+        userId: user.id,
+      },
+      data: {
+        Activity: ActivityType, // The new value for the Activity field
+      },
+    });
+
+        revalidatePath("/dashboard");
+        revalidatePath("/account/[id]");
+
+    console.log("[4] Update Success", updatedTransactions)
+    return {success: true}
+  } catch (error) {
+    console.log("Error editing Activity Type.")
+    throw new Error("Error editing Activity type", error.message)
+  }
+}
+

@@ -1,142 +1,181 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { AlignJustify, ChevronDown, Loader2, X } from "lucide-react";
+import { AlignJustify, ArchiveX, Book, BookMinus, BookPlus, ChartBarBig, ChevronDown, ChevronUp, Inbox, InboxIcon, Loader2, MailIcon, Table, X } from "lucide-react";
 import Link from "next/link";
+import { Box, Collapse, Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, useMediaQuery, useTheme } from "@mui/material";
 
 const SideNavBar = ({ accountId }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isBookExpanded, setIsBookExpanded] = useState(false);
+  const [isDrop, setIsDrop] = useState(false);
   const [loadingLink, setLoadingLink] = useState(null);
+  const theme = useTheme();
 
-  const toggleNavBar = () => setIsOpen(!isOpen);
-  const toggleBookMenu = () => setIsBookExpanded(!isBookExpanded);
+  const isMobile = typeof window !== "undefined"
+    ? useMediaQuery(theme.breakpoints.down("sm"))
+    : false;
+
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  const anchor = hydrated && isMobile ? "bottom" : "left";
+
 
   const handleLinkClick = (linkId) => {
     setLoadingLink(linkId); // Set the clicked link as loading
   };
-  
+    const [open, setOpen] = useState(false);
+
+  const toggleDrawer = (newOpen) => () => {
+    setOpen(newOpen);
+  };
+  const handleDrop = () => {
+    setIsDrop(!isDrop);
+  };
+
+  const DrawerList = (
+      <Box sx={{ width: anchor === "left" ? 250 : "auto" }} role="presentation">
+        <List>
+          <ListItem className="bg-yellow-200">
+            <ListItemText className="text-center" primary="Menu"/>
+          </ListItem>
+          <Divider/>
+
+          <ListItemButton disabled={loadingLink} onClick={handleDrop}>
+            <ListItemIcon>
+              <Book />
+            </ListItemIcon>
+            <ListItemText primary="Book of Accounts" />
+            {isDrop ? <ChevronUp /> : <ChevronDown />}
+          </ListItemButton>
+
+          <Collapse in={isDrop} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              <ListItemButton
+                disabled={loadingLink}
+                sx={{ pl: 4 }} 
+                href={`/CashReceiptBook/${accountId}`}
+                onClick={() => handleLinkClick("cashReceipt")}>
+                <ListItemIcon>
+                  {loadingLink === "cashReceipt" ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <BookPlus />
+                  )}
+                </ListItemIcon>
+                <ListItemText primary="Cash Receipt Book" />
+              </ListItemButton>
+              
+              <ListItemButton 
+                sx={{ pl: 4 }} 
+                href={`/DisbursementReceiptBook/${accountId}`}
+                onClick={() => handleLinkClick("disbursementReceipt")}
+                disabled={loadingLink}>
+                <ListItemIcon>
+                  {loadingLink === "disbursementReceipt" ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <BookMinus />
+                  )}
+                </ListItemIcon>
+                <ListItemText primary="Cash Disbursement Book" />
+              </ListItemButton>
+            </List>
+          </Collapse>       
+
+          <ListItem disablePadding>
+            <ListItemButton
+              disabled={loadingLink}
+              href={`/SubAccounts/${accountId}`}
+              onClick={() => handleLinkClick("groupedTransactions")}
+            >
+              <ListItemIcon>
+                {loadingLink === "groupedTransactions" ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <ChartBarBig />
+                )}
+              </ListItemIcon>
+              <ListItemText primary="Grouped Transaction" />
+            </ListItemButton>
+          </ListItem>
+
+          <ListItem disablePadding>
+            <ListItemButton
+              disabled={loadingLink}
+              href={`/CashflowStatement/${accountId}`}
+              onClick={() => handleLinkClick("cashflow")}
+            >
+              <ListItemIcon>
+                {loadingLink === "cashflow" ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Table />
+                )}
+              </ListItemIcon>
+              <ListItemText primary="Cashflow Statement" />
+            </ListItemButton>
+          </ListItem>
+          
+          <ListItem disablePadding>
+            <ListItemButton
+              disabled={loadingLink}
+              href={`/Archive/${accountId}`}
+              onClick={() => handleLinkClick("archive")}
+            >
+              <ListItemIcon>
+                {loadingLink === "archive" ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <ArchiveX />
+                )}
+              </ListItemIcon>
+              <ListItemText primary="Archive" />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Box>    
+  )
 
   return (
     <>
       {/* Button Under Transaction Count */}
-      <div className="mt-4">
+      <div>
         <Button
           className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 shadow-md flex items-center justify-center"
-          onClick={toggleNavBar}
+          onClick={toggleDrawer(true)}
         >
           <AlignJustify />
         </Button>
       </div>
 
       {/* Hovering Side Navigation Bar */}
-      {isOpen && (
-        <div className="fixed top-[4rem] left-0 h-[calc(100%-4rem)] w-64 bg-white shadow-lg z-50 border-r border-gray-200">
-          {/* Close Button */}
-          
-          {/* Navigation Links */}
-          <nav className="p-4 space-y-4">
-            {/* Book of Accounts */}
-            <div className="flex justify-between items-center pt-5 ">
-            <h2></h2>
-            <button
-              className="text-gray-400 hover:text-red-600"
-              onClick={toggleNavBar}
-            >
-              <X className="w-4 h-6" />
-            </button>
-          </div>
 
-            <div>
-              <button
-                className="flex items-center justify-between w-full text-left text-black hover:text-blue-600"
-                onClick={toggleBookMenu}
-              >
-                <span>Book of Accounts</span>
-                <ChevronDown
-                  className={`w-5 h-5 transform transition-transform ${
-                    isBookExpanded ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-              {isBookExpanded && (
-                <div className="mt-2 pl-4 space-y-2">
-                  <Link
-                    href={`/CashReceiptBook/${accountId}`}
-                    className={`block text-black hover:text-blue-600 ${
-                      loadingLink === "cashReceipt" ? "pointer-events-none opacity-50" : ""
-                    }`}
-                    onClick={() => handleLinkClick("cashReceipt")}
-                  >
-                    {loadingLink === "cashReceipt" ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="animate-spin w-4 h-4" />
-                        <span className="text-neutral-500">Cash Receipt Book</span>
-                      </div>
-                    ) : (
-                      "Cash Receipt Book"
-                    )}
-                  </Link>
-                  <Link
-                    href={`/DisbursementReceiptBook/${accountId}`}
-                    className={`block text-black hover:text-blue-600 ${
-                      loadingLink === "disbursementReceipt" ? "pointer-events-none opacity-50" : ""
-                    }`}
-                    onClick={() => handleLinkClick("disbursementReceipt")}
-                  >
-                    {loadingLink === "disbursementReceipt" ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="animate-spin w-4 h-4" />
-                        <span className="text-neutral-500">Disbursement Receipt Book</span>
-                      </div>
-                    ) : (
-                      "Disbursement Receipt Book"
-                    )}
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Cashflow */}
-            <Link
-              href={`/CashflowStatement/${accountId}`}
-              className={`block text-black hover:text-blue-600 ${
-                loadingLink === "cashflow" ? "pointer-events-none opacity-50" : ""
-              }`}
-              onClick={() => handleLinkClick("cashflow")}
-            >
-              {loadingLink === "cashflow" ? (
-                    <div className="flex items-center gap-2">
-                    <Loader2 className="animate-spin w-4 h-4 text-neutral-500" />
-                    <span className="text-neutral-500">Cashflow Statement</span>
-                    </div>
-                ) : (
-                    "Cashflow Statement"
-                )}
-            </Link>
-
-            {/* Grouped Transactions */}
-            <Link
-              href={`/SubAccounts/${accountId}`}
-              className={`block text-black hover:text-blue-600 ${
-                loadingLink === "groupedTransactions" ? "pointer-events-none opacity-50" : ""
-              }`}
-              onClick={() => handleLinkClick("groupedTransactions")}
-            >
-              {loadingLink === "groupedTransactions" ? (
-                <div className="flex items-center gap-2">
-                <Loader2 className="animate-spin w-4 h-4 text-neutral-500" />
-                <span className="text-neutral-500">Grouped Transactions</span>
-                </div>
-            ) : (
-                "Grouped Transactions"
-            )}
-            </Link>
-          </nav>
-        </div>
-      )}
+      <Drawer 
+        open={open} 
+        onClose={toggleDrawer(false)}
+        anchor={anchor}
+        ModalProps={{
+          keepMounted: true
+        }}
+        slotProps={{
+          paper: {
+            sx: anchor === "bottom"
+              ? { borderTopLeftRadius: 16, borderTopRightRadius: 16, minHeight: 200 }
+              : {},
+          },
+        }}>
+        {DrawerList}
+      </Drawer>
     </>
   );
 };
 
 export default SideNavBar;
+
+
+
+
+
+

@@ -1,14 +1,13 @@
 "use client";
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Clock, Loader2, Search, Shield, CheckCircle, User, Users, UserX } from 'lucide-react';
+import {Loader2, Search, Shield, CheckCircle, Users, UserX, LaptopMinimalCheck, UserRoundPlus, UserRound, MoreHorizontal, Trash, X, Bolt, Pen, Check } from 'lucide-react';
 import useFetch from '@/hooks/use-fetch';
-import { getUser, updateUserRole } from '@/actions/settings';
+import { createUser, deleteUser, getUser, getUserForSysAdmin, updateUser, updateUserRole } from '@/actions/settings';
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -16,15 +15,14 @@ import { Input } from '@/components/ui/input';
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
-    TableFooter,
     TableHead,
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -34,13 +32,112 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
 import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { userSchema } from '@/app/lib/schema';
+import Swal from 'sweetalert2';
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+
+import { BarLoader } from 'react-spinners';
+import { Skeleton } from '@mui/material';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
+
+
+
+
+const roles = [
+  {
+    name: "STAFF",
+    icon: <UserRound className="w-6 h-6 text-blue-500" />,
+    description: "Staff can manage and analyze data for their assigned client accounts. They have access to client dashboards, can create transactions (including AI-powered receipt scanning), and manage cashflow statements and sub-accounts.",
+    accesses: [
+      "Dashboard with analytics for assigned client",
+      "Clickable client cards to access account pages",
+      "Create transactions (AI-powered receipt scanning)",
+      "View and edit account transactions",
+      "Edit Cashflow Statements (CFS)",
+      "Access Disbursement & Cash Receipt Books",
+      "Manage sub-accounts",
+      "Download CFS as PDF"
+    ]
+  },
+  {
+    name: "ADMIN",
+    icon: <Shield className="w-6 h-6 text-green-600" />,
+    description: "Admins have access to decision support tools, advanced analytics, and user management. They can forecast, schedule tasks, and oversee all client and user activity.",
+    accesses: [
+      "Decision Support System (DSS) with analytics",
+      "AI-powered forecasting & task scheduling",
+      "Create and manage tasks",
+      "Admin portal dashboard (recent reports)",
+      "View all activity logs",
+      "Access all client information",
+      "View user list and change user roles"
+    ]
+  },
+  {
+    name: "SYSTEM ADMIN",
+    icon: <LaptopMinimalCheck className="w-6 h-6 text-yellow-600" />,
+    description: "System Admins have the highest level of access, focusing on system-wide user and session management.",
+    accesses: [
+      "System Admin portal dashboard (recent reports)",
+      "View all user session logs",
+      "Manage user list (create and delete users)"
+    ]
+  }
+];
+
+function RoleInfoTab() {
+  return (
+    <div className="w-full max-w-5xl mx-auto py-6 px-2 sm:px-4">
+      <h2 className="text-3xl font-bold mb-2 text-gray-900">Roles & Access Overview</h2>
+      <p className="text-gray-600 mb-8 max-w-2xl">
+        Below is a summary of each role in the platform and the features they can access. This helps clarify permissions and responsibilities for each user type.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {roles.map((role) => (
+          <Card key={role.name} className="flex flex-col h-full">
+            <CardHeader className="flex flex-row items-center gap-3 pb-2">
+              <div className="flex-shrink-0">{role.icon}</div>
+              <div>
+                <CardTitle className="text-xl">{role.name}</CardTitle>
+                <CardDescription className="text-gray-500">{role.description}</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <ul className="list-disc pl-5 space-y-1 text-gray-800 text-sm">
+                {role.accesses.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 
 const SettingsForm = () => {
     const [userSearch, setUserSearch] = useState("");
-    const [confirmAdminDialog, setConfirmAdminDialog] = useState(false);
-    const [userToPromote, setUserToPromote] = useState(null);
-    const [confirmRemoveDialog, setConfirmRemoveDialog] = useState(false);
-    const [userToDemote, setUserToDemote] = useState(null);
+
+
+// ADD MORE ROLE TO DROPDOWN MENU
 
     const {
         loading: fetchingUsers,
@@ -55,6 +152,14 @@ const SettingsForm = () => {
         data: updateRoleResult,
         error: updateRoleError,
     } = useFetch(updateUserRole)
+
+    const {
+    loading: createUserLoading,
+    fn: createUserFn,
+    data: createUserResult,
+    error: createUserError,
+  } = useFetch(createUser);
+
 
     // error handler
     useEffect(() => {
@@ -75,191 +180,468 @@ const SettingsForm = () => {
        if(updateRoleResult?.success){
         toast.success("User role has been updated.");
         fetchUsers();
-        setConfirmAdminDialog(false);
-        setConfirmRemoveDialog(false);
        }
     },[updateRoleResult])
 
     const filteredUsers = usersData?.success
         ? usersData.data.filter((user) => 
-            user.name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+            user.Fname?.toLowerCase().includes(userSearch.toLowerCase()) ||
+            user.Lname?.toLowerCase().includes(userSearch.toLowerCase()) ||
             user.email?.toLowerCase().includes(userSearch.toLowerCase())
         )
         : [];
     
-    const handleMakeAdmin = async (user) => {
-        if (!userToPromote) return;
-        await updateRole(userToPromote.id, "ADMIN") 
+
+
+const handleChangeUserRole = async (role) => {
+  if (!userToChangeRole) return;
+  await updateRole(userToChangeRole.id, role);
+  setChangeRoleDialog(false);
+};
+
+const [createUserDialog, setCreateUserDialog] = useState(false);
+
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+    reset,
+  } = useForm({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      Fname: "",
+      Lname: "",
+      email: "",
+      role: "",
+      username: "",
+    },
+  });
+
+const handleCreateUser = async (data) => {
+  if (data && data.email && data.username && data.Fname && data.Lname && data.role){
+    
+    await createUserFn(data);
+  }else {
+    toast.error("Incomplete inputs.")
+  }
+  return;
+};
+
+useEffect(() => {
+  if (createUserResult?.success && !createUserLoading) {
+    toast.success("User created successfully!");
+    setCreateUserDialog(false);
+    reset();
+    fetchUsers();
+  }
+}, [createUserResult, reset, createUserLoading]);
+
+
+
+  useEffect(() => {
+    if (createUserError && !createUserLoading) {
+      console.log(createUserError)
+          reset({
+      ...watch(),
+      email: "",
+      username: "",
+    });
+    }
+  },[createUserError, createUserLoading])
+
+  const {
+    loading: userDeleteLoading,
+    fn: userDeleteFn,
+    data: userDeleted,
+    error: userDeleteError
+  } = useFetch(deleteUser);
+
+
+
+    const handleSingleDelete = async (userIdDelete, deleteClerkId) => {
+      const result = await Swal.fire({
+        title: `Delete this user?`,
+        text: `This action cannot be undone.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Delete",
+        cancelButtonText: "Cancel",
+      });
+  
+      if (result.isConfirmed) {
+        await userDeleteFn(userIdDelete, deleteClerkId);
+      }
     };
 
-    const handleRemoveAdmin = async (user) => {
-        if (!userToDemote) return;
-        await updateRole(userToDemote.id, "STAFF")
-    };
+    useEffect(() => {
+      if (userDeleted && !userDeleteLoading){
+        toast.success("User has been deleted.", {icon: <Trash className='text-green-500 h-4 w-4'/>})
+        console.log("Success Deleting user")
+        fetchUsers();
+      }
+    }, [userDeleted, userDeleteLoading])
+
+    useEffect(() => {
+      if(userDeleteError && !userDeleteLoading){
+        console.log("error user deletion")
+        toast.error("Error deleting user.")
+      }
+    }, [userDeleteError, userDeleteLoading])
+
+    const [changeRoleDialog, setChangeRoleDialog] = useState(false)
+    const [userToChangeRole, setUserToChangeRole] = useState(null);
+
+
+    const {
+      loading: updateUserLoading,
+      fn: updateUserFn,
+      data: updateUserData,
+      error: updateUserError,
+    } = useFetch(updateUser);
+
+    const [userNewName, setUserNewName] = useState("");
+    const [userNewFname, setUserNewFname] = useState("");
+    const [userNewLname, setUserNewLname] = useState("");
+    const [udpateDialogOpen, setUpdateDialogOpen] = useState(false);
+    const [userToUpdataId, setUserToUpdateId] = useState("")
+    const [emailUpdate, setEmailUpdate] = useState("")
+
+    const handleUpdateData = (user) => {
+      console.warn("user:", user)
+      if (!user) return;
+      setUserToUpdateId(user.id)
+      setUpdateDialogOpen(true)
+      setUserNewName(user.username);
+      setUserNewFname(user.Fname);
+      setUserNewLname(user.Lname);  
+      setEmailUpdate(user.email)
+    }
+
+
+    const handleUpdateUser = async () => {
+      try {
+        await updateUserFn(userToUpdataId, userNewFname, userNewLname, userNewName);
+      } catch (error) {
+        toast.error(`Error updating user`);
+      }
+    }
+
+    useEffect(() => {
+      if(updateUserData && !updateUserLoading){
+        setUpdateDialogOpen(false);
+        fetchUsers();
+        toast.success("User updated.")
+      }
+    }, [updateUserData, updateUserLoading])
+
+    useEffect(() => {
+      if(updateUserError && !updateUserLoading){
+        setUpdateDialogOpen(false);
+        toast.error("User failed to udpate")
+        console.log("Error occured", updateUserError)
+      }
+    }, [updateUserError, updateUserLoading])
+
+
+    const [RoleButtonClick, setRoleButtonClick] = useState(false);
+    const [RoleButtonClickId, setRoleButtonClickId] = useState("");
+
+
+
+
+
+const [confirmRole, setConfirmRole] = useState(null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 
   return (
-    <div className='space-y-6'>
-      <Tabs defaultValue="hours">
+ <div className='space-y-6'>
+      <Tabs defaultValue="admins">
         <TabsList>
             <TabsTrigger value="Something">
-                <Clock className='h-4 w-4 mr-2'/>
-                Working Hours
+                <LaptopMinimalCheck className='h-4 w-4 mr-2'/>
+                Role information & accesses tab
             </TabsTrigger>
             <TabsTrigger value="admins">
                 <Shield className='h-4 w-4 mr-2'/>
-                Users
+                Users tab
             </TabsTrigger>
         </TabsList>
         <TabsContent 
             value="Something"
             className="space-y-6 mt-6">
-                Change your password here.
+                <RoleInfoTab />
         </TabsContent>
 
-        {/* <TabsContent 
-            value="admins"
-            className="space-y-6 mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Users</CardTitle>
-                            <CardDescription>Role Contol</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className='mb-6 relative'>
-                                <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-gray-500'/>
-                                <Input
-                                    type="search"
-                                    placeholder="Search"
-                                    className="pl-9 w-full"
-                                    value={userSearch}
-                                    onChange={(e) => setUserSearch(e.target.value)} />
-                            </div>
 
-                            {fetchingUsers 
-                                ? (
-                                    <div className="py-12 flex justify-center">
-                                        <Loader2 className='h-8 w-8 animate-spin text-gray-400'/>
-                                    </div>
-                                )
-                                : (
-                                    usersData?.success && filteredUsers.length>0
-                                    ? (
-                                        <Table>
-                                            <TableHeader>
-                                            <TableRow>
-                                                <TableHead>User</TableHead>
-                                                <TableHead>Email</TableHead>
-                                                <TableHead>Role</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
-                                            </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                            
-                                                
-                                                    {filteredUsers.map((user) => {
-                                                        return (<TableRow key={user.id}>
-                                                                    <TableCell className="font-medium">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden relative">
-                                                                                {user.imageUrl
-                                                                                    ? (
-                                                                                        <img 
-                                                                                            src={user.imageUrl}
-                                                                                            alt={user.name || "User"}
-                                                                                            className='w-full h-full object-cover'
-                                                                                        />
-                                                                                    )
-                                                                                    : (
-                                                                                        <User className='h-4 w-4 text-gray-500'/>
-                                                                                    )
-                                                                                }
-                                                                            </div>
-                                                                            <span>{user.name || "Unnamed User"}</span>
-                                                                        </div>
-                                                                    </TableCell>
-                                                                    <TableCell>{user.email}</TableCell>
-                                                                    <TableCell>
-                                                                        <Badge
-                                                                            className={
-                                                                                user.role === "ADMIN"
-                                                                                    ? 'bg-green-800'
-                                                                                    : 'bg-gray-800'   
-                                                                            }>
-                                                                                {user.role}
-                                                                            </Badge>
-                                                                    </TableCell>
-                                                                    <TableCell className="text-right">
-                                                                            {user.role === "ADMIN" 
-                                                                                ? (
-                                                                                    <Button
-                                                                                        variant="outline"
-                                                                                        size="sm"
-                                                                                        className="text-red-600"
-                                                                                        onClick={() => handleRemoveAdmin(user)}
-                                                                                        disabled={updatingRole}>
 
-                                                                                            <UserX className='h-4 w-4 mr-2'/>
-                                                                                            Remove Admin
-                                                                                    </Button>
-                                                                                )
-                                                                                : (
-                                                                                    <Button
-                                                                                        variant="outline"
-                                                                                        size="sm"
-                                                                                        onClick={() => handleMakeAdmin(user)}
-                                                                                        disabled={updatingRole}>
 
-                                                                                            <Shield className='h-4 w-4 mr-2'/>
-                                                                                            Make Admin
-                                                                                    </Button>
-                                                                                )
-                                                                            }
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                        )
-                                                    })}
-                                                
-                                           
-                                            </TableBody>
-                                        </Table>
-                                    )
-                                    : (
-                                        <div className="py-12 text-center">
-                                            <Users className="h-12 w-12 text-gray-300 mx-auto mb-4"/>
-                                            <h3 className='text-lg font-medium text-gray-900 mb-1'>
-                                                No Users Found
-                                            </h3>
-                                            <p className="text-gray-500">
-                                                {userSearch
-                                                    ? "No users matched."
-                                                    : "No Registered users."
-                                                }
-                                            </p>
-                                        </div>
-                                    )
-                                )
-                            }
-                        </CardContent>
-                    </Card>
-        </TabsContent> */}
-                <TabsContent value="admins" className="space-y-6 mt-6">
+        <Dialog open={createUserDialog} >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New User</DialogTitle>
+              <DialogDescription>
+                Fill out the form to create a new user.
+              </DialogDescription>
+            </DialogHeader>
+              <form onSubmit={handleSubmit(handleCreateUser)} className="flex flex-col gap-4">
+               
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="email" className="text-sm font-medium text-gray-700">Email</label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="user@email.com"
+                    className="w-full"
+                    {...register("email")}
+                    required
+                    disabled={createUserLoading}
+                  />
+                  {errors.email && <span className="text-red-500 text-xs">{errors.email.message}</span>}
+                </div>
+
+               
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="username" className="text-sm font-medium text-gray-700">Username</label>
+                  <Input
+                    id="username"
+                    placeholder="username"
+                    className="w-full"
+                    {...register("username")}
+                    required
+                    disabled={createUserLoading}
+                  />
+                  {errors.username && <span className="text-red-500 text-xs">{errors.username.message}</span>}
+                </div>
+
+               
+                <div className="flex flex-col md:flex-row gap-2">
+                  <div className="flex flex-col gap-1 w-full">
+                    <label htmlFor="Fname" className="text-sm font-medium text-gray-700">First Name</label>
+                    <Input
+                      id="Fname"
+                      placeholder="First Name"
+                      className="w-full"
+                      {...register("Fname")}
+                      required
+                      disabled={createUserLoading}
+                    />
+                    {errors.Fname && <span className="text-red-500 text-xs">{errors.Fname.message}</span>}
+                  </div>
+                  <div className="flex flex-col gap-1 w-full">
+                    <label htmlFor="Lname" className="text-sm font-medium text-gray-700">Last Name</label>
+                    <Input
+                      id="Lname"
+                      placeholder="Last Name"
+                      className="w-full"
+                      {...register("Lname")}
+                      required
+                      disabled={createUserLoading}
+                    />
+                    {errors.Lname && <span className="text-red-500 text-xs">{errors.Lname.message}</span>}
+                  </div>
+                </div>
+
+               
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="role" className="text-sm font-medium text-gray-700">Role</label>
+                  <select
+                    id="role"
+                    className={`w-full border rounded px-2 py-2 bg-neutral-50 ${watch("role") ? "text-black" : "text-neutral-400"}`}
+                    {...register("role")}
+                    onChange={e => setValue("role", e.target.value)}
+                    value={watch("role")}
+                    required
+                    disabled={createUserLoading}
+                  >
+                    <option className="text-gray-400" value="">Select role</option>
+                    <option className="text-blue-500" value="STAFF">Staff</option>
+                    <option className="text-green-500" value="ADMIN">Admin</option>
+                    <option className='text-yellow-400' value="SYSADMIN">System Admin</option>
+                  </select>
+                  {errors.role && <span className="text-red-500 text-xs">{errors.role.message}</span>}
+                </div>
+
+                
+                <DialogFooter className="flex flex-col-reverse md:flex-row gap-2 md:justify-end">
+                <DialogClose asChild>
+                  <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCreateUserDialog(false)}
+                  disabled={createUserLoading}
+                  className="w-full md:w-auto"
+                  >
+                  Cancel
+                </Button>
+                </DialogClose>
+
+                <Button type="submit" disabled={createUserLoading} className="w-full md:w-auto">
+                  {createUserLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating
+                    </>
+                  ) : (
+                    "Create"
+                  )}
+                </Button>
+                </DialogFooter>
+              </form>
+          </DialogContent>
+        </Dialog>
+
+                        <Dialog open={udpateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit User</DialogTitle>
+                              <DialogDescription>
+                                Edit information of this user
+                              </DialogDescription>
+                            </DialogHeader>
+                              <form 
+                                onSubmit={e => {
+                                  e.preventDefault();
+                                  handleUpdateUser(userToUpdataId, userNewFname, userNewLname, userNewName);
+                                }}
+                                className="flex flex-col gap-4">
+                              
+                                <div className="flex flex-col gap-1">
+                                  <label htmlFor="email" className="text-sm font-medium text-gray-700">Email</label>
+                                  <Input
+                                    id="email"
+                                    type="email"
+                                    value={emailUpdate}
+                                    className="w-full"
+                                    disabled={true}
+                                  />
+                                </div>
+
+                              
+                                <div className="flex flex-col gap-1">
+                                  <label htmlFor="username" className="text-sm font-medium text-gray-700">Username</label>
+                                  <Input
+                                    id="username"
+                                    placeholder="username"
+                                    value={userNewName}
+                                    className="w-full"
+                                    required
+                                    onChange={(e) => setUserNewName(e.target.value)}
+                                    disabled={updateUserLoading}
+                                  />
+                                </div>
+
+                              
+                                <div className="flex flex-col md:flex-row gap-2">
+                                  <div className="flex flex-col gap-1 w-full">
+                                    <label htmlFor="Fname" className="text-sm font-medium text-gray-700">First Name</label>
+                                    <Input
+                                      id="Fname"
+                                      placeholder="First Name"
+                                      className="w-full"
+                                      required
+                                      onChange={(e) => setUserNewFname(e.target.value)}
+                                      value={userNewFname}
+                                      disabled={updateUserLoading}
+                                    />
+                                  </div>
+                                  <div className="flex flex-col gap-1 w-full">
+                                    <label htmlFor="Lname" className="text-sm font-medium text-gray-700">Last Name</label>
+                                    <Input
+                                      id="Lname"
+                                      placeholder="Last Name"
+                                      className="w-full"
+                                      required
+                                      onChange={(e) => setUserNewLname(e.target.value)}
+                                      value={userNewLname}
+                                      disabled={updateUserLoading}
+                                    />
+                                  </div>
+                                </div>
+
+                                
+                                <DialogFooter className="flex flex-col-reverse md:flex-row gap-2 md:justify-end">
+                                <DialogClose asChild>
+                                  <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => setUpdateDialogOpen(false)}
+                                  disabled={updateUserLoading}
+                                  className="w-full md:w-auto
+                                  border-red-500 hover:border-0 hover:bg-red-500 hover:text-white"
+                                  >
+                                  Cancel
+                                </Button>
+                                </DialogClose>
+
+                                <Button 
+                                type="submit" 
+                                disabled={updateUserLoading} 
+                                variant="outline"
+                                // onClick={() => handleUpdateUser(userToUpdataId, userNewFname, userNewLname, userNewName)}
+                                className="w-full md:w-auto border-green-500 hover:border-0 hover:bg-green-500 hover:text-white">
+                                  {updateUserLoading ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Applying
+                                    </>
+                                  ) : (
+                                    "Apply Changes"
+                                  )}
+                                </Button>
+                                </DialogFooter>
+                              </form>
+                          </DialogContent>
+                        </Dialog>
+
+
+
+
+
+
+        <TabsContent value="admins" className="space-y-6 mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Admin Users</CardTitle>
-              <CardDescription>
-                Manage users with admin privileges.
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between gap-4">
+              <div>
+                <CardTitle>User List</CardTitle>
+                <CardDescription>
+                  Manage your users in here.
+                </CardDescription>
+              </div>
+              <Button variant="outline" className="h-10 border border-black" onClick={() => setCreateUserDialog(true)}>
+                <UserRoundPlus className="mr-2 h-4 w-4" /> Create User
+              </Button>
             </CardHeader>
+
+
             <CardContent>
               <div className="mb-6 relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                 <Input
                   type="search"
-                  placeholder="Search users..."
+                  placeholder="Search name or email"
                   className="pl-9 w-full"
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
@@ -267,8 +649,46 @@ const SettingsForm = () => {
               </div>
 
               {fetchingUsers ? (
-                <div className="py-12 flex justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-4 w-full animate-pulse"
+                    >
+                      {/* Avatar */}
+                      <Skeleton
+                        animation="wave"
+                        variant="circular"
+                        width={40}
+                        height={40}
+                        className="!w-10 !h-10"
+                      />
+                      {/* Name */}
+                      <Skeleton
+                        animation="wave"
+                        variant="text"
+                        width="20%"
+                        height={32}
+                        className="!w-1/5 !min-w-[80px] !h-8"
+                      />
+                      {/* Email */}
+                      <Skeleton
+                        animation="wave"
+                        variant="text"
+                        width="30%"
+                        height={32}
+                        className="!w-1/3 !min-w-[120px] !h-8"
+                      />
+                      {/* Actions */}
+                      <Skeleton
+                        animation="wave"
+                        variant="text"
+                        width="15%"
+                        height={32}
+                        className="!w-[15%] !min-w-[60px] !h-8 ml-auto"
+                      />
+                    </div>
+                  ))}
                 </div>
               ) : usersData?.success && filteredUsers.length > 0 ? (
                 <div className="overflow-x-auto">
@@ -276,8 +696,9 @@ const SettingsForm = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>User</TableHead>
+                        <TableHead className="hidden sm:table-cell">Username</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
+                        <TableHead className="text-center">Role</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -294,53 +715,88 @@ const SettingsForm = () => {
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
-                                  <Users className="h-4 w-4 text-gray-500" />
+                                  <UserRound className="h-4 w-4 text-gray-500" />
                                 )}
                               </div>
-                              <span>{user.name || "Unnamed User"}</span>
+                              <span>{`${user.Fname} ${user.Lname}`|| "Unnamed User"}</span>
                             </div>
                           </TableCell>
+                          <TableCell className="hidden sm:table-cell">{user.username}</TableCell>
                           <TableCell>{user.email}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             <Badge
                               className={
                                 user.role === "ADMIN"
                                   ? "bg-green-800"
-                                  : "bg-gray-800"
+                                  : user.role === "SYSADMIN"
+                                    ? "bg-yellow-500"
+                                    : "bg-blue-800"
                               }
                             >
-                              {user.role}
+                              {user.role
+                                ? user.role === "ADMIN"
+                                  ? "Admin"
+                                  : user.role === "SYSADMIN"
+                                    ? "System Admin"
+                                    : "Staff"  
+                                : "No Role...Immidiate Database check"
+                              }
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">
-                            {user.role === "ADMIN" ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600"
-                                onClick={() => {
-                                  setUserToDemote(user);
-                                  setConfirmRemoveDialog(true);
-                                }}
-                                disabled={updatingRole}
-                              >
-                                <UserX className="h-4 w-4 mr-2" />
-                                Remove Admin
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setUserToPromote(user);
-                                  setConfirmAdminDialog(true);
-                                }}
-                                disabled={updatingRole}
-                              >
-                                <Shield className="h-4 w-4 mr-2" />
-                                Make Admin
-                              </Button>
-                            )}
+                          <TableCell className="text-right flex items-center justify-end gap-2">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline"
+                                  className="px-2 py-1 h-8 w-8 flex items-center justify-center"
+                                  aria-label="Open user actions">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent 
+                                align="end"
+                                className="w-56 max-w-xs sm:max-w-sm md:max-w-md p-4 rounded-xl shadow-lg bg-white"
+                                sideOffset={8}>
+
+                                <div className="flex flex-col gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  className="flex items-center gap-2 border-yellow-300 hover:bg-yellow-300 hover:text-white hover:border-0"
+                                  onClick={() => handleUpdateData(user)}>
+                                    <span className="flex items-center">
+                                    <Pen className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                    <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">
+                                      Edit
+                                    </span>
+                                  </span>
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2 border-rose-600 hover:bg-rose-600 hover:text-white hover:border-0"
+                                    onClick={() => handleSingleDelete(user.id, user.clerkUserId)}
+                                  >
+                                    <span className="flex items-center">
+                                      <Trash className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                      <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Delete</span>
+                                    </span>
+                                  </Button>
+                                  {/* Change Role Button */}
+                                  <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2 border-black hover:bg-black hover:text-white hover:border-0"
+                                    onClick={() => {
+                                      setUserToChangeRole(user);
+                                      setChangeRoleDialog(true);
+                                    }}
+                                  >
+                                    <span className="flex items-center">
+                                      <Shield className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                      <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Change Role</span>
+                                    </span>
+                                  </Button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+
                           </TableCell>
                         </TableRow>
                       ))}
@@ -363,84 +819,133 @@ const SettingsForm = () => {
             </CardContent>
           </Card>
 
-          {/* Confirm Make Admin Dialog */}
           <Dialog
-            open={confirmAdminDialog}
-            onOpenChange={setConfirmAdminDialog}
-          >
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirm Admin Privileges</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to give admin privileges to{" "}
-                  {userToPromote?.name || userToPromote?.email}? Admin users can
-                  manage all aspects of the dealership.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
+            open={changeRoleDialog}
+              onOpenChange={(open) => {
+              setChangeRoleDialog(open);
+              if (!open) setConfirmRole(null);
+            }}>
+            <DialogContent className="max-w-md w-full p-0 rounded-2xl overflow-hidden">
+              <div className="bg-blue-50 px-6 pt-6 pb-4">
+                <DialogHeader>
+                  <DialogTitle>Change User Role</DialogTitle>
+                  <DialogDescription>
+                      {confirmRole && (
+                        <>Are you sure you want to change the role of{" "}
+                        <span className="font-semibold">{userToChangeRole.Fname} {userToChangeRole.Lname}{" "}</span>to
+                        <span className="font-semibold">{" "}{confirmRole}</span>?</>
+                      )}
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+              <div className="bg-white flex flex-col gap-2 px-4 py-4 sm:flex-row sm:gap-4 min-w-0">
                 <Button
-                  variant="outline"
-                  onClick={() => setConfirmAdminDialog(false)}
-                  disabled={updatingRole}
+                  onClick={() => {
+                    if (confirmRole === "STAFF") {
+                      handleChangeUserRole("STAFF");
+                      setConfirmRole(null);
+                    } else {
+                      setConfirmRole("STAFF");
+                    }
+                  }}
+                  disabled={updatingRole || userToChangeRole?.role === "STAFF"}
+                  className={`flex-1 basis-1/4 min-w-0 flex flex-col items-center justify-center rounded-xl border border-blue-100 shadow-none transition-all duration-200 hover:scale-105 h-20
+                    ${confirmRole === "STAFF" 
+                      ? " border-green-200 group hover:bg-green-300" 
+                      : "hover:bg-blue-300"}
+                  `}
+                  variant="ghost"
                 >
-                  Cancel
+                    <UserRound className={`mb-1 h-6 w-6 
+                      ${confirmRole === "STAFF" 
+                        ? "text-green-400 group-hover:text-white" 
+                        : "text-blue-500"}` //unclicked
+                        } />
+                    <span className={`font-medium text-sm ${confirmRole === "STAFF" ? "text-white" : "text-blue-700"}`}>
+                      {confirmRole === "STAFF" 
+                        ? (<><Check className="text-green-400 group-hover:text-white"/>
+                          <label className="text-green-400 group-hover:text-white">Yes</label></>)
+                        : "Staff"}
+                    </span>
                 </Button>
-                <Button onClick={handleMakeAdmin} disabled={updatingRole}>
-                  {updatingRole ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Confirming...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Confirm
-                    </>
-                  )}
+                <Button
+                  onClick={() => {
+                    if (confirmRole === "ADMIN") {
+                      handleChangeUserRole("ADMIN");
+                      setConfirmRole(null);
+                    } else {
+                      setConfirmRole("ADMIN");
+                    }
+                  }}
+                  disabled={updatingRole || userToChangeRole?.role === "ADMIN"}
+                  className={`flex-1 basis-1/4 min-w-0 flex flex-col items-center justify-center rounded-xl border border-purple-100 shadow-none transition-all duration-200 hover:scale-105 h-20
+                    ${confirmRole === "ADMIN"
+                      ?  " border-green-200 group hover:bg-green-300" 
+                      : "hover:bg-purple-300"}
+                  `}
+                  variant="ghost"
+                >
+                  <Shield className={`mb-1 h-6 w-6
+                    ${confirmRole === "ADMIN"
+                      ? "text-green-400 group-hover:text-white"
+                      : "text-purple-500"}
+                  `} />
+                  <span className={`font-medium text-sm ${confirmRole === "ADMIN" ? "text-white" : "text-purple-700"}`}>
+                    {confirmRole === "ADMIN"
+                      ? (<><Check className="text-green-400 group-hover:text-white"/>
+                        <label className="text-green-400 group-hover:text-white">Yes</label></>)
+                      : "Admin"}
+                  </span>
                 </Button>
-              </DialogFooter>
+                <Button
+                  onClick={() => {
+                    if (confirmRole === "SYSADMIN") {
+                      handleChangeUserRole("SYSADMIN");
+                      setConfirmRole(null);
+                    } else {
+                      setConfirmRole("SYSADMIN");
+                    }
+                  }}
+                  disabled={updatingRole || userToChangeRole?.role === "SYSADMIN"}
+                  className={`flex-1 basis-1/4 min-w-0 flex flex-col items-center justify-center rounded-xl border border-indigo-100 shadow-none transition-all duration-200 hover:scale-105 h-20
+                    ${confirmRole === "SYSADMIN"
+                      ?  " border-green-200 group hover:bg-green-300" 
+                      : "hover:bg-indigo-300"}
+                  `}
+                  variant="ghost"
+                >
+                  <Bolt className={`mb-1 h-6 w-6
+                    ${confirmRole === "SYSADMIN"
+                      ? "text-green-400 group-hover:text-white"
+                      : "text-indigo-500"}
+                  `} />
+                  <span className={`font-medium text-sm ${confirmRole === "SYSADMIN" ? "text-white" : "text-indigo-700"}`}>
+                    {confirmRole === "SYSADMIN"
+                      ? (<><Check className="text-green-400 group-hover:text-white"/>
+                        <label className="text-green-400 group-hover:text-white">Yes</label></>)
+                      : <>System<br />Admin</>}
+                  </span>
+                </Button>
+                <Button
+                  onClick={() => {
+                    setChangeRoleDialog(false);
+                    setConfirmRole(null); 
+                  }}
+                  disabled={updatingRole}
+                  className="flex-1 basis-1/4 min-w-0 flex flex-col items-center 
+                  justify-center rounded-xl border border-gray-100 shadow-none 
+                  hover:bg-gray-300 transition-all duration-200 hover:scale-105 h-20"
+                  variant="ghost"
+                >
+                  <X className="mb-1 h-6 w-6 text-gray-500" />
+                  <span className="text-gray-700 font-medium text-sm">Cancel</span>
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
 
-          {/* Confirm Remove Admin Dialog */}
-          <Dialog
-            open={confirmRemoveDialog}
-            onOpenChange={setConfirmRemoveDialog}
-          >
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Remove Admin Privileges</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to remove admin privileges from{" "}
-                  {userToDemote?.name || userToDemote?.email}? They will no
-                  longer be able to access the admin dashboard.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setConfirmRemoveDialog(false)}
-                  disabled={updatingRole}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleRemoveAdmin}
-                  disabled={updatingRole}
-                >
-                  {updatingRole ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Removing...
-                    </>
-                  ) : (
-                    "Remove Admin"
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+
+
         </TabsContent>
     </Tabs>
 

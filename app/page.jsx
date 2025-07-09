@@ -1,22 +1,6 @@
-// "use client";
-// import HeroSection from "@/components/hero";
-// import { Button } from "@/components/ui/button";
-// import { Card, CardContent } from "@/components/ui/card";
-// import { featuresData, howItWorksData, statsData, testimonialsData } from "@/data/landing";
-// import { SignIn } from "@clerk/nextjs";
-// import Image from "next/image";
-// import Link from "next/link";
-// import { redirect } from "next/navigation";
-// import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
-// import { useEffect } from "react";
-// import { useAuth, useUser } from "@clerk/nextjs";
-// import { useRouter } from "next/navigation";
 
-
-
-// The exported code uses Tailwind CSS. Install Tailwind CSS in your dev environment to ensure all styles work.
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef} from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -73,7 +57,10 @@ import {
   Book,
   CalendarDays,
   ChartLine,
-  Triangle
+  Triangle,
+  Brain,
+  Folders,
+  IdCard
 } from "lucide-react";
 
 
@@ -128,123 +115,228 @@ const Home = () => {
       section.scrollIntoView({ behavior: "smooth" });
     }
   };
+
   const features = [
     {
-      id: "cashflow",
-      title: "Cashflow Statement Creation",
-      icon: <ChartLine/>,
+      id: "account",
+      title: "Account Creation",
+      bestPracticeId: "account",
+      icon: <IdCard/>,
+      src: "/createAcc.png",
       description: 
-        "Learn how to create and manage your cashflow statements efficiently.",
+        "Create an account for your client.",
       steps: [
-        "Step number one",
-        "Step number two",
-        "Step number three",
-        "Step number four",
-        "Step number five",
+        "Find the 'Add New Account' card in your dashboard.",
+        "Fill out the form with the information of the client.",
+        "Review the information you entered in the blanks.",
+        "Click on Add Client button",
+        "You will see your created on the dashboard.",
       ],
-      imagePrompt:
-        "Professional financial dashboard showing cashflow statement creation interface with charts, graphs, and financial data visualization on a clean light background with blue and white color scheme, high quality 3D rendering",
-      tryItLink: "/cashflow",
     },
     {
       id: "ai-transaction",
       title: "AI-Powered Transaction Recording",
-      icon: <Bot/>,
+      bestPracticeId: "infoAI",
+      src: "/AddTransaction.png",
+      icon: <Bot className="text-black group-hover:text-white group-hover:animate-bounce"/>,
       description:
-        "Record transactions effortlessly with the help of Gemini AI technology.",
+        "Save time on recording the transactions in the accounts.",
       steps: [
-        "Step number one",
-        "Step number two",
-        "Step number three",
-        "Step number four",
-        "Step number five",
+        "Choose an account in the dashboard.",
+        "Click on the Add Transaction button of the chosen account.",
+        "Scan the receipt.",
+        "Wait for the AI to process the scanned receipt.",
+        "Review the reflected information on the form.",
+        "Click Create Transaction to save the transaction."
       ],
-      imagePrompt:
-        "Futuristic AI interface processing financial transaction data with glowing blue elements, showing natural language input being converted to structured transaction data by Gemini AI on a minimalist white background with subtle tech elements",
-      tryItLink: "/transactions",
     },
     {
-      id: "grouping",
-      title: "Transaction Grouping System",
-      icon: <Layers/>,
+      id: "cashflow",
+      title: "Cashflow Statement Generation",
+      bestPracticeId: "cashflowStatment",
+      icon: <ChartLine/>,
+      src: "/cashflowModal.png",
       description:
-        "Organize your transactions into meaningful groups for better financial management.",
+        "Generate Cashflow Statements for specifc periods.",
       steps: [
-        "Step number one",
-        "Step number two",
-        "Step number three",
-        "Step number four",
-        "Step number five",
+        "In the Account page, navigate the tabs to see the tables.",
+        "Select transactions or grouped transactions.",
+        "Click on Cashflow Statement button.",
+        "Enter the beginning balance.",
+        "Click on Generate to preview PDF of the cashflow statement.",
       ],
-      imagePrompt:
-        "Clean modern interface showing transaction grouping system with color-coded categories and drag-drop functionality, displaying financial data organization with a light professional design and subtle grid background",
-      tryItLink: "/groups",
     },
     {
-      id: "email-support",
-      title: "AI Email Decision Support",
-      icon: <Mail/>,
+      id: "group",
+      title: "Group Transaction",
+      bestPracticeId: "groupTransaction",
+      icon: <Folders/>,
+      src: "/groupTransaction.png",
       description:
-        "Receive intelligent financial insights and recommendations via email.",
+        "Group transaction for long time framed cashflow statements.",
       steps: [
-        "Step number one",
-        "Step number two",
-        "Step number three",
-        "Step number four",
-        "Step number five",
+        "Select transactions with same Type and Activity.",
+        "Click on Group Transaction button.",
+        "Fill in the form.",
+        "Click on Create group",
       ],
-      imagePrompt:
-        "Professional email interface showing AI-powered financial decision support system with data visualization, recommendation cards, and actionable insights on a clean white background with subtle blue accents",
-      tryItLink: "/email-settings",
     },
     {
-      id: "auto-recording",
-      title: "Auto Recording System",
-      icon: <Book/>,
+      id: "DecisionSupport",
+      title: "Decision Support System",
+      bestPracticeId: "DSS",
+      icon: <Brain className="text-black group-hover:text-white group-hover:animate-bounce"/>,
+      src: "/dss(1).png",
       description:
-        "Automatically record transactions in Cash Receipt and Disbursement Books.",
+        "Receive financial insights and recommendations through Hybrid Decision Support.",
       steps: [
-        "Step number one",
-        "Step number two",
-        "Step number three",
-        "Step number four",
-        "Step number five",
+        "Ensure you have transactions and cashflows.",
+        "Select a client at the top right of Client Income Summary card.",
+        "For suggested schedule, ensure you created Tasks.",
+        "Click on Generate AI Powered Forecast to see forecast.",
+        "Click on Schedule Task with AI to receive suggestion of schedule prioritization insight.",
       ],
-      imagePrompt:
-        "Digital accounting interface showing automated transaction recording system with cash receipt and disbursement books, featuring clean spreadsheet-like design with transaction history and automatic categorization on light background",
-      tryItLink: "/auto-recording",
-    },
-    {
-      id: "date-filtering",
-      title: "Date Filtering Features",
-      icon: <CalendarDays/>,
-      description:
-        "Filter your financial records by date ranges for targeted analysis.",
-      steps: [
-        "Step number one",
-        "Step number two",
-        "Step number three",
-        "Step number four",
-        "Step number five",
-      ],
-      imagePrompt:
-        "Clean date filtering interface for financial application showing calendar selection, date range picker, and filtered transaction results with data visualization elements on minimal white background with light blue accents",
-      tryItLink: "/filters",
     },
   ];
+
+  const BestPractices = [
+    {
+      id: "account",
+      itemId: "accountItemId",
+      ItemTrigger1: "Action & Access",
+      ItemTrigger2: "Other helpful information",
+      list: [
+        "Only users with Staff role can have access to dashboard.",
+        "Each Staff will only see accounts of clients they created.",
+        "Review the information you entered in the blanks.",
+        "The Business Name cannot be repeated.",
+        "The hollow card is the toggle to open a form to create a new account for a client.",
+        "Choos a client from the Dropdown list in the Left card to see their reports in the graphs.",
+      ],
+      list2: [
+        "You must have transactions encoded for an account to see reports in the graphs",
+        "The graphs are based on time frames, do not worry if you do not see a graph",
+        "The Bar graph illustrates the ranking of income source base on Account Titles of transactions",
+        "The Pie chart shows the breakdown of expenses of the current month",
+        "The Area graph gives a comparision of a client's incomes and expenses for the past 3 months",
+        "Hovering on the graphs shows a tooltip that describes a data.",
+        "Clicking on the reset will unfill the blanks."
+      ],
+    },
+    {
+      id: "infoAI",
+      itemId: "accountItemId",
+      ItemTrigger1: "Action & Access",
+      ItemTrigger2: "Other helpful information",
+      list: [
+        "The user can only add transactions on accounts that he created.",
+        "The page to create transactions is only for users with staff role.",
+        "You can switch the account you are encoding for, in the Create Transaction page.",
+        "Clicking on Reset button, resets all blanks including the Image field for scanning.",
+        "As long as Transaction type is Expense the amount is negative.",
+      ],
+      list2: [
+        "The AI is suggestive on descriptive information of a receipt.",
+        "The AI can detect the BIR Authority to Print number.",
+        "The resolution of your phone's camera can affect the scanning phase.",
+        "The vendor's name in the receipt can also be read by the AI.",
+        "Always review before finalizing.",
+        "Be mindful on switching accounts.",
+        "Having a Particular can also give a shorten name to the transaction.",
+        "A check icon appears in the Image field if it contains an image of a receipt.",
+      ],
+    },
+    {
+      id: "cashflowStatment",
+      itemId: "accountItemId",
+      ItemTrigger1: "Action & Access",
+      ItemTrigger2: "Other helpful information",
+      list: [
+        "You must select transactions or grouped transaction.",
+        "Enter begining balances or choose from the previous ending balances shown.",
+        "Clicking on the Create Cashflow will show a card where you will see ending balances of previous cashflows.",
+        "The Generate button can only be clicked once requirements for cashflow statement is complete.",
+        "The Save Only button will only save your newly created cashflow statement in the Cashflow page.",
+        "Produced PDF's are fixed data, click Cancel to prevent disruption to your organized cashflows.",
+        "The Download button also save the cashflow statement you created."
+      ],
+      list2: [
+        "The Account page enables your to quickly create Cashflow Statements solely for reporting purposes.",
+        "Created cashflow statements are automatically categorized by period base on the dates of your selected transactions.",
+        "Quick preivew of cashflow statement on mobile device is not possible.",
+        "When creating on mobile for reporting purposes, make sure to review your records for realignment.",
+        "You should select the previous ending balance respectively to the period of the next cashflow statement.",
+        "You can update cashflows in Cashflow page.", 
+        "The Quick Edit mode allows you to update the balances of a cashflow statements without visiting each cashflows one-by-one.",
+        "Click on a record of cashflow for precision update and download option."
+      ],
+    },
+    {
+      id: "groupTransaction",
+      itemId: "accountItemId",
+      ItemTrigger1: "Action & Access",
+      ItemTrigger2: "Other helpful information",
+      list: [
+        "The groups of transactions can only be seen on accounts where you created it.",
+        "Created groups are fixed, automatically giving them fixed amount once created.",        
+        "Visit Group Transaction page to update your created groups.",
+        "You can remove transaction from opted groups.",
+        "The system enables an updating guide notification.",
+        "Seeing a warning sign and a Pen icon means the group's amount needs to be updated.",
+      ],
+      list2: [
+        "You can create a group without selecting transaction by filling out New Group Name only.",
+        "Not selecting transactions and filling only the Parent's Group Name will keep Create Group disabled.",
+        "Picking transaction and filling only the Parent's Group Name, inserts a transaction to existing group.",
+        "You can select transaction and fill in the New Group Name.",
+        "Description is optional but highly encourage to provide clarity and context for reviewing and reporting.",
+      ],
+    },
+    {
+      id: "DSS",
+      itemId: "accountItemId",
+      ItemTrigger1: "Action & Access",
+      ItemTrigger2: "Other helpful information",
+      list: [
+        "Generate forecasts and insights from AI in a click of a button.",
+        "Gross forecast based on the balances and gross of cashflows of a client.",
+        "Insights of AI based on the Gross forecasts.",
+        "Forecast of inflows and outflows of a client",
+        "Recommendations with impact level categorization based from overall analysis",
+        "Admin level feature only.",
+        "Leverage decision support for your administrative level corporate planning.",
+        "Create tasks and let AI give suggestion of weekly schedule of your services for your clients.",
+        "Be informed of your client's inflow rate per month.",
+      ],
+      list2: [
+        "Illustrates accumulated data from accounts created by staff.",
+        "Moving average model forecasting based on historical data in quarterly timeframe.",
+        "Comparative graphs for simple trend analysis.",
+        "Know what you can prioritize in your day from AI.",
+      ],
+    },
+  ]
+
+
+
+
+
+
+
+
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header with progress bar */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm pt-11">
-        <div className="container mx-auto px-4 py-4">
-          
-          <Progress value={scrollProgress} className="h-1 mt-4" />
-        </div>
+
 
         {/* Navigation tabs */}
         <div className="container mx-auto px-4">
-          <Tabs>
-              <TabsList className="w-full justify-start overflow-x-auto py-2 space-x-2">
+          <Tabs className="mt-10 pt-2">
+              <TabsList className="w-full justify-between 
+              overflow-x-auto overflow-y-hidden py-2 space-x-2 h-auto">
             {features.map((feature) => (
               <TabsTrigger
                 key={feature.id}
@@ -277,11 +369,10 @@ const Home = () => {
               Teruel Accounting Financial Management System
             </h1>
             <p className="text-lg text-gray-600 mb-6">
-              Welcome to your comprehensive guide to using our Web-Based
-              Financial Management System. Learn how to leverage AI-powered
-              features to streamline your financial workflows.
+              Welcome to your comprehensive guide to <br/>using our
+              Web-Based Financial Management System.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
+            {/* <div className="flex flex-col sm:flex-row gap-4">
               <Button className="bg-blue-600 hover:bg-blue-700 text-white !rounded-button whitespace-nowrap cursor-pointer">
                 <i className="fa-solid fa-play mr-2"></i>
                 Watch Tutorial
@@ -294,11 +385,12 @@ const Home = () => {
                 <i className="fa-solid fa-book-open mr-2"></i>
                 Start Reading
               </Button>
-            </div>
+            </div> */}
           </div>
           <div className="md:w-1/2 mt-8 md:mt-0">
             <img
-              src="https://readdy.ai/api/search-image?query=Modern%20financial%20dashboard%20interface%20with%20AI%20assistant%20helping%20user%20navigate%20through%20various%20financial%20tools%20and%20features%2C%20showing%20clean%20UI%20with%20data%20visualization%20elements%2C%20charts%20and%20helpful%20tooltips%20on%20a%20light%20background%20with%20blue%20accents&width=600&height=400&seq=hero1&orientation=landscape"
+              // src="https://readdy.ai/api/search-image?query=Modern%20financial%20dashboard%20interface%20with%20AI%20assistant%20helping%20user%20navigate%20through%20various%20financial%20tools%20and%20features%2C%20showing%20clean%20UI%20with%20data%20visualization%20elements%2C%20charts%20and%20helpful%20tooltips%20on%20a%20light%20background%20with%20blue%20accents&width=600&height=400&seq=hero1&orientation=landscape"
+              src="dashSS(1).png"
               alt="Financial System Overview"
               className="rounded-lg shadow-xl object-cover w-full h-auto"
             />
@@ -316,7 +408,13 @@ const Home = () => {
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-white pb-6">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <div className={`
+                          ${feature.id === "DecisionSupport" || feature.id === "ai-transaction"
+                            ? ("w-12 h-12 rounded-full bg-blue-100 hover:animate-bounce border border-blue-600 hover:border-none group hover:bg-gradient-to-r hover:from-blue-700  hover:to-fuchsia-600 flex items-center justify-center")
+                            : ("w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center")
+                          }
+                          
+                          `}>
                         {/* <i
                           className={`${feature.icon} text-blue-600 text-xl`}
                         ></i> */}
@@ -372,52 +470,38 @@ const Home = () => {
                       </ol>
                       <div className="mt-8">
                         <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                          Detailed Instructions
+                          Be informed with the following: 
                         </h3>
-                        <Accordion type="single" collapsible className="w-full">
-                          <AccordionItem value="tips">
-                            <AccordionTrigger className="text-blue-600">
-                              Tips & Best Practices
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                                <li>
-                                  bullet 1
-                                </li>
-                                <li>
-                                  bullet 2
-                                </li>
-                                <li>
-                                  bullet 3
-                                </li>
-                                <li>
-                                  bullet 4
-                                </li>
-                              </ul>
-                            </AccordionContent>
-                          </AccordionItem>
-                          <AccordionItem value="common-issues">
-                            <AccordionTrigger className="text-blue-600">
-                              Common Issues & Solutions
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="space-y-3 text-gray-700">
-                                <p>
-                                  <strong>Issue:</strong> issue #1
-                                </p>
-                                <p>
-                                  <strong>Solution:</strong> answer to issue #1
-                                </p>
-                                <p className="mt-2">
-                                  <strong>Issue:</strong> issue #2
-                                </p>
-                                <p>
-                                  <strong>Solution:</strong> answer to issue #2
-                                </p>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
+                      
+
+                        {BestPractices.filter(bp => bp.id === feature.bestPracticeId).map((practice) => (
+                          <Accordion key={practice.id} type="single" collapsible className="w-full">
+                            <AccordionItem value={`list1-${practice.id}`}>
+                              <AccordionTrigger className="text-blue-600">
+                                {practice.ItemTrigger1}
+                              </AccordionTrigger>
+                              <AccordionContent>
+                                <ul className="list-disc pl-5 space-y-2 text-gray-700">
+                                  {practice.list.map((item, idx) => (
+                                    <li key={idx}>{item}</li>
+                                  ))}
+                                </ul>
+                              </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value={`list2-${practice.id}`}>
+                              <AccordionTrigger className="text-blue-600">
+                                {practice.ItemTrigger2}
+                              </AccordionTrigger>
+                              <AccordionContent>
+                                <ul className="list-disc pl-5 space-y-2 text-gray-700 mt-4">
+                                  {practice.list2.map((item, idx) => (
+                                    <li key={idx}>{item}</li>
+                                  ))}
+                                </ul>
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
+                        ))}
                       </div>
                     </div>
                     <div className="bg-gray-50 p-6 flex flex-col">
@@ -426,35 +510,10 @@ const Home = () => {
                       </h3>
                       <div className="rounded-lg overflow-hidden shadow-md flex-grow">
                         <img
-                          src={`https://readdy.ai/api/search-image?query=$%7Bfeature.imagePrompt%7D&width=600&height=400&seq=${feature.id}&orientation=landscape`}
+                          src={feature.src || "no image"}
                           alt={feature.title}
                           className="w-full h-full object-cover object-top"
                         />
-                      </div>
-                      <div className="mt-6 flex flex-col space-y-4">
-                        <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
-                          <h4 className="font-medium text-blue-700 mb-1">
-                            Pro Tip
-                          </h4>
-                          <p className="text-gray-700 text-sm">
-                            {index === 0 &&
-                              "Use the 'Save Template' feature to quickly generate similar statements in the future."}
-                            {index === 1 &&
-                              "The more you use AI transaction recording, the better it becomes at understanding your specific financial patterns."}
-                            {index === 2 &&
-                              "Create custom tags for your transaction groups to make them even more organized and searchable."}
-                            {index === 3 &&
-                              "Set priority levels for different types of financial insights to ensure you see the most important ones first."}
-                            {index === 4 &&
-                              "Schedule a monthly review of your auto-recorded transactions to ensure everything is categorized correctly."}
-                            {index === 5 &&
-                              "Save your most frequently used date filters as presets for quick access in the future."}
-                          </p>
-                        </div>
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white mt-auto !rounded-button whitespace-nowrap cursor-pointer">
-                          <i className="fa-solid fa-external-link-alt mr-2"></i>
-                          Try It Now
-                        </Button>
                       </div>
                     </div>
                   </div>
@@ -464,8 +523,12 @@ const Home = () => {
           ))}
         </div>
       </div>
+
+
+
+
       {/* Additional resources section */}
-      <section className="bg-blue-50 py-16">
+      {/* <section className="bg-blue-50 py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
             Additional Resources
@@ -586,55 +649,55 @@ const Home = () => {
             </Card>
           </div>
         </div>
-      </section>
+      </section> */}
 
 
       
       {/* FAQ Section */}
-      <section className="py-16 bg-white">
+      {/* <section className="py-16 bg-gray-800">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
+          <h2 className="text-3xl font-bold text-center text-white mb-12">
             Frequently Asked Questions
           </h2>
           <div className="max-w-3xl mx-auto">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="faq-1">
-                <AccordionTrigger className="text-lg font-medium text-gray-800">
+                <AccordionTrigger className="text-lg font-medium text-white">
                   FAQ #1?
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-700">
+                <AccordionContent className="text-white">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien id laoreet varius, risus nunc viverra libero, at dignissim justo magna in nisi. Curabitur vulputate, ex non interdum fermentum, enim nunc feugiat nulla, at cursus arcu sapien in metus. Fusce a turpis vel est elementum vehicula. Integer malesuada eros vitae odio congue, quis porttitor metus vulputate.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="faq-2">
-                <AccordionTrigger className="text-lg font-medium text-gray-800">
+                <AccordionTrigger className="text-lg font-medium text-white">
                   FAQ #2?
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-700">
+                <AccordionContent className="text-white">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien id laoreet varius, risus nunc viverra libero, at dignissim justo magna in nisi. Curabitur vulputate, ex non interdum fermentum, enim nunc feugiat nulla, at cursus arcu sapien in metus. Fusce a turpis vel est elementum vehicula. Integer malesuada eros vitae odio congue, quis porttitor metus vulputate.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="faq-3">
-                <AccordionTrigger className="text-lg font-medium text-gray-800">
+                <AccordionTrigger className="text-lg font-medium text-white">
                   FAQ #3?
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-700">
+                <AccordionContent className="text-white">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien id laoreet varius, risus nunc viverra libero, at dignissim justo magna in nisi. Curabitur vulputate, ex non interdum fermentum, enim nunc feugiat nulla, at cursus arcu sapien in metus. Fusce a turpis vel est elementum vehicula. Integer malesuada eros vitae odio congue, quis porttitor metus vulputate.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="faq-4">
-                <AccordionTrigger className="text-lg font-medium text-gray-800">
+                <AccordionTrigger className="text-lg font-medium text-white">
                   FAQ #3?
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-700">
+                <AccordionContent className="text-white">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien id laoreet varius, risus nunc viverra libero, at dignissim justo magna in nisi. Curabitur vulputate, ex non interdum fermentum, enim nunc feugiat nulla, at cursus arcu sapien in metus. Fusce a turpis vel est elementum vehicula. Integer malesuada eros vitae odio congue, quis porttitor metus vulputate.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="faq-5">
-                <AccordionTrigger className="text-lg font-medium text-gray-800">
+                <AccordionTrigger className="text-lg font-medium text-white">
                   FAQ #4?
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-700">
+                <AccordionContent className="text-white">
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien id laoreet varius, risus nunc viverra libero, at dignissim justo magna in nisi. Curabitur vulputate, ex non interdum fermentum, enim nunc feugiat nulla, at cursus arcu sapien in metus. Fusce a turpis vel est elementum vehicula. Integer malesuada eros vitae odio congue, quis porttitor metus vulputate.
                 </AccordionContent>
               </AccordionItem>
@@ -642,203 +705,12 @@ const Home = () => {
           </div>
         </div>
       </section>
+ */}
 
 
 
 
 
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">List of items</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 1
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 2
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 3
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 4
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 5
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-
-            <div>
-              <h3 className="text-lg font-semibold mb-4">List of items</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 1
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 2
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 3
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 4
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 5
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">List of items</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 1
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 2
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 3
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 4
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 5
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">List of items</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 1
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 2
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 3
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 4
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-300 hover:text-white transition cursor-pointer"
-                  >
-                    Item 5
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            
-          </div>
-        </div>
-      </footer>
 
 
       {/* Floating action button */}
@@ -901,6 +773,7 @@ const Home = () => {
         </div>
       )}
     </div>
+ 
   );
 };
 export default Home;

@@ -9,7 +9,7 @@ import {
     CardHeader,
     CardTitle,
   } from "@/components/ui/card"
-import { ArrowDownRight, ArrowUpRight, Loader2 } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Camera, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import useFetch from '@/hooks/use-fetch';
 import { updateDefaultAccount } from '@/actions/accounts';
@@ -26,6 +26,7 @@ const AccountCard = ({account}) => {
         type, 
         balance, 
         id, 
+        _count,
         isDefault, // initially this is false
     } = account;
 
@@ -81,6 +82,7 @@ const AccountCard = ({account}) => {
   const isLoading = loadingAccountId === id; // Check if this card is loading
   const isDisabled = !!loadingAccountId; // Disable all cards if any card is loading
 
+  console.log("Account:",_count)
 
   
   
@@ -99,7 +101,7 @@ const AccountCard = ({account}) => {
     >
     <Link href={`/account/${id}`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium capitalize">{name}</CardTitle>
+        <CardTitle className="text-sm font-medium capitalize">{account._count.transactions} Transactions</CardTitle> {/*replace with number of transaction in the account */}
       </CardHeader>
 
       <CardContent>
@@ -123,19 +125,19 @@ const AccountCard = ({account}) => {
       <CardFooter className="flex justify-between text-sm text-muted-foreground">
         
         <Button
-        className={`bg-gradient-to-r from-blue-600 to-blue-400 
-                    hover:from-blue-700 hover:to-blue-500 
-                    text-white font-semibold 
+        className={`bg-white hover:bg-gradient-to-r 
+                    hover:from-blue-700 hover:to-fuchsia-600 
+                    text-black hover:text-white font-semibold 
                     py-2 px-4 rounded-lg 
                     shadow-md hover:shadow-lg 
                     transition-all duration-300 
                     w-full
                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400
-                    border border-yellow-400
+                    border border-black hover:border-white tracking-normal
                   `}
         onClick={handleAddTransaction}
         >
-        Add Transaction
+        <Camera/> Add Transaction
       </Button>
       </CardFooter>
   </Card>

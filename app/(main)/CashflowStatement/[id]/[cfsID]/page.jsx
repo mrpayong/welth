@@ -10,7 +10,7 @@ export default async function CashflowDetailsPage({ params }) {
     }
 
     return (
-        <div className="p-4">
+        <div>
             <CashflowDetails cashflow={cashflow} /> {/* Pass data to the child component */}
         </div>
     );

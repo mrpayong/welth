@@ -18,21 +18,16 @@ import {
     TooltipProvider,
     TooltipTrigger,
   } from "@/components/ui/tooltip"
-import { ArrowDownNarrowWide, ArrowUpWideNarrow, ChevronDown, ChevronUp, Clock, Download, Loader, Loader2, MoreHorizontal, PlusCircleIcon, RefreshCw, Search, Trash, X } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ArrowDownNarrowWide, ArrowUpWideNarrow, ChevronDown, ChevronUp, Clock, Download, Info, Loader, Loader2, MoreHorizontal, PlusCircleIcon, RefreshCw, Search, Trash, X } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import useFetch from '@/hooks/use-fetch';
-import { bulkDeleteTransactions, createSubAccount } from '@/actions/accounts';
+import { bulkDeleteTransactions, createSubAccount, deleteSubAccount } from '@/actions/accounts';
 import { toast } from 'sonner';
 import { BarLoader, BeatLoader } from 'react-spinners';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import Swal from 'sweetalert2';
 import { createCashflow, deleteCashflow} from '@/actions/cashflow';
 import { pdf, PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
@@ -42,6 +37,7 @@ import {
     DialogClose,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -52,7 +48,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { subAccountSchema } from "@/app/lib/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Import Tabs components
-
+import { updateManyTransaction } from '@/actions/transaction';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 const RECURRING_INTERVALS = {
     DAILY: "Daily",
@@ -61,27 +62,43 @@ const RECURRING_INTERVALS = {
     YEARLY: "Yearly",
 };
 
+function useIsSmallScreen(breakpoint = 640) { // Tailwind's 'sm' is 640px
+  const [isSmall, setIsSmall] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsSmall(window.innerWidth < breakpoint);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [breakpoint]);
+
+  return isSmall;
+}
 
 
   
-const TransactionTable = ({transactions, id, subAccounts}) => { 
+const TransactionTable = ({transactions, id, subAccounts, recentCashflows}) => { 
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
     const [response, setResponse] = useState(0.00)
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isBulkEdit, setIsBulkEdit] = useState(false);
     const [isCloseButtonDisabled, setIsCloseButtonDisabled] = useState(true);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedSubAccountIds, setSelectedSubAccountIds] = useState([]); // State for selected sub-accounts
     const [currentTransactionPage, setCurrentTransactionPage] = useState(1);
-const [currentSubAccountPage, setCurrentSubAccountPage] = useState(1);
-const [activityFilter, setActivityFilter] = useState("");
+    const [currentSubAccountPage, setCurrentSubAccountPage] = useState(1);
+    const [activityFilter, setActivityFilter] = useState("");
+    const isSmallScreen = useIsSmallScreen();
+console.log("subAccounts", subAccounts)
 // Removed duplicate declaration of rowsPerPage
 const rowsPerPage = 10; // Default rows per page
 
     const {
         register,
         handleSubmit,
+        watch,
         formState: { errors },
         reset,
       } = useForm({
@@ -122,14 +139,34 @@ const rowsPerPage = 10; // Default rows per page
         data: deleted,
       } = useFetch(bulkDeleteTransactions);
 
+    const handleSingleDelete = async (id) => {
+        const result = await Swal.fire({
+            title: `Are you sure?`,
+            text: `You are about to delete this transaction.`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Confirm",
+            cancelButtonText: "Cancel",
+          });
+        
+          if (result.isConfirmed) {
+            deleteFn([id]);
+          }
+    }
+
     const filteredAndSortedTransactions = useMemo(() => {
         let result = [...transactions];
 
         // Apply search filter
         if(searchTerm) {
             const searchLower = searchTerm.toLowerCase();
-            result = result.filter((transaction) =>
-                transaction.description?.toLowerCase().includes(searchLower));
+        result = result.filter((transaction) =>
+            (transaction.particular?.toLowerCase().includes(searchLower) ||
+             transaction.description?.toLowerCase().includes(searchLower) ||
+             transaction.refNumber?.toLowerCase().includes(searchLower))
+        );
         }
 
         // Apply recurring filter
@@ -209,24 +246,12 @@ const rowsPerPage = 10; // Default rows per page
         );
       };
 
-    // const handleBulkDelete = async () => {
-    //     // if (
-    //     //     !window.confirm(
-    //     //         `Are you sure you want to DELETE ${selectedIds.length} transactions?`
-    //     //     )
-    //     // )  
-    //     // return; 
-
-    //     console.log("Deleting transactions with IDs:", selectedIds);
-
-    //     deleteFn(selectedIds);
-    // }
 
     useEffect(() => {
         if (deleted && !deleteLoading) {
             // console.log("Transactions deleted successfully:", deleted);
             // toast.error("Selected Transactions Deleted successfully");
-             toast.error(`${selectedIds.length} Deleted successfully`);
+             toast.error(`Deleted successfully`);
              setSelectedIds([]);
         }
     }, [deleted, deleteLoading]);
@@ -316,7 +341,7 @@ const rowsPerPage = 10; // Default rows per page
         e.preventDefault();
       
        
-            if (response === 0 || response < 0) {
+            if (response === 0) {
               toast.error(`Beginning balance must not be zero.`);
               return;
             }
@@ -341,6 +366,7 @@ const rowsPerPage = 10; // Default rows per page
 
       useEffect(() => {
         if (forCfs && forCfs.success) {
+          setSelectedIds([])
           toast.success("Cashflow statement created successfully.");
           console.log("CFS data:", forCfs);
     
@@ -442,9 +468,7 @@ const rowsPerPage = 10; // Default rows per page
         } = useFetch(createSubAccount);
 
         const onSubmit = async (data) => {
-            
               console.log("Raw Form Data:", data);
-          
               // Sanitize and validate data types
               const sanitizedData = {
                 ...data,
@@ -453,7 +477,7 @@ const rowsPerPage = 10; // Default rows per page
                 parentName: data.parentName ? String(data.parentName).trim() : null,
               };
           
-              console.log("Sanitized Data:", sanitizedData);
+            
           
               // Call the server action using useFetch
            
@@ -461,20 +485,20 @@ const rowsPerPage = 10; // Default rows per page
         };
 
         useEffect(() => {
-          if (subAccountData && subAccountData.success) {
-            console.log("Group created successfully:", subAccountData);
+          if (subAccountData && !subAccountLoading) {
             toast.success("Group created successfully!");
+            setSelectedIds([]);
             reset(); // Reset the form after successful submission
             setIsDialogOpen(false); // Close the dialog
           }
-        }, [subAccountData]);
+        }, [subAccountData, subAccountLoading]);
 
         useEffect(() => {
-          if (subAccountError) {
+          if (subAccountError && !subAccountLoading) {
             console.error("Error grouping transactions:", subAccountError.message);
-            toast.error(subAccountError.message || "An unexpected error occurred.");
+            toast.error("Failed to create group.");
           }
-        }, [ subAccountError]);
+        }, [subAccountError, subAccountLoading]);
    
 
     const filteredAndSortedSubAccounts = useMemo(() => {
@@ -558,6 +582,18 @@ const rowsPerPage = 10; // Default rows per page
         });
       };
 
+      const getGerundActivity = (activity) => {
+        switch (activity) {
+          case "OPERATION":
+            return "Operating";
+          case "INVESTMENT":
+            return "Investing";
+          case "FINANCING":
+            return "Financing";
+          default:
+            return activity; // Fallback to raw data if no match
+        }
+      };
       const TransactionDetailshandler = (transaction) => {
         if (typeof window === "undefined") return;
         const formatDateTime = (dateString) => {
@@ -590,7 +626,7 @@ const rowsPerPage = 10; // Default rows per page
               <p><strong>Type:</strong> ${transaction.type}</p>
               <p><strong>Reference number:</strong> ${transaction.refNumber || "N/A"}</p>
               <p><strong>Account title:</strong> ${transaction.category || "N/A"}</p>
-              <p><strong>Activity type:</strong> ${transaction.Activity || "N/A"}</p>
+              <p><strong>Activity type:</strong> ${getGerundActivity(transaction.Activity) || "N/A"}</p>
               <p><strong>Description:</strong> ${transaction.description || "No description provided."}</p>
               <p><strong>BIR authority to print number:</strong> ${transaction.printNumber || "N/A"}</p>
               <p><strong>Recorded on:</strong> ${formatDateTime(transaction.createdAt) || "N/A"}</p>              
@@ -619,22 +655,146 @@ const rowsPerPage = 10; // Default rows per page
       };
 
 
-      const getGerundActivity = (activity) => {
-        switch (activity) {
-          case "OPERATION":
-            return "Operating";
-          case "INVESTMENT":
-            return "Investing";
-          case "FINANCING":
-            return "Financing";
-          default:
-            return activity; // Fallback to raw data if no match
+
+
+      const {
+        loading: updateLoading,
+        fn: updateFn,
+        data: updatedData,
+        error: updateError
+      } = useFetch(updateManyTransaction)
+
+      const [ActivityType, setActivityType] = useState("")
+      const handleUpdate = async () => {
+        setIsBulkEdit(false)
+        const result = await Swal.fire({
+          title: `Are you sure?`,
+          text: `You are about to update ${selectedIds.length} transactions.`,
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33",
+          cancelButtonColor: "#3085d6",
+          confirmButtonText: "Confirm",
+          cancelButtonText: "Cancel",
+        });
+      
+        if (result.isConfirmed) {
+          console.log("Updating transactions with IDs:", selectedIds);
+          updateFn(selectedIds, ActivityType); // Call the delete function with selected IDs
+        }
+      }
+
+      useEffect(() => {
+        if (updatedData && !updateLoading){
+          console.log("Success editing Activity types");
+          toast.success("Success editing Activity types");
+          setSelectedIds([]);
+          setActivityType("")
+        }
+      }, [updatedData, updateLoading])
+
+      useEffect(() => {
+        if(updateError && !updateLoading){
+          console.log("Error editing Activity types");
+          toast.error("Error editing Activity types");
+        }
+      }, [updateError, updateLoading])
+
+      // disable create group button
+      const groupName = watch("name");
+      const parentGroupName = watch("parentName");
+
+      const isCreateGroupDisabled =
+        (!groupName && !parentGroupName) ||
+        (parentGroupName && selectedIds.length === 0);
+
+
+
+      const PERIOD_LABELS = [
+        { label: "Previous Daily", value: "DAILY" },
+        { label: "Previous Weekly", value: "WEEKLY" },
+        { label: "Previous Monthly", value: "MONTHLY" },
+        { label: "Previous Annual", value: "ANNUAL" },
+      ];
+
+      const periodCashflowMap = useMemo(() => {
+        const map = {};
+        (recentCashflows?.latestCashflows || []).forEach(cf => {
+          map[cf.periodCashFlow] = cf;
+        });
+        return map;
+      }, [recentCashflows]);
+
+
+      const [selectedPeriod, setSelectedPeriod] = useState(null);
+
+      const handleCheckboxChange = (period) => {
+        if (selectedPeriod === period) {
+          setSelectedPeriod(null); // Uncheck
+          setResponse("");         // Clear input
+        } else {
+          setSelectedPeriod(period);
+          setResponse(periodCashflowMap[period]?.endBalance ?? "");
         }
       };
 
 
 
 
+
+      const [openSubAccountInfoId, setOpenSubAccountInfoId] = useState(null);
+      const [groupDeleteDialog, setGroupDeleteDialog] = useState(false);
+      const [groupToDeleteId, setGroupToDeleteId] = useState("");
+
+
+
+      const {
+        loading: deleteGroupLoading,
+        fn: deleteGroupFn,
+        data: deletedGroup,
+        error: deleteGroupError
+      } = useFetch(deleteSubAccount)
+
+      const handleGroupToDeleteId = (id) => {
+        console.log("subAccount", id)
+        console.log('subAccount ID:', id)
+        setGroupToDeleteId(id);
+        if(groupToDeleteId !== ""){
+          setGroupDeleteDialog(true);
+        }
+      }
+
+      const handleCancelGroupToDeleteId = () => {
+        setGroupToDeleteId("");
+        if(groupToDeleteId !== ""){
+          setGroupDeleteDialog(false);
+        }
+      }
+
+      const handleDeleteGroup = async () => {
+        if(!groupToDeleteId){
+          toast.error("Error deleting group.")
+        } else {
+          deleteGroupFn(groupToDeleteId);
+        }
+      }
+
+
+      useEffect(() => {
+        if (deletedGroup && !deleteGroupLoading){
+          setGroupToDeleteId("")
+          console.log("Success deleting group.");
+          toast.success("Success deleting group.");
+        }
+      }, [deletedGroup, deleteGroupLoading])
+
+      useEffect(() => {
+        if(deleteGroupError && !deleteGroupLoading){
+          setGroupToDeleteId("")
+          console.log("Error deleting group.");
+          toast.error("Error deleting group.");
+        }
+      }, [deleteGroupError, deleteGroupLoading])
 
 
 
@@ -677,305 +837,461 @@ const rowsPerPage = 10; // Default rows per page
     
     <div className='space-y-4'>
        {deleteLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
-       
-       
+       {updateLoading  && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
+       {subAccountLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
+       {deleteGroupLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
+       {cfsLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
       {/* FILTERS */}
         <div className="lg:flex flex-row items-center justify-between gap-4 mb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-start">
+          <div className="flex flex-col 
+            sm:flex-row py-1 sm:items-center gap-4 justify-start lg:overflow-y-hidden
+            md:overflow-x-auto md:max-w-full  md:gap-3">
 
-                <div className='flex flex-col sm:flex-row gap-4'>
-                    <div className='relative flex'>
-                        <Search className='absolute left-2 top-2.5 h-4 text-muted-foreground'/>
-                        <Input 
-                            className="pl-8 text-sm"
-                            // placeholder="Search Transactions..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-
-                    <div className='flex flex-col lg:flex-row md:flex-row gap-2'>
-                        <Select  value={typeFilter} onValueChange={setTypeFilter}>
-                            <SelectTrigger className=" bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
-                                                border border-blue-500/30 hover:border-blue-500/50
-                                                shadow-lg shadow-blue-500/20
-                                                transition-all duration-300
-                                                px-6 py-3 rounded-full
-                                                font-semibold text-sm
-                                                flex items-center gap-2
-                                                hover:scale-105
-                                                justify-center 
-                                                text-center">
-                                <SelectValue placeholder="All Types"/>
-                            </SelectTrigger>
-
-                            <SelectContent>
-                                <SelectItem value='INCOME'>Income</SelectItem>
-                                <SelectItem value='EXPENSE'>Expense</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <Select
-    value={activityFilter}
-    onValueChange={(value) => setActivityFilter(value)}
-    className="w-[140px] text-sm"
-  >
-    <SelectTrigger
-      className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
-                  border border-blue-500/30 hover:border-blue-500/50
-                  shadow-lg shadow-blue-500/20
-                  transition-all duration-300
-                  px-6 py-3 rounded-full
-                  font-semibold text-sm
-                  flex items-center gap-2
-                  hover:scale-105
-                  justify-center 
-                  text-center"
-    >
-      <SelectValue placeholder="All Activities" />
-    </SelectTrigger>
-
-    <SelectContent>
-      {/* <SelectItem value="">All Activities</SelectItem> */}
-      <SelectItem value="OPERATION">Operating</SelectItem>
-      <SelectItem value="INVESTMENT">Investing</SelectItem>
-      <SelectItem value="FINANCING">Financing</SelectItem>
-    </SelectContent>
-  </Select>
-
-
-                        {(searchTerm || typeFilter || activityFilter) && (
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={handleClearFilters}
-                                title="Clear Filters"
-                                    ><X className='h-4 w-5'/></Button>
-                        )}
-
-
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                        <Button
-                                        variant="outline"
-                                        className={cn(
-                                            "bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300",
-                                            "border border-blue-500/30 hover:border-blue-500/50",
-                                            "shadow-lg shadow-blue-500/20",
-                                            "transition-all duration-300",
-                                            "px-4 sm:px-6 py-2 sm:py-3 rounded-full",
-                                            "font-semibold text-sm",
-                                            "flex items-center gap-2",
-                                            "hover:scale-105",
-                                            "w-full sm:w-auto" //Make it full width on small screen
-                                        )}
-                                    >
-                                   
-                                        <PlusCircleIcon/> Cashflow Statement
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    className="w-auto p-6 bg-white/2 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl "
-                                    align="center"
-                                    style={{ zIndex: 0 }}
-                                >
-                                <h2 className="text-lg font-semibold text-black mb-4">Generate Cashflow Statement</h2>
-                                    <form onSubmit={handleCashflow} className="space-y-4">
-                                        <div className="flex flex-col sm:flex-row items-center gap-4">
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                value={response}
-                                                onChange={handleSample}
-                                                placeholder="0.00"
-                                                className="w-full sm:w-64 text-sm bg-black/20 text-gray-800 border-purple-500/30
-                                                placeholder:text-gray-400 focus-visible:ring-purple-500
-                                                focus-visible:border-purple-500"
-                                            />
-                                        
-                                            
-                                                <Button
-                                                    variant="outline"
-                                                    className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
-                                                        border border-blue-500/30 hover:border-blue-500/50
-                                                        shadow-lg shadow-blue-500/20
-                                                        transition-all duration-300
-                                                        px-6 py-3 rounded-full
-                                                        font-semibold text-sm
-                                                        flex items-center gap-2
-                                                        hover:scale-105"
-                                                    size="sm"
-                                                    type="submit"
-                                                    disabled={cfsLoading}
-                                                >
-                                                {!cfsLoading
-                                                    ? ("Generate")
-                                                    : (<><Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500" /> <span className="text-gray-500">Generating</span></>)
-                                                }
-                                                </Button>
-                                        </div>
-                                    </form>
-                                    <p className="text-xs text-gray-700 mt-4">
-                                        Enter a Beginning Net Cash and click Generate.
-                                    </p>
-                                </PopoverContent>
-                            </Popover>
-
-                            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                                <DialogContent className="[&>button:last-child]:hidden sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] max-h-[90vh]">
-                                <DialogHeader>
-                                    <DialogTitle>Cashflow Statement PDF</DialogTitle>
-                                    <DialogDescription>
-                                    {cfsLoading
-                                        ? "Re-assessing your last entry..."
-                                        : "View your generated cashflow statement."}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                {cfsLoading
-                                    ? (
-                                        <div className="flex justify-center items-center h-48">
-                                        <BeatLoader color="#36d7b7" />
-                                        <h1>LOADING...</h1>
-                                        </div> ) 
-                                    : ( 
-                                            <PDFViewer style={{ width: '100%', height: '500px' }} showToolbar={false}>
-                                                {forCfs && forCfs.data && Array.isArray(forCfs.data.transactions) 
-                                                    ? (<MyPDFaccountPage cashflow={forCfs.data} subAccounts={forCfs.data.subAccounts} transactions={forCfs.data.transactions} />) 
-                                                    : (<div>No transactions available for the Cashflow Statement.</div>)
-                                                }
-                                            </PDFViewer> 
-                                    )}
-                                
-                                    <div className="flex justify-center gap-2 align-baseline">
-                                        {forCfs && forCfs.data && Array.isArray(forCfs.data.transactions)
-                                            ? ( 
-                                                
-                                                    
-                                                    <PDFDownloadLink 
-                                                    document={<MyPDFaccountPage cashflow={forCfs.data} subAccounts={forCfs.data.subAccounts} transactions={forCfs.data.transactions} />}
-                                                    fileName={`Cashflow_Statement_${forCfs.data.id}.pdf`}
-                                                    >
-                                                    
-                                                    {({ blob, url, loading, error }) => {
-                                                        if (!loading){
-                                                            return <Button className="bg-green-600 text-white hover:bg-green-700" onClick={handlePdfDownload} disabled={loading}>
-                                                            <div className='flex items-center gap-1'>
-                                                            <Download className="mr-2 sm:mr-3 md:mr-4 h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6"/>
-                                                                Download
-                                                            </div></Button>
-                                                        }
-                                                        else if (loading){<Loader/>,"Downloading PDF."}
-                                                        }
-                                                    }
-
-                                                    </PDFDownloadLink>
-                                            )
-                                            : ("SOMETHINGS'S WRONG")
-                                        }
-                                        
-
-                                        {!loadingCfsDelete 
-                                          ? <Button variant="destructive" onClick={handleCancelPDFdownload}> Cancel </Button>
-                                          : <Button variant="destructive" disabled={true}>Cancelling<Loader2/></Button>
-                                        }
-                                        <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Save</Button>
-                                    </div>
-                                    
-                                
-                                </DialogContent>
-                                
-                            </Dialog>
-
-                            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                    disabled={isDialogOpen} // Disable if no transactions are selected
-                                    >
-                                    Group transactions
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] max-h-[90vh]">
-                                    <DialogHeader>
-                                    <DialogTitle>Group transactions</DialogTitle>
-                                    </DialogHeader>
-                                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                                    <div>
-                                        <label className="text-sm font-medium">Group name</label>
-                                        <input
-                                        type="text"
-                                        {...register("name")}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                        placeholder="Enter group name"
-                                        />
-                                        {errors.name && (
-                                        <p className="text-sm text-red-500">{errors.name.message}</p>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        {/* <label className="text-sm font-medium">Description</label>
-                                        <textarea
-                                        {...register("description")}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                        placeholder="Enter description (optional)"
-                                        />
-                                        {errors.description && (
-                                        <p className="text-sm text-red-500">{errors.description.message}</p>
-                                        )} */}
-                                    </div>
-
-                                    <div>
-                                        <label className="text-sm font-medium">Parent group's name</label>
-                                        <input
-                                        type="text"
-                                        {...register("parentName")}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                        placeholder="Enter parent group name (optional)"
-                                        />
-                                        {errors.parentName && (
-                                        <p className="text-sm text-red-500">{errors.parentName.message}</p>
-                                        )}
-                                    </div>
-
-                                    <div className="flex justify-end">
-                                        <Button type="submit" className="bg-blue-500 text-white">
-                                        Create group
-                                        </Button>
-                                    </div>
-                                    </form>
-                                </DialogContent>
-                                </Dialog>
-                                </div>
-                       
-            
-                    
+              <div className='flex flex-col sm:flex-row gap-4'>
+                <div className='relative flex'>
+                    <Search className='absolute left-2 top-2.5 h-4 text-muted-foreground'/>
+                    <Input 
+                        className="pl-8 text-xs w-full md:w-64 lg:w-80"
+                        placeholder="Search Ref#, Particular, Description"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-            </div>
-            
 
-                        <div className="flex items-center gap-2 justify-end">
-                            {selectedIds && selectedIds.length > 0 && (
-                                <div className="fixed bottom-4 right-4 z-50">
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={handleBulkDelete}
-                                  className="bg-red-500/90 hover:bg-red-500 text-white
-                                             border border-red-500/30 hover:border-red-500/50
-                                             shadow-lg shadow-red-500/20
-                                             transition-all duration-300
-                                             px-4 py-2 rounded-full
-                                             font-semibold text-sm
-                                             flex items-center gap-2 hover:scale-105"
-                                >
-                                  <Trash className="h-4 w-4" />
-                                  <span>Delete {selectedIds.length} transactions</span> 
-                                </Button>
-                              </div>
+                <div className='flex flex-col lg:flex-row md:flex-row gap-2'>
+                  <Select  value={typeFilter} onValueChange={setTypeFilter}>
+                      <SelectTrigger className=" bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
+                                          border border-blue-500/30 hover:border-blue-500/50
+                                          shadow-lg shadow-blue-500/20
+                                          transition-all duration-300
+                                          px-6 py-3 rounded-full
+                                          font-semibold text-sm
+                                          flex items-center gap-2
+                                          hover:scale-105
+                                          justify-center 
+                                          text-center">
+                          <SelectValue placeholder="All Types"/>
+                      </SelectTrigger>
+
+                      <SelectContent>
+                          <SelectItem value='INCOME'>Income</SelectItem>
+                          <SelectItem value='EXPENSE'>Expense</SelectItem>
+                      </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={activityFilter}
+                    onValueChange={(value) => setActivityFilter(value)}
+                    className="w-[140px] text-sm"
+                  >
+                    <SelectTrigger
+                      className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
+                                  border border-blue-500/30 hover:border-blue-500/50
+                                  shadow-lg shadow-blue-500/20
+                                  transition-all duration-300
+                                  px-6 py-3 rounded-full
+                                  font-semibold text-sm
+                                  flex items-center gap-2
+                                  hover:scale-105
+                                  justify-center 
+                                  text-center">
+                      <SelectValue placeholder="All Activities" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      {/* <SelectItem value="">All Activities</SelectItem> */}
+                      <SelectItem value="OPERATION">Operating</SelectItem>
+                      <SelectItem value="INVESTMENT">Investing</SelectItem>
+                      <SelectItem value="FINANCING">Financing</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+
+                  {(searchTerm || typeFilter || activityFilter) && (
+                      <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={handleClearFilters}
+                          title="Clear Filters"
+                              ><X className='h-4 w-5'/></Button>
+                  )}
+
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                      variant="outline"
+                      className={cn(
+                          "bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300",
+                          "border border-blue-500/30 hover:border-blue-500/50",
+                          "shadow-lg shadow-blue-500/20",
+                          "transition-all duration-300",
+                          "px-4 sm:px-6 py-2 sm:py-3 rounded-full",
+                          "font-semibold text-sm",
+                          "flex items-center gap-2",
+                          "hover:scale-105",
+                          "w-full sm:w-auto" //Make it full width on small screen
+                      )}>
+                        <PlusCircleIcon/> Cashflow Statement
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-auto p-6 bg-white/2 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl "
+                      align="center"
+                      style={{ zIndex: 0 }}
+                    >
+                      <div className="flex flex-col gap-2 mb-2">
+                        <h2 className="text-lg font-semibold text-black">Generate Cashflow Statement</h2>
+                        <div >
+                          <ul className="grid grid-rows-4 md:grid-rows-none md:grid-cols-2 gap-1">
+                            {PERIOD_LABELS.map(({ label, value }) => (
+                              <li key={value} className="flex flex-row items-center gap-1">
+                                <Checkbox
+                                  checked={selectedPeriod === value}
+                                  onCheckedChange={() => handleCheckboxChange(value)}
+                                  disabled={!periodCashflowMap[value]}
+                                  id={`checkbox-${value}`}
+                                />
+                                <label htmlFor={`checkbox-${value}`} className={periodCashflowMap[value] ? "" : "text-gray-400"}>
+                                  {label}
+                                </label>
+                                {periodCashflowMap[value] && (
+                                  <span className="ml-1 text-xs text-gray-500">
+                                    (₱{Number(periodCashflowMap[value].endBalance).toLocaleString()})
+                                  </span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    
+                      <form onSubmit={handleCashflow} className="space-y-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                          <div className="w-full sm:w-64 relative min-h-[44px]">
+                            {/* Animated input switch */}
+                            <div className="relative">
+                              {/* Read-only, formatted input */}
+                              <Input
+                                type="text"
+                                readOnly
+                                value={
+                                  selectedPeriod && periodCashflowMap[selectedPeriod]
+                                    ? formatTableAmount(periodCashflowMap[selectedPeriod].endBalance)
+                                    : ""
+                                }
+                                className={`
+                                  absolute top-0 left-0 w-full text-sm bg-black/20 text-gray-800 border-purple-500/30
+                                  placeholder:text-gray-400 focus-visible:ring-purple-500
+                                  focus-visible:border-purple-500 transition-all duration-300
+                                  ${selectedPeriod && periodCashflowMap[selectedPeriod]
+                                    ? "opacity-100 translate-y-0 pointer-events-auto"
+                                    : "opacity-0 -translate-y-2 pointer-events-none"}
+                                `}
+                                style={{ zIndex: selectedPeriod && periodCashflowMap[selectedPeriod] ? 10 : 0 }}
+                              />
+                              {/* Editable number input */}
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={selectedPeriod && periodCashflowMap[selectedPeriod] ? "" : response}
+                                onChange={handleSample}
+                                placeholder="0.00"
+                                className={`
+                                  w-full text-sm bg-black/20 text-gray-800 border-purple-500/30
+                                  placeholder:text-gray-400 focus-visible:ring-purple-500
+                                  focus-visible:border-purple-500 transition-all duration-300
+                                  ${selectedPeriod && periodCashflowMap[selectedPeriod]
+                                    ? "opacity-0 translate-y-2 pointer-events-none absolute top-0 left-0"
+                                    : "opacity-100 translate-y-0 pointer-events-auto relative"}
+                                `}
+                                style={{ zIndex: selectedPeriod && periodCashflowMap[selectedPeriod] ? 0 : 10 }}
+                              />
+                            </div>
+                          </div>
+                          <Button
+                              variant="outline"
+                              className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-400 hover:text-blue-300
+                                  border border-blue-500/30 hover:border-blue-500/50
+                                  shadow-lg shadow-blue-500/20
+                                  transition-all duration-300
+                                  px-6 py-3 rounded-full
+                                  font-semibold text-sm
+                                  flex items-center gap-2
+                                  hover:scale-105"
+                              size="sm"
+                              type="submit"
+                              disabled={cfsLoading || !response || selectedIds.length === 0}
+                          >
+                          {!cfsLoading
+                              ? ("Generate")
+                              : (<><Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-500" /> <span className="text-gray-500">Generating</span></>)
+                          }
+                          </Button>
+                        </div>
+                      </form>
+                      <p className="text-xs text-gray-700 mt-4 tracking-wide">
+                        Choose previous ending balance from respective period.<br/> 
+                        Enter new beginning balance for new period only.
+                      </p>
+                    </PopoverContent>
+                  </Popover>
+
+                  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                      <DialogContent onInteractOutside={e => e.preventDefault()} className="[&>button:last-child]:hidden sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] max-h-[90vh]">
+                      <DialogHeader>
+                          <DialogTitle>Cashflow Statement PDF</DialogTitle>
+                      </DialogHeader>
+                        {cfsLoading
+                          ? (
+                              <div className="flex justify-center items-center h-48">
+                                <BeatLoader color="#36d7b7" />
+                                <h1>LOADING</h1>
+                              </div> 
+                          ) 
+                          : ( 
+                            <>
+                            {isSmallScreen 
+                              ? (
+                                <div className="flex justify-center gap-2 align-baseline">
+                                  {forCfs && forCfs.data && Array.isArray(forCfs.data.transactions)
+                                    ? ( 
+                                        <PDFDownloadLink 
+                                          document={<MyPDFaccountPage cashflow={forCfs.data} subAccounts={forCfs.data.subAccounts} transactions={forCfs.data.transactions} />}
+                                          fileName={`Cashflow_Statement_${forCfs.data.id}.pdf`}
+                                        >
+                                          {({ blob, url, loading, error }) => {
+                                            if (!loading){
+                                              return <Button className="bg-green-600 text-white hover:bg-green-700" onClick={handlePdfDownload} disabled={loading}>
+                                              <div className='flex items-center gap-1'>
+                                              <Download className="mr-2 sm:mr-3 md:mr-4 h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6"/>
+                                                  Download
+                                              </div></Button>
+                                            }
+                                            else if (loading){
+                                              <Loader/>,"Downloading PDF."
+                                            }
+                                          }}
+                                        </PDFDownloadLink>
+                                    )
+                                    : ("SOMETHINGS'S WRONG")
+                                  }
+
+                                  {!loadingCfsDelete 
+                                    ? <Button variant="destructive" onClick={handleCancelPDFdownload}> Cancel </Button>
+                                    : <Button variant="destructive" disabled={true}>Cancelling<Loader2  className="mr-2 h-4 w-4 animate-spin text-gray-500" /></Button>
+                                  }
+                                  <Button variant="outline" 
+                                      className="bg-white text-black border-black 
+                                      hover:border-0 hover:bg-black 
+                                      hover:text-white" 
+                                      onClick={() => setIsModalOpen(false)}>
+                                    Save only
+                                  </Button>
+                                </div>
+                              ) 
+                              : (<>
+                                  <PDFViewer style={{ width: '100%', height: '500px' }} showToolbar={false}>
+                                    {forCfs && forCfs.data && Array.isArray(forCfs.data.transactions) 
+                                      ? (<MyPDFaccountPage cashflow={forCfs.data} subAccounts={forCfs.data.subAccounts} transactions={forCfs.data.transactions} />) 
+                                      : (<div>No transactions available for the Cashflow Statement.</div>)
+                                    }
+                                  </PDFViewer> 
+                                  <div className="flex justify-center gap-2 align-baseline">
+                                    {forCfs && forCfs.data && Array.isArray(forCfs.data.transactions)
+                                      ? ( 
+                                          <PDFDownloadLink 
+                                            document={<MyPDFaccountPage cashflow={forCfs.data} subAccounts={forCfs.data.subAccounts} transactions={forCfs.data.transactions} />}
+                                            fileName={`Cashflow_Statement_${forCfs.data.id}.pdf`}
+                                          >
+                                            {({ blob, url, loading, error }) => {
+                                              if (!loading){
+                                                return <Button className="bg-green-600 text-white hover:bg-green-700" onClick={handlePdfDownload} disabled={loading}>
+                                                <div className='flex items-center gap-1'>
+                                                <Download className="mr-2 sm:mr-3 md:mr-4 h-4 sm:h-5 md:h-6 w-4 sm:w-5 md:w-6"/>
+                                                    Download
+                                                </div></Button>
+                                              }
+                                              else if (loading){
+                                                <Loader/>,"Downloading PDF."
+                                              }
+                                            }}
+                                          </PDFDownloadLink>
+                                      )
+                                      : ("SOMETHINGS'S WRONG")
+                                    }
+
+                                    {!loadingCfsDelete 
+                                      ? <Button variant="destructive" onClick={handleCancelPDFdownload}>Cancel</Button>
+                                      : <Button variant="destructive" disabled={true}>Cancelling<Loader2  className="mr-2 h-4 w-4 animate-spin text-gray-500" /></Button>
+                                    }
+                                    <Button 
+                                        variant="outline" 
+                                        className="bg-white text-black border-black 
+                                        hover:border-0 hover:bg-black 
+                                        hover:text-white" 
+                                        onClick={() => setIsModalOpen(false)}>
+                                      Save only
+                                    </Button>
+                                  </div>
+                                </>
+                              )
+                            }
+                            </>
+                          )
+                        }
+                      <div className="flex justify-around items-center">
+                        <DialogFooter className="text-gray-400 tracking-normal">
+                          {cfsLoading
+                            ? "Re-assessing your last entry..."
+                            : isSmallScreen
+                              ? "PDF ready, download to view. Downloading also saves in Cashflow."
+                              : "Preview of generated cashflow statement. Downloading also saves in Cashflow."
+                          }
+                        </DialogFooter>
+                      </div>
+                      </DialogContent>
+                  </Dialog>
+
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        disabled={isDialogOpen || subAccountLoading || deleteGroupLoading} 
+                        >
+                        Group transactions
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] max-h-[90vh]">
+                        <DialogHeader>
+                        <DialogTitle>Group transactions</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        <div>
+                            <label className="text-sm font-medium">New group name</label>
+                            <input
+                            type="text"
+                            {...register("name")}
+                            className="w-full p-2 border border-gray-300 rounded" 
+                            placeholder="Enter group name"
+                            />
+                            {errors.name && (<p className="text-sm text-red-500">{errors.name.message}</p>)}
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium">Description</label>
+                            <textarea
+                            {...register("description")}
+                            className="w-full p-2 border border-gray-300 rounded"
+                            placeholder="Enter description (optional)"
+                            />
+                            {errors.description && (
+                            <p className="text-sm text-red-500">{errors.description.message}</p>
                             )}
                         </div>
-            
+
+                        <div>
+                            <label className="text-sm font-medium">Parent group's name</label>
+                            <input
+                            type="text"
+                            {...register("parentName")}
+                            className="w-full p-2 border border-gray-300 rounded"
+                            placeholder="Enter parent group name (optional)"
+                            />
+                            {errors.parentName && (
+                            <p className="text-sm text-red-500">{errors.parentName.message}</p>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end">
+                            <Button type="submit" disabled={subAccountLoading || isCreateGroupDisabled} className="bg-blue-500 text-white">
+                            {subAccountLoading
+                              ? (<><Loader2  className="mr-2 h-4 w-4 animate-spin text-blue-300" />Creating group</>)
+                              : "Create group"
+                            }
+                            </Button>
+                        </div>
+                        </form>
+                    </DialogContent>
+                  </Dialog>
+
+                  {selectedIds.length > 0 && (
+                    <Dialog open={isBulkEdit} onOpenChange={setIsBulkEdit}>
+                      <DialogTrigger asChild>
+                          <Button
+                          className="bg-yellow-300 
+                          text-black px-4 py-2 rounded 
+                          hover:bg-yellow-200 hover:text-slate-700"
+                          disabled={isDialogOpen || subAccountLoading || deleteGroupLoading} // Disable if no transactions are selected
+                          >
+                          Edit Activity type
+                          </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[90%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] max-h-[90vh]">
+                          <DialogHeader>
+                          <DialogTitle>Edit Activity Type</DialogTitle>
+                          <DialogDescription>Select Activity Type to edit opted transactions.</DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={async (e) => {
+                              e.preventDefault();
+                              await handleUpdate();
+                            }} className="space-y-4">
+                              
+                            <div className="flex flex-col gap-1">
+                              <label htmlFor="Activity" className="text-sm font-medium text-gray-700">Activity</label>
+                              <select
+                                id="Activity"
+                                className={`w-full border rounded px-2 py-2 bg-neutral-50 ${
+                                  ActivityType ? "text-black" : "text-gray-400"
+                                }`}
+                                onChange={(e) => setActivityType(e.target.value)}
+                                value={ActivityType}
+                                required
+                                disabled={updateLoading}
+                              >
+                                <option className="text-gray-400" value="">Select role</option>
+                                <option className="text-blue-500" value="OPERATION">Operating</option>
+                                <option className="text-purple-500" value="FINANCING">Financing</option>
+                                <option className="text-yellow-500" value="INVESTMENT">Investing</option>
+                              </select>
+                            </div>
+                          <div className="flex justify-end">
+                              <Button type="submit" disabled={updateLoading} className="bg-blue-500 text-white">
+                              {updateLoading
+                                ? (<><Loader2  className="mr-2 h-4 w-4 animate-spin text-blue-300" />Editing Activity</>)
+                                : "Edit Activity"
+                              }
+                              </Button>
+                          </div>
+                          </form>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
+              </div>
+          </div>
+
+          <div className="flex items-center gap-2 justify-end">
+            {selectedIds && selectedIds.length > 0 && (
+                <div className="fixed bottom-4 right-4 z-50">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  className="bg-red-500/90 hover:bg-red-500 text-white
+                    border border-red-500/30 hover:border-red-500/50
+                    shadow-lg shadow-red-500/20
+                    transition-all duration-300
+                    px-4 py-2 rounded-full
+                    font-semibold text-sm
+                    flex items-center gap-2 hover:scale-105"
+                >
+                  <Trash className="h-4 w-4" />
+                  <span>Delete {selectedIds.length} transactions</span> 
+                </Button>
+              </div>
+            )}
+          </div>
         </div> 
 
 
@@ -983,14 +1299,24 @@ const rowsPerPage = 10; // Default rows per page
 
       {/* TRANSACTIONS */}
       <Tabs defaultValue='transactions'>
-        <TabsList className="flex flex-col sm:flex-row sm:justify-start border-b border-gray-200 mb-4 space-y-2 sm:space-y-0 sm:space-x-4">
-          <TabsTrigger value="transactions" className="w-full sm:w-auto">Transactions tab</TabsTrigger>
-          <TabsTrigger value="subAccounts" className="w-full sm:w-auto">Grouped transactions tab</TabsTrigger>
+        <TabsList   className="
+          flex flex-row gap-x-2 
+          overflow-x-auto md:overflow-x-visible
+          whitespace-nowrap
+          border-b border-gray-200 mb-4
+          w-full
+          bg-neutral-300
+          rounded-t-md
+          px-2 h-12 py-2 shadow-sm
+          ">
+          <TabsTrigger value="transactions" className="flex-shrink-0 px-4 py-2">Transactions tab</TabsTrigger>
+          <TabsTrigger value="subAccounts" className="flex-shrink-0 px-4 py-2">Grouped transactions tab</TabsTrigger>
         </TabsList>
         <TabsContent value="transactions">
           <div className="rounded-md border overflow-x-auto">
+
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-slate-300">
                 <TableRow>
                   <TableHead className="w-[50px] text-center">
                     <Checkbox
@@ -1004,7 +1330,7 @@ const rowsPerPage = 10; // Default rows per page
                   <TableHead className="text-left cursor-pointer"
                     onClick={() => handleSort("date")}
                   ><div className="flex items-center">
-                  Date
+                  Transaction date
                   {sortConfig.field === "date" &&
                     (sortConfig.direction === "asc" ? (
                       <ArrowUpWideNarrow className="ml-1 h-4 w-4" />
@@ -1040,12 +1366,23 @@ const rowsPerPage = 10; // Default rows per page
                             ))}
                         </div>
                   </TableHead>
-                  <TableHead className="text-center">
-                            Reference number
-                    </TableHead>
+                  <TableHead className="text-center"
+                    onClick={() => handleSort("createdAt")}>
+                      <div className="flex justify-center">
+                        Recorded on
+                        {sortConfig.field === "createdAt" &&
+                          (sortConfig.direction === "asc" ? (
+                            <ArrowUpWideNarrow className="ml-1 h-4 w-4" />
+                          ) : (
+                            <ArrowDownNarrowWide className="ml-1 h-4 w-4" />
+                        ))}
+                      </div>
+                  </TableHead>
+                  <TableHead className="text-center">Reference number</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="bg-zinc-200">
                 {paginatedTransactions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground">
@@ -1087,21 +1424,17 @@ const rowsPerPage = 10; // Default rows per page
                         {formatTableAmount(transaction.amount.toFixed(2))}
                       </TableCell>
                       <TableCell className="text-center">
-                        {/* {transaction.isRecurring ? (
-                          <Badge variant="outline" className="gap-1 bg-purple-100 text-purple-700">
-                            Recurring
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="gap-1">
-                            One-time
-                          </Badge>
-                        )} */}
+                        {formatDate(transaction.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-center">
                         {transaction.refNumber}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className='flex justify-around'>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
+                            <Button 
+                              disabled={subAccountLoading || deleteGroupLoading} 
+                              variant="ghost" className="h-8 w-8 p-0">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -1113,7 +1446,7 @@ const rowsPerPage = 10; // Default rows per page
                                   }
                                   className="text-yellow-400">Edit</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleSingleDelete(transaction.id)}>Delete</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => TransactionDetailshandler(transaction)} className="text-blue-700">Details</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1147,7 +1480,8 @@ const rowsPerPage = 10; // Default rows per page
                     />
                   </TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-left">Amount</TableHead>
+                  <TableHead className="text-right font-medium">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1167,8 +1501,135 @@ const rowsPerPage = 10; // Default rows per page
                         />
                       </TableCell>
                       <TableCell>{subAccount.name}</TableCell>
-                      <TableCell className="text-right font-medium">
-                        ₱{subAccount.balance?.toFixed(2) || "0.00"}
+                      <TableCell className="text-left font-medium">
+                        {formatTableAmount(subAccount.balance?.toFixed(2)) || "0.00"}
+                      </TableCell>
+                      <TableCell className="flex justify-end items-end">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline"
+                            disabled={subAccountLoading || deleteGroupLoading}
+                              className="px-2 py-1 h-8 w-8 flex border-0 items-center justify-center"
+                              aria-label="Open user actions">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent 
+                            align="end"
+                            className="w-56 max-w-xs sm:max-w-sm md:max-w-md p-4 rounded-xl shadow-lg bg-white"
+                            sideOffset={8}>
+
+                            <div className="flex flex-col gap-2">
+                          
+                            <Button
+                                onClick={() => handleGroupToDeleteId(subAccount.id)}
+                                variant="outline"
+                                className="flex items-center gap-2 text-rose-600 border-rose-600 hover:bg-rose-600 hover:text-white hover:border-0">
+                                <span className="flex items-center">
+                                  <Trash className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                  <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Delete</span>
+                                </span>
+                              </Button>
+
+                              <Button
+                                onClick={() => setOpenSubAccountInfoId(subAccount.id)}
+                                variant="outline"
+                                className="flex items-center gap-2 text-blue-700 border-blue-700 hover:bg-blue-700 hover:text-white hover:border-0"
+                              >
+                                <span className="flex items-center">
+                                  <Info className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true"/>
+                                  <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Details</span>
+                                </span>
+                              </Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+
+                      <Dialog open={openSubAccountInfoId === subAccount.id} onOpenChange={(open) => setOpenSubAccountInfoId(open ? subAccount.id : null)}>
+                          <DialogContent>
+                          <DialogHeader>
+                              <DialogTitle className="text-center">Group Transaction Details</DialogTitle>
+                              <DialogDescription>
+                                  These details are only about this opened group.
+                              </DialogDescription>
+                          </DialogHeader>
+                            <div className="flex">
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-700">
+                                  <strong>Name:</strong> {subAccount.name}
+                                </p>
+                                <p className="text-sm text-gray-700">
+                                  <strong>Balance:</strong> {formatTableAmount(subAccount.balance?.toFixed(2)) || "0.00"}
+                                </p>
+                                <p className="text-sm text-gray-700">
+                                  <strong>Parent of:</strong> {`${subAccount.children.length} groups` || "No child group"}
+                                </p>
+                                <p className="text-sm text-gray-700">
+                                  <strong>Transactions in this group only:</strong> {subAccount.transactions.length || "No Transactions"}
+                                </p>
+                                <p className="text-sm text-gray-700">
+                                  <strong>Description:</strong> {subAccount.description || "No description available"}
+                                </p>
+                                <p className="text-sm text-gray-700">
+                                  <strong>Created On:</strong> {formatDate(subAccount.createdAt) || "No date"}
+                                </p>
+                                <p className="text-sm text-gray-700">
+                                  <strong>Updated Last:</strong> {subAccount?.updatedAt ? formatDate(subAccount.updatedAt) : "No date"}
+                                </p>
+                              </div>
+                            </div>
+                          <DialogClose asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-auto
+                              border-black hover:border-0 hover:bg-black hover:text-white"
+                              >Close
+                            </Button>
+                          </DialogClose>
+                          </DialogContent>
+                          
+                      </Dialog>
+                          
+                      <Dialog open={groupToDeleteId === subAccount.id} onOpenChange={(open) => setGroupToDeleteId(open ? subAccount.id : null)}>
+                          <DialogContent>
+                          <DialogHeader>
+                              <DialogTitle className="text-center">Delete this group?</DialogTitle>
+                              <DialogDescription className="text-center">
+                                  Deleting this group will not delete other related child groups. 
+                              </DialogDescription>
+                          </DialogHeader>
+                          <div className="flex flex-col md:flex-row gap-2 justify-center">
+                          <DialogFooter>
+                              
+                                <Button 
+                                disabled={deleteGroupLoading}
+                                type="button"
+                                variant="outline"
+                                onClick={handleDeleteGroup}
+                                className="border-2 border-green-400 
+                                hover:border-0 hover:bg-green-400 
+                                text-green-400 hover:text-white">
+                                  Yes
+                                </Button>
+                              
+                                <DialogClose asChild>
+                                  <Button
+                                    disabled={deleteGroupLoading}
+                                    onClick={handleCancelGroupToDeleteId}
+                                    type="button"
+                                    variant="outline"
+                                    className="w-auto
+                                    border-rose-600 hover:border-0 hover:bg-rose-600 
+                                    text-rose-600 hover:text-white"
+                                    >Cancel
+                                  </Button>
+                                </DialogClose>
+                            
+                          </DialogFooter></div>
+                            
+                          </DialogContent>
+                      </Dialog>
                       </TableCell>
                     </TableRow>
                   ))

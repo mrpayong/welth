@@ -7,6 +7,8 @@ import { Toaster } from "sonner";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import theme from "./theme";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
+import { Suspense } from "react";
+import { BarLoader } from "react-spinners";
 
 const inter = Inter({subsets:["latin"]});
 
@@ -18,15 +20,11 @@ export const metadata = {
 
 
 export default function RootLayout({ children }) {
-
+  
 
   return (
     <ClerkProvider>
-        
-                    
-                    
         <html lang="en">
-          
           <body
             className={`${inter.className}`}
           >
@@ -50,8 +48,6 @@ export default function RootLayout({ children }) {
             </footer>
           </body>
         </html>
- 
-                  
     </ClerkProvider>
   );
 }

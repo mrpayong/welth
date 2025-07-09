@@ -110,5 +110,6 @@ export async function getDashboardData() {
         orderBy: {date: "desc"},
     });
 
+
     return transactions.map(serializeTransaction);
 }

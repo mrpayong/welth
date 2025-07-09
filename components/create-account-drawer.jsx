@@ -450,7 +450,8 @@ const CreateAccountDrawer = ({ children }) => {
         {/* Submit and Cancel Buttons */}
         <div className="flex gap-4 pt-6">
           <DialogClose asChild>
-              <Button type="button" variant="outline" className="flex-1 border-2 border-black-400" disabled={createAccountLoading}>Close</Button>
+              <Button type="button" variant="outline" className="flex-1 border-2 border-black-400" disabled={createAccountLoading}>
+                Close</Button>
           </DialogClose>
           <Button type="submit" className="flex-1" disabled={createAccountLoading}>
             {createAccountLoading ? (

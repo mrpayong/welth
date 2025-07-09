@@ -9,17 +9,16 @@ async function CashflowPage ({ params }) {
 
     const account = await getAccountWithTransactions(id)
     const cashflows = await getCashflow(id)
-    console.log(account.name)
     const accountName = account.name
 
 
 
-    if (!cashflows || cashflows.length === 0) {
-        return <p>No cashflow statements found for this account.</p>;
-    }
+    // if (!cashflows || cashflows.length === 0) {
+    //     return <p>No cashflow statements found for this account.</p>;
+    // }
 
     return (
-        <div className="p-4 bg-gradient-to-b from-blue-50 to-white">
+        <div className="bg-gradient-to-b from-blue-50 to-white">
            
             <CashflowList cashflows={cashflows} name={accountName}/> {/* Pass data to the child component */}
         </div>

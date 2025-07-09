@@ -19,14 +19,18 @@ model User {
   id                      String    @id @default(uuid())
   clerkUserId             String    @unique
   email                   String    @unique
-  name                    String?
+  Fname                   String    
+  Lname                   String    
+  username                String    @unique 
   imageUrl                String?
   role                    UserRole  @default(USER)
   transactions            Transaction[]
   accounts                Account[]
-  budgets                 Budget[]
-  // bookOfAccount           Book[]
+  tasks                   Task[]
+  actLog                  ActivityLog[]
+  archived                Archive[]
   
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -66,11 +70,10 @@ model Account {
   branchCount             Int?
   owner                   String
   
-  user                    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                    User  @relation(fields: [userId], references: [id])
   transactions            Transaction[]
-  // bookOfAccount           Book[]
   Cashflow                cashFlow[]
-
+  archived                Archive[]
 
   @@index([userId])
   @@map("accounts")
@@ -106,7 +109,6 @@ model Transaction {
   Activity              activityType
   printNumber           String   
   refNumber             String    @unique 
-  // isDebit               Boolean   @default(false) //true if it is a debit transaction
 
   
   isRecurring           Boolean      @default(false)
@@ -114,18 +116,15 @@ model Transaction {
   nextRecurringDate     DateTime?   //Next date for recurring transaction
   
   lastProcessed         DateTime?   //last time this recurring transac was processed
-  status                TransactionStatus   @default(COMPLETED)
   userId                String
-  user                  User        @relation(fields: [userId], references: [id], onDelete:Cascade)
+  user                  User        @relation(fields: [userId], references: [id])
   accountId             String
-  account               Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account               Account     @relation(fields: [accountId], references: [id])
 
   cashFlow              cashFlow[]   @relation("TransactionToCashflow") // Define the relationship
   subAccounts            SubAccountTransaction[] // Explicit many-to-many relationship
 
-  // bookId                String
-  // bookOfAccount         Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  
+
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
 
@@ -136,29 +135,6 @@ model Transaction {
   
 }
 
-// model Book {
-//   id                    String       @id @default(uuid())
-//   type                  BookType
-//   startDate             DateTime
-//   endDate               DateTime
-//   transaction           Transaction[]
-//   totalDebit            Decimal
-//   totalCredit           Decimal
-//   accountId             String
-//   account               Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
-//   userId                String
-//   user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-//   createdAt             DateTime    @default(now())
-//   updatedAt             DateTime    @updatedAt
-
-//   @@index([userId])
-//   @@map("books")
-// }
-// enum BookType {
-//   CASH_RECEIPT
-//   CASH_DISBURSEMENT
-// }
 
 enum TransactionType {
   INCOME
@@ -172,10 +148,11 @@ enum RecurringInterval {
   YEARLY
 }
 
-enum TransactionStatus {
-  PENDING
+enum TaskStatus {
   COMPLETED
-  FAILED
+  PROGRESS
+  PLANNING
+  RESEARCH
 }
 
 enum activityType {
@@ -188,22 +165,14 @@ enum UserRole {
   USER
   ADMIN
   STAFF
-}
-model Budget {
-  id    String    @id @default(uuid())
-  amount  Decimal
-  lastAlertSent   DateTime   // Track when the last alert was sent
-  userId    String    @unique
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  @@index([userId])
-  @@map("budgets")  
+  SYSADMIN
 }
 
-
-
+enum UrgencyLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
 
 
 
@@ -221,9 +190,9 @@ model cashFlow {
   periodCashFlow          CashFlowPeriod  @default(DAILY)
 
   userId                  String
-  user                    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                    User        @relation(fields: [userId], references: [id])
   accountId               String
-  account                 Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)           
+  account                 Account     @relation(fields: [accountId], references: [id])           
 
 
   createdAt               DateTime    @default(now()) // timestamp for generation
@@ -252,7 +221,7 @@ model SubAccount {
   description String?      // Optional description
   balance     Decimal?     // Balance specific to the sub-account
   accountId   String       // Foreign key to the parent account
-  account     Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account     Account      @relation(fields: [accountId], references: [id])
   transactions SubAccountTransaction[] // Transactions specific to this sub-account
   parentOf     SubAccountRelation[] @relation("ParentAccount")
   childOf      SubAccountRelation[] @relation("ChildAccount")
@@ -263,14 +232,14 @@ model SubAccount {
 
   @@index([accountId])
   @@map("sub_accounts")
-  
+   
 }
 
 model SubAccountRelation {
   id           String       @id @default(uuid())
-  parent       SubAccount? @relation("ParentAccount", fields: [parentId], references: [id], onDelete: Cascade)
+  parent       SubAccount? @relation("ParentAccount", fields: [parentId], references: [id])
   parentId     String?    
-  child        SubAccount @relation("ChildAccount", fields: [childId], references: [id], onDelete: Cascade)
+  child        SubAccount @relation("ChildAccount", fields: [childId], references: [id])
   childId      String
   relationName String?  // This allows you to name the relationship
 
@@ -285,8 +254,8 @@ model SubAccountRelation {
 model CashflowSubAccount {
   cashFlowId    String
   subAccountId  String
-  cashFlow      cashFlow   @relation("CashflowToSubAccount", fields: [cashFlowId], references: [id], onDelete: Cascade)
-  subAccount    SubAccount @relation("SubAccountToCashflow", fields: [subAccountId], references: [id], onDelete: Cascade)
+  cashFlow      cashFlow   @relation("CashflowToSubAccount", fields: [cashFlowId], references: [id])
+  subAccount    SubAccount @relation("SubAccountToCashflow", fields: [subAccountId], references: [id])
 
   // Additional metadata fields
   createdAt     DateTime   @default(now())
@@ -297,10 +266,10 @@ model CashflowSubAccount {
 }
 
 model SubAccountTransaction {
-  subAccountId  String
+  subAccountId  String  //subAccount.id
   transactionId String
-  subAccount    SubAccount   @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
-  transaction   Transaction  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  subAccount    SubAccount   @relation(fields: [subAccountId], references: [id])
+  transaction   Transaction  @relation(fields: [transactionId], references: [id])
 
   createdAt     DateTime     @default(now())
 
@@ -308,5 +277,48 @@ model SubAccountTransaction {
   @@map("sub_account_transactions")
 }
 
+model Task {
+  id              String   @id @default(uuid())
+  taskName        String
+  taskDescription String?
+ 
+  taskCategory    String
+  urgency         UrgencyLevel  @default(MEDIUM)
+  dueDate         DateTime
+
+  userId          String
+  assignedTo      User     @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  @@index([userId])
+  @@map("tasks")
+}
 
 
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Archive {
+  id          String   @id @default(uuid())
+  userId      String
+  action      String           // e.g. "createSubAccount", "deleteTransaction"
+  entityType  String           // e.g. "SubAccount", "Transaction"
+  entityId    String           // The unique id of the affected entity
+  data        Json             // The full snapshot of the entity at the time of action
+  createdAt   DateTime @default(now())
+  accountId   String
+  user        User     @relation(fields: [userId], references: [id])
+  account     Account  @relation(fields: [accountId], references: [id])
+
+  @@index ([userId])
+  @@index ([accountId])
+  @@map("archives")
+}

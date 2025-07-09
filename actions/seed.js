@@ -3,8 +3,8 @@
 import { db } from "@/lib/prisma";
 import { subDays } from "date-fns";
 
-const ACCOUNT_ID = "3984da8a-de53-4d9c-9149-80d729fbbd2f";
-const USER_ID = "87c13bc1-4b76-4761-8644-6522bf6f970e";
+const ACCOUNT_ID = "2e88d58d-677c-4f6f-9552-d4e0a701f09f";
+const USER_ID = "61fd5b0f-53ed-404e-b410-de982f4aacca";
 
 // Categories with their typical amount ranges 
 const CATEGORIES = {
@@ -90,7 +90,6 @@ export async function seedTransactions() {
           } ${category}`,
           date,
           category,
-          status: "COMPLETED",
           userId: USER_ID,
           accountId: ACCOUNT_ID,
           createdAt: date,

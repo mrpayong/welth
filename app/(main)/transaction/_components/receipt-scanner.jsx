@@ -3,11 +3,11 @@
 import { scanReceipt } from '@/actions/transaction';
 import { Button } from '@/components/ui/button';
 import useFetch from '@/hooks/use-fetch';
-import { Camera, Loader2 } from 'lucide-react';
+import { Camera, CircleCheck, Loader2 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner';
 
-const ReceiptScanner = ({onScanComplete}) => {
+const ReceiptScanner = ({onScanComplete, scannedReceipt}) => {
     const fileInputRef = useRef();
     const [isClient, setIsClient] = useState(false);
     
@@ -84,11 +84,11 @@ const ReceiptScanner = ({onScanComplete}) => {
                 {scanReceiptLoading
                     ? (<>
                         <Loader2 className='mr-2 animate-spin'/> 
-                        Scanning Receipt... </>
+                        Scanning Receipt </>
                     )
                     : (<>
                             <Camera className='mr-2'/> 
-                               Scan Receipt with AI
+                               Scan Receipt with AI {scannedReceipt ?(<CircleCheck  className='text-green-400'/>) : ""}
                         </>
                     )
                 }

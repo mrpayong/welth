@@ -60,7 +60,8 @@ export async function getCashOutflow(id) {
             type: true,
             updatedAt: true,
             userId: true,
-            refNumber:true
+            refNumber:true,
+            particular: true,
           }
         },
       },
@@ -161,7 +162,8 @@ export async function getCashInflow(id) {
             type: true,
             updatedAt: true,
             userId: true,
-            refNumber:true
+            refNumber:true,
+            particular: true,
           }
         },
       },
@@ -207,7 +209,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
 
 
 
-    console.log("INPUTS TO API:", transactionIds, take, subAccountIds, accountId, data);
+
     // fetching all transactions
     let transactions = []; // Initialize transactions as an empty array
 
@@ -223,7 +225,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
           id: { in: transactionIds },
           userId: user.id,
         },
-        take, // beginning balance input
+        take, 
         select: {
           Activity: true,
           type: true,
@@ -235,7 +237,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
       });
     }
 
-  
+
     let subAccounts = []; // Initialize subAccounts as an empty array
 
     if (subAccountIds && subAccountIds.length > 0) {
@@ -267,7 +269,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
       ...transaction,
       amount: parseFloat(transaction.amount.toNumber().toFixed(3))
     }));
-    console.log("sub accounts: ", subAccounts);
+   
 
     const transactionDates = transactions.map((t) => new Date(t.date));
     const earliestDate = new Date(Math.min(...transactionDates));
@@ -285,6 +287,9 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
         break;
       case dateRangeInDays <= 31:
         periodCashFlow = "MONTHLY";
+        break;
+      case dateRangeInDays >= 365:
+        periodCashFlow = "ANNUAL";
         break;
       case dateRangeInDays >= 120:
         periodCashFlow = "QUARTERLY";
@@ -476,8 +481,9 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
 
 
     
+    
 
-     console.log("THE NEW CASHFLOW: ", newCashflow);
+
     const cashflowWithTransactions = await db.cashFlow.findUnique({
       where: { id: newCashflow.id },
       include: { 
@@ -513,7 +519,7 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
           } : false,
       },
     });
-    console.log("THE LAST STAGE: ", cashflowWithTransactions)
+   
     
     const convertedTransactions = cashflowWithTransactions.transactions
       ? cashflowWithTransactions.transactions.map((transaction) => ({
@@ -544,6 +550,8 @@ export async function createCashflow(transactionIds, take, subAccountIds, accoun
       subAccounts: serializedSubAccounts,
     }
 
+    revalidatePath('/dashboard')
+    revalidatePath(`/account/${accountId}`)
     return {
       success: true,
       data: convertedCashflow
@@ -608,7 +616,6 @@ export async function getCashflow(accountId, userId, cashFlowId) {
         transactions: convertedTransactions,
       };
     });
-console.log("THE CASHFLOW DATA FROM BACKEND",convertedCashflows)
 
     return convertedCashflows;
   } catch (error) {
@@ -618,7 +625,58 @@ console.log("THE CASHFLOW DATA FROM BACKEND",convertedCashflows)
 }
 
 
+export async function getCashflowEnding(accountId){
+  try {
+    console.log("[1] Auth")
+    const {userId} = await auth();
+    if(!userId){
+      throw new Error("Unauthorized.")
+    }
 
+    const user = await db.user.findUnique({
+      where: {clerkUserId: userId}
+    })
+
+    if(!user){
+      throw new Error("Unauthorized.")
+    }
+
+    if(user.role !== "STAFF"){
+      throw new Error("Unavailable data.")
+    }
+
+    console.log("[1] Auth passed")
+    console.log("[2] Periods")
+    const periods = ["DAILY", "WEEKLY", "MONTHLY", "ANNUAL", "FISCAL_YEAR"]; // Add others if needed
+
+    console.log("[3] Querying every Periods")
+    const latestCashflows = await Promise.all(
+      periods.map(async (period) => {
+        const cashflow = await db.cashFlow.findFirst({
+          where:{
+            accountId,
+            periodCashFlow: period,
+          },
+          orderBy: {createdAt: "desc"},
+          select: {
+            id: true, 
+            endBalance: true,
+            periodCashFlow: true,
+            createdAt: true,
+          }
+        });
+        return cashflow ? {...cashflow} : null
+      })
+    );
+    console.log("[3] Fetched")
+
+    console.log("[4] Success")
+    return {success: true, latestCashflows: latestCashflows.filter(Boolean)}
+  } catch (error) {
+    console.log("Error fetching latest cashflow statements.", error.message)
+    throw new Error("Error fetching latest cashflow statements.")
+  }
+}
 
 
 
@@ -892,6 +950,127 @@ export async function getCashflowById(cfsID) {
 
 
 
+// export async function recalculateCashflowTotals(cashflowId) {
+//   console.log("[3.1] Recalculate balances")
+//   // 1. Fetch the current cashflow to get accountId, periodCashFlow, and createdAt
+//   const current = await db.cashFlow.findUnique({
+//     where: { id: cashflowId },
+//     select: {
+//       id: true,
+//       accountId: true,
+//       periodCashFlow: true,
+//       createdAt: true,
+//     }
+//   });
+//   if (!current) throw new Error("Cashflow not found.");
+
+//   // 2. Fetch all cashflows for this account and period, ordered by createdAt ASC
+//   const cashflows = await db.cashFlow.findMany({
+//     where: {
+//       accountId: current.accountId,
+//       periodCashFlow: current.periodCashFlow,
+//     },
+//     orderBy: { createdAt: "asc" }
+//   });
+
+//   // 3. Find the index of the current cashflow in the sequence
+//     console.log("[3.2] Recalculate balances")
+//   const startIdx = cashflows.findIndex(cf => cf.id === cashflowId);
+//   if (startIdx === -1) throw new Error("Cashflow not found in sequence.");
+
+//   // 4. For each cashflow from the current to the last, recalculate and update
+//   let prevEndBalance = null;
+//   for (let i = startIdx; i < cashflows.length; i++) {
+//     const cf = cashflows[i];
+
+//     // Fetch transactions and subAccounts for this cashflow
+//     const fullCF = await db.cashFlow.findUnique({
+//       where: { id: cf.id },
+//       include: {
+//         transactions: {
+//           select: {
+//             Activity: true,
+//             type: true,
+//             amount: true,
+//           },
+//         },
+//         subAccounts: {
+//           select: {
+//             subAccount: {
+//               select: {
+//                 balance: true,
+//                 transactions: {
+//                   select: {
+//                     transaction: {
+//                       select: {
+//                         Activity: true,
+//                         type: true,
+//                       },
+//                     },
+//                   },
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       },
+//     });
+
+//     // Use previous period's endBalance as startBalance if not the first in sequence
+//     let startBalance = i === 0 ? Number(fullCF.startBalance) : prevEndBalance;
+
+//     // Calculate activity totals
+//     const activities = ["OPERATION", "INVESTMENT", "FINANCING"];
+//     let activityTotal = [];
+
+//   console.log("[3.3] Recalculate balances")
+//     for (const activity of activities) {
+//       // Direct transactions
+//       const income = fullCF.transactions
+//         .filter(t => t.Activity === activity && t.type === "INCOME")
+//         .reduce((sum, t) => sum + Number(t.amount), 0);
+//       const expense = fullCF.transactions
+//         .filter(t => t.Activity === activity && t.type === "EXPENSE")
+//         .reduce((sum, t) => sum + Number(t.amount), 0);
+
+//       // SubAccount balances
+//       let subAccountIncome = 0;
+//       let subAccountExpense = 0;
+//       for (const rel of fullCF.subAccounts) {
+//         const sub = rel.subAccount;
+//         if (!sub || !sub.transactions || sub.transactions.length === 0) continue;
+//         const t = sub.transactions[0].transaction;
+//         if (t.Activity === activity) {
+//           if (t.type === "INCOME") subAccountIncome += Number(sub.balance);
+//           if (t.type === "EXPENSE") subAccountExpense += Number(sub.balance);
+//         }
+//       }
+
+//       const total = (income + subAccountIncome) - (expense + subAccountExpense);
+//       activityTotal.push(Number(total.toFixed(3)));
+//     }
+
+//       console.log("[3.4] Recalculate balances")
+//     // Net change and end balance
+//     const netChange = activityTotal.reduce((a, b) => a + b, 0);
+//     const endBalance = Number((startBalance + netChange).toFixed(3));
+
+//     // Update the cashflow record
+//     await db.cashFlow.update({
+//       where: { id: cf.id },
+//       data: {
+//         activityTotal,
+//         netChange: Number(netChange.toFixed(3)),
+//         startBalance: Number(startBalance.toFixed(3)),
+//         endBalance,
+//       },
+//     });
+
+//     prevEndBalance = endBalance;
+//   }
+//   console.log("[3.5] Success Recalculate balances")
+//   return { success: true };
+// }
 
 
 
@@ -918,68 +1097,94 @@ export async function getCashflowById(cfsID) {
 
 
 
+// export async function updateCashflow({ cashflowId, transactionId, newAmount }) {
+//   try {
+//     const { userId } = await auth();
+//     if (!userId) throw new Error("Unauthorized");
 
-export async function updateCashflow(cashflowId, data) {
+//     // 1. Fetch the cashflow and check if the transaction is related
+//     const cashflow = await db.cashFlow.findUnique({
+//       where: { id: cashflowId },
+//       include: { transactions: { select: { id: true } } },
+//     });
+//     if (!cashflow) throw new Error("Cashflow not found.");
+
+//     const isRelated = cashflow.transactions.some(tx => tx.id === transactionId);
+//     if (!isRelated) throw new Error("Transaction is not related to this cashflow.");
+
+//     // 2. Update the transaction amount
+//     await db.transaction.update({
+//       where: { id: transactionId },
+//       data: { amount: Number(newAmount) },
+//     });
+
+//     // 3. Recalculate this cashflow and all subsequent cashflows
+//     let recalc = await recalculateCashflowTotals(cashflowId);
+
+//     let prevEndBalance = null;
+//     if (recalc && recalc.data && typeof recalc.data.endBalance === "number") {
+//       prevEndBalance = recalc.data.endBalance;
+//     } else {
+//       // fallback: fetch updated cashflow for endBalance
+//       const updated = await db.cashFlow.findUnique({ where: { id: cashflowId }, select: { endBalance: true } });
+//       prevEndBalance = updated.endBalance;
+//     }
+
+//     const currentCashflow = await db.cashFlow.findUnique({ 
+//       where: { id: cashflowId } 
+//     });
+
+//     const subsequentCashflows = await db.cashFlow.findMany({
+//       where: {
+//         accountId: currentCashflow.accountId,
+//         periodCashFlow: currentCashflow.periodCashFlow,
+//         createdAt: { gt: currentCashflow.createdAt }
+//       },
+//       orderBy: { createdAt: "asc" }
+//     });
+
+//     for (const cfs of subsequentCashflows) {
+//       recalc = await recalculateCashflowTotals(cfs.id, prevEndBalance);
+//       prevEndBalance = recalc && recalc.data && typeof recalc.data.endBalance === "number"
+//         ? recalc.data.endBalance
+//         : (await db.cashFlow.findUnique({ where: { id: cfs.id }, select: { endBalance: true } })).endBalance;
+//     }
+
+//     return { success: true };
+//   } catch (error) {
+//     return { success: false, error: error.message };
+//   }
+// }
+
+
+
+
+async function archiveEntity({
+  userId,
+  accountId,
+  action,
+  entityType,
+  entityId,
+  data,
+}) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
-
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
-    });
-    if (!user) throw new Error("User not found");
-
-    // Fetch the original cashflow
-    const originalCashflow = await db.cashFlow.findUnique({
-      where: { id: cashflowId },
-      include: { transactions: true, subAccounts: true },
-    });
-    if (!originalCashflow) throw new Error("Cashflow not found.");
-
-    // Validate input data
-    if (typeof data.startBalance !== "number") {
-      throw new Error("Invalid startBalance: must be a number");
-    }
-    if (data.transactionIds && !Array.isArray(data.transactionIds)) {
-      throw new Error("Invalid transactionIds: must be an array");
-    }
-    if (data.subAccountIds && !Array.isArray(data.subAccountIds)) {
-      throw new Error("Invalid subAccountIds: must be an array");
-    }
-
-    // Update the cashflow
-    const updatedCashflow = await db.cashFlow.update({
-      where: { id: cashflowId },
+    await db.archive.create({
       data: {
-        startBalance: data.startBalance,
-        subAccounts: data.subAccountIds
-          ? {
-              set: data.subAccountIds.map((id) => ({ id })), // Update associated subaccounts
-            }
-          : undefined,
-        transactions: data.transactionIds
-          ? {
-              set: data.transactionIds.map((id) => ({ id })), // Update associated transactions
-            }
-          : undefined,
-      },
-      include: {
-        transactions: true,
-        subAccounts: true,
+        userId,
+        accountId,
+        action,
+        entityType,
+        entityId,
+        data,
       },
     });
 
-    // Revalidate paths
-    revalidatePath(`/CashflowStatement/${originalCashflow.accountId}`);
-    revalidatePath(`/CashflowStatement/${originalCashflow.accountId}/${cashflowId}`);
-
-    return { success: true, data: updatedCashflow };
+    return;
   } catch (error) {
-    console.error("Error updating cashflow:", error);
-    return { success: false, error: error.message || "Failed to update cashflow" };
+    console.error("Error archiving entity:", error);
+    return { success: false, error: error.message || "Archiving failed" };
   }
 }
-
 
 export async function deleteCashflow(cashflowId) {
   console.log("THE BACKEND",cashflowId)
@@ -1008,25 +1213,604 @@ export async function deleteCashflow(cashflowId) {
       },
       select: {
         id: true,
+        periodCashFlow: true,
+        accountId: true,
+        startBalance: true,
+        endBalance: true,
+        activityTotal: true,
+        netChange: true,
+        createdAt: true,
       }
     });
 
     if (!cashflow) {
       throw new Error('Cashflow not found or unauthorized');
     }
-    console.log('Cashflow found:', cashflow);
+        await archiveEntity({
+          userId: user.id,
+          accountId: cashflow.accountId,
+          action: "deleteCashflowStatement",
+          entityType: "CashflowStatement",
+          entityId: cashflow.id,
+          data: cashflow,
+        });
 
     await db.cashFlow.delete({
       where: {
-        id: cashflowId,
+        id: cashflow.id,
       },
     });
 
     console.log('Cashflow deleted');
+    revalidatePath('/CashflowStatement')
 
     return { success: true, message: "Cancelled creating Cashflow Statement"};
   } catch (error) {
     console.error('Error cancelling Cashflow creation:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+
+export async function updateCashflow(cashflowId, updatedTransactionIds, updatedSubAccountIds) {
+  try {
+    console.log("[1] update start", cashflowId, updatedTransactionIds, updatedSubAccountIds)
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+    if (!user) throw new Error("User not found");
+
+    // Step 1: Fetch the current cashflow with necessary details
+    const existingCashflow = await db.cashFlow.findUnique({
+      where: { id: cashflowId },
+      include: {
+        transactions: true,
+        subAccounts: {
+          include: {
+            subAccount: {
+              include: {
+                transactions: {
+                  include: { transaction: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!existingCashflow) throw new Error("Cashflow not found");
+
+    const accountId = existingCashflow.accountId;
+    const period = existingCashflow.periodCashFlow;
+    const startBalance = existingCashflow.startBalance;
+
+    // Step 2: Fetch updated transactions
+    const updatedTransactions = await db.transaction.findMany({
+      where: {
+        id: { in: updatedTransactionIds },
+        userId: user.id,
+      },
+    });
+
+    const updatedSubAccounts = await db.SubAccount.findMany({
+      where: {
+        id: { in: updatedSubAccountIds },
+        accountId: accountId,
+      },
+      include: {
+        transactions: {
+          include: { transaction: true },
+        },
+      },
+    });
+
+    // Helper to sum transactions
+    const sumTransactions = (txs, activity, type) =>
+      txs
+        .filter(t => t.Activity === activity && t.type === type)
+        .reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
+
+    const sumSubAccounts = (subs, activity, type) =>
+      subs.reduce((sum, sa) => {
+        const match = sa.transactions.some(t => t.transaction.Activity === activity && t.transaction.type === type);
+        return match ? sum + parseFloat(sa.balance?.toString() || "0") : sum;
+      }, 0);
+
+    // Step 3: Calculate new activity totals
+    const totalOperating =
+      sumTransactions(updatedTransactions, "OPERATION", "INCOME") -
+      sumTransactions(updatedTransactions, "OPERATION", "EXPENSE") +
+      sumSubAccounts(updatedSubAccounts, "OPERATION", "INCOME") -
+      sumSubAccounts(updatedSubAccounts, "OPERATION", "EXPENSE");
+
+    const totalInvesting =
+      sumTransactions(updatedTransactions, "INVESTMENT", "INCOME") -
+      sumTransactions(updatedTransactions, "INVESTMENT", "EXPENSE") +
+      sumSubAccounts(updatedSubAccounts, "INVESTMENT", "INCOME") -
+      sumSubAccounts(updatedSubAccounts, "INVESTMENT", "EXPENSE");
+
+    const totalFinancing =
+      sumTransactions(updatedTransactions, "FINANCING", "INCOME") -
+      sumTransactions(updatedTransactions, "FINANCING", "EXPENSE") +
+      sumSubAccounts(updatedSubAccounts, "FINANCING", "INCOME") -
+      sumSubAccounts(updatedSubAccounts, "FINANCING", "EXPENSE");
+
+    const netChange = totalOperating + totalInvesting + totalFinancing;
+    const endBalance = startBalance + netChange;
+
+    // Step 4: Update the current cashflow
+    await db.cashFlow.update({
+      where: { id: cashflowId },
+      data: {
+        activityTotal: [totalOperating, totalInvesting, totalFinancing],
+        netChange,
+        endBalance,
+        updatedAt: new Date(),
+        transactions: {
+          set: [], // clear existing
+          connect: updatedTransactionIds.map(id => ({ id })),
+        },
+        subAccounts: {
+          deleteMany: {}, // clear all
+          create: updatedSubAccountIds.map(id => ({
+            subAccount: { connect: { id } },
+          })),
+        },
+      },
+    });
+
+    // Step 5: Update subsequent cashflows of same period
+    const futureCashflows = await db.cashFlow.findMany({
+      where: {
+        accountId,
+        periodCashFlow: period,
+        date: { gt: existingCashflow.date },
+      },
+      orderBy: { date: "asc" },
+    });
+
+    let runningStart = endBalance;
+
+    for (const cf of futureCashflows) {
+      const newEnd = runningStart + cf.netChange;
+      await db.cashFlow.update({
+        where: { id: cf.id },
+        data: {
+          startBalance: runningStart,
+          endBalance: newEnd,
+        },
+      });
+      runningStart = newEnd;
+    }
+console.log("[2] update end. success.")
+    return { success: true, message: "Cashflow updated successfully." };
+  } catch (error) {
+    console.log("[3] action end. failed.")
+    console.error("UPDATE CASHFLOW ERROR:", error);
+    throw new Error("Failed to update cashflow");
+  }
+}
+
+
+export async function udpateNetchange(cfsId, amount){
+  try {
+    console.log("[1] Auth");
+    const {userId} = await auth();
+
+    const user = await db.user.findUnique({
+      where: {clerkUserId: userId}
+    });
+
+    if(!user){
+      throw new Error("Unauthorized.");
+    };
+
+    if(user.role !== "STAFF"){
+      throw new Error("Unavailable action");
+    };
+
+    const cashflow = await db.cashFlow.findUnique({
+      where: {id: cfsId},
+      select: {
+        id: true,
+        accountId: true,
+        netChange: true,
+      }
+    });
+
+    console.log("[2]Fetched Cashflow", cashflow);
+
+    if(!cashflow){
+      throw new Error("Error fetching this cashflow.");
+    }
+
+    const newAmount = Number(amount);
+    console.log("[3]Update Net change", cashflow);
+    const updatedNetchange = await db.cashFlow.update({
+      where: {id: cashflow.id},
+      data: {
+        netChange: newAmount,
+      }
+    });
+
+    revalidatePath(`/CashflowStatement/${cashflow.accountId}/${cashflow.id}`);
+
+    console.log("[4] Success update");
+    console.log("[4]", updatedNetchange);
+    return {success: true, data: updatedNetchange};
+  } catch (error) {
+    console.log("Error updating net change");
+    throw new Error("Error udpating Net change");
+  }
+}
+
+export async function updateStartBalance(cfsId, amount) {
+  try {
+    console.log("[1] Auth");
+    const { userId } = await auth();
+
+    const user = await db.user.findUnique({ 
+      where: { clerkUserId: userId } 
+    });
+
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    if (!user || user.role !== "STAFF") {
+      throw new Error("Unavailable action");
+    }
+
+    console.log("[2] Fetch Cashflow");
+    const cashflow = await db.cashFlow.findUnique({ 
+      where: { id: cfsId },
+      select: {
+        id: true,
+        startBalance: true,
+      }
+    });
+    if (!cashflow){
+      throw new Error("Cashflow not found.");
+    }
+
+    console.log("[3] Update balance");
+    const newAmount = Number(amount)
+    const updatedBeginningBal = await db.cashFlow.update({
+      where: { id: cashflow.id },
+      data: { startBalance: newAmount }
+    });
+
+    revalidatePath(`/CashflowStatement/${cashflow.accountId}/${cashflow.id}`);
+
+    console.log("[4] Success update");
+    return { success: true, data: updatedBeginningBal };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+
+export async function updateEndBalance(cfsId, amount) {
+  try {
+    console.log("[1] Auth");
+    const { userId } = await auth();
+    const user = await db.user.findUnique({ 
+      where: { clerkUserId: userId } 
+    });
+    if (!user){
+      throw new Error("Unauthorized");
+    }
+    if (!user || user.role !== "STAFF") {
+      throw new Error("Unavailable action");
+    }
+
+
+    console.log("[2] Fetch Cashflow");
+    const cashflow = await db.cashFlow.findUnique({ 
+      where: { id: cfsId },
+      select: {
+        id: true,
+        endBalance: true,
+      }
+    });
+    if (!cashflow){
+      throw new Error("Cashflow not found.");
+    }
+
+    console.log("[3] Update end balance", cashflow);
+    const newAmount = Number(amount);
+    const updatedEndBalance = await db.cashFlow.update({
+      where: { id: cashflow.id },
+      data: { endBalance: newAmount }
+    });
+
+    console.log("[4] Success update", updatedEndBalance);
+    revalidatePath(`/CashflowStatement/${cashflow.accountId}/${cashflow.id}`);
+    return { success: true, data: updatedEndBalance };
+  } catch (error) {
+    console.log("Error udpating Ending balance");
+    throw new Error("Error updating Ending balance");
+  }
+}
+
+// relation checker
+async function isTransactionInCashflow(cashflowId, transactionId) {
+  try {
+    const cashflowRelation = await db.cashFlow.findUnique({
+      where: { id: cashflowId },
+        select: {
+          transactions: {
+            where: { id: transactionId },
+            select: { id: true }
+          }
+        }
+      });
+    
+    if (!cashflowRelation){
+      return {success: false, message: "[3] Relation not found"};
+    }
+      
+    return {success: true};
+  } catch (error) {
+    console.error("[3] Error checking transaction in cashflow:", error);
+    return { success: false, message: "[3] Relation not found, error", error: error.message };
+  }
+}
+
+export async function updateCashflowTransaction(cfsId, transactionId, amount) {
+  try {
+    console.log("[1] Auth")
+    const { userId } = await auth();
+
+    const user = await db.user.findUnique({ 
+      where: { clerkUserId: userId } 
+    });
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+    if (!user || user.role !== "STAFF") {
+      throw new Error("Unavailable action");
+    }
+
+    console.log("[2] Fetch data")
+    const currCashflow = await db.cashFlow.findUnique({
+      where: {id: cfsId},
+      select: {
+        id: true,
+        accountId: true,
+        transactions: {
+          select: {
+            id: true, 
+            type: true, 
+            Activity: true,
+            amount: true,
+          }
+        }
+      }
+    })
+
+    const transaction = await db.transaction.findUnique({
+      where: { 
+        id: transactionId, 
+        userId: user.id 
+      },
+      select: {
+        id: true,
+      }
+    });
+    
+    if (!transaction || !currCashflow) {
+      throw new Error("[2] Data not found.");
+    }
+
+    console.log("[3] Relation check")
+    const isRelated = await isTransactionInCashflow(currCashflow.id, transaction.id);
+
+    if (!isRelated.success) {
+      throw new Error("[3] Transaction is not related to this cashflow.");
+    }
+
+    console.log("[4] Update amount", amount)
+    let newType = amount < 0 
+      ? "EXPENSE" 
+      : "INCOME";
+
+    const updatedTransaction = await db.transaction.update({
+      where: { id: transaction.id },
+      data: {
+        amount: Math.abs(Number(amount)),
+        type: newType
+      }
+    });
+
+    console.log("[5] Fetching updated transaction")
+    const returnUpdated = await db.transaction.findUnique({
+      where: {id: updatedTransaction.id},
+      select: {
+        id: true,
+        type: true,
+        amount: true,
+        Activity: true
+      }
+    })
+    console.log("[5] Fetched", returnUpdated)
+
+    const formattedUpdatedTransaction = {
+      ...returnUpdated,
+      amount: Number(returnUpdated.amount),
+    }
+
+    revalidatePath(`/CashflowStatement/${currCashflow.accountId}/${currCashflow.id}`)
+
+    console.log("[6] Success updating transaction")
+    return { success: true, data: formattedUpdatedTransaction};
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+export async function updateTotalOperating(cfsId, newValue) {
+  try {
+    const { userId } = await auth();
+    const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+    if (!user || user.role !== "STAFF") throw new Error("Unavailable action");
+
+    const cashflow = await db.cashFlow.findUnique(
+      { where: { id: cfsId } 
+    });
+    if (!cashflow) throw new Error("Cashflow not found.");
+
+    const activityTotal = Array.isArray(cashflow.activityTotal)
+      ? [...cashflow.activityTotal]
+      : [0, 0, 0];
+
+    activityTotal[0] = Number(newValue);
+
+    const updated = await db.cashFlow.update({
+      where: { id: cfsId },
+      data: { activityTotal }
+    });
+
+    revalidatePath(`/CashflowStatement/${cashflow.accountId}/${cashflow.id}`);
+    return { success: true, data: updated };
+  } catch (error) {
+    throw new Error("Error updating activity total")
+  }
+}
+
+export async function updateTotalInvesting(cfsId, newValue) {
+  try {
+    const { userId } = await auth();
+    const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+    if (!user || user.role !== "STAFF") throw new Error("Unavailable action");
+
+    const cashflow = await db.cashFlow.findUnique({ where: { id: cfsId } });
+    if (!cashflow) throw new Error("Cashflow not found.");
+
+    const activityTotal = Array.isArray(cashflow.activityTotal)
+      ? [...cashflow.activityTotal]
+      : [0, 0, 0];
+
+    activityTotal[1] = Number(newValue);
+
+    const updated = await db.cashFlow.update({
+      where: { id: cfsId },
+      data: { activityTotal }
+    });
+
+    revalidatePath(`/CashflowStatement/${cashflow.accountId}/${cashflow.id}`);
+    return { success: true, data: updated };
+  } catch (error) {
+    throw new Error("Error updating activity total")
+  }
+}
+
+export async function updateTotalFinancing(cfsId, newValue) {
+  try {
+    const { userId } = await auth();
+    const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+    if (!user || user.role !== "STAFF") throw new Error("Unavailable action");
+
+    const cashflow = await db.cashFlow.findUnique({ 
+        where: { id: cfsId } 
+      }
+    );
+    if (!cashflow) throw new Error("Cashflow not found.");
+
+
+
+    const activityTotal = Array.isArray(cashflow.activityTotal)
+      ? [...cashflow.activityTotal]
+      : [0, 0, 0];
+
+    activityTotal[2] = Number(newValue);
+
+    const updated = await db.cashFlow.update({
+      where: { id: cfsId },
+      data: { 
+        activityTotal
+      }
+    });
+
+    revalidatePath(`/CashflowStatement/${cashflow.accountId}/${cashflow.id}`);
+    return { success: true, data: updated };
+  } catch (error) {
+    throw new Error("Error updating activity total")
+  }
+}
+
+
+export async function udpateBalanceQuick(cfsId, netChange, begBalance, endBal){
+  try {
+    console.log("[1] Auth")
+    console.log("[1]", cfsId, netChange, begBalance, endBal)
+    console.log("[1]", typeof cfsId, typeof netChange, typeof begBalance, typeof endBal)
+    const { userId } = await auth();
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId}
+    });
+
+    if(!user){
+      throw new Error("Unauthorized");
+    };
+
+    if(user.role !== "STAFF"){
+      throw new Error("Unavailable action");
+    };
+
+    console.log("[2] Fetching cashflow")
+    const cashflow = await db.cashFlow.findUnique({
+      where: { id: cfsId },
+      select: {
+        id: true,
+        accountId: true,
+        netChange: true,
+        startBalance: true,
+        endBalance: true,
+      }
+    });
+
+    
+    if(!cashflow){
+      throw new Error("[2] Cashflow do not exist")
+    }
+
+    console.log("[3] Update Balances")
+    const currNetChange = Number(netChange);
+    const currStartBalance = Number(begBalance);
+    const currEndBalance = Number(endBal);
+
+    const updatedCashflowBalance = await db.cashFlow.update({
+      where: {id: cashflow.id},
+      data: {
+        netChange: currNetChange,
+        startBalance: currStartBalance,
+        endBalance: currEndBalance
+      },
+    });
+
+
+
+    
+    revalidatePath(`/CashflowStatement/${cashflow.accountId}`);
+    revalidatePath(`/CashflowStatement/${cashflow.accountId}/${cashflow.id}`);
+    console.log("[4] Success udpate", updatedCashflowBalance)
+    return { success: true}
+  } catch (error) {
+    console.log("Error quick balance update");
     return { success: false, error: error.message };
   }
 }

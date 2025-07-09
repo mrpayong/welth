@@ -3,10 +3,19 @@ import { defaultCategories } from '@/data/category';
 import React from 'react'
 import AddTransactionForm from '../_components/transaction-form';
 import { getTransaction } from '@/actions/transaction';
+import { getStaff, getUnauthUser } from '@/actions/admin';
+import NotFound from '@/app/not-found';
 // import { AddTransactionForm } from '../_components/transaction-form';
 
 
 const AddTransactionPage = async ({ searchParams }) => {
+    const user = await getStaff()
+    
+    if(!user.authorized){
+      await getUnauthUser();
+      return NotFound();
+    }
+
     const accounts = await getUserAccounts();
 
     const accountId = (await searchParams)?.accountId;
