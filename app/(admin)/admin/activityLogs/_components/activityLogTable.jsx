@@ -59,6 +59,10 @@ function getActionLabel(action) {
     case "scanReceipt":
       return "Scanned receipt";
     // Default
+    case "updateUserEmail":
+      return "Updated Email";
+    case "updateUser":
+      return "Updated User";
     default:
       return "Visited a page";
   }

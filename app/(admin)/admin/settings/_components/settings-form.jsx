@@ -371,10 +371,8 @@ useEffect(() => {
 
     const handleActiveEmailUpdate = (user) => {
       setOpenEmailDialog(true)
-      if(emailUpdate === "" && userToUpdateEmailId === ""){
-        setUserToUpdateEmailId(user.id);
-        setEmailUpdate(user.email);
-      }
+      setUserToUpdateEmailId(user.id);
+      setEmailUpdate(user.email);
     }
 
     const handleCancelEmailUpdate = () => {

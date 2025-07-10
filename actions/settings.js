@@ -370,11 +370,19 @@ export async function updateUserEmail(userToUpdateId, newUserEmail){
 
 
         console.log("[5] update db", oldEmailObj)
-        await db.user.update({
+        const newUserUpdated = await db.user.update({
             where: { id: userToUpdate.id },
             data:{
                 email: newUserEmail,
             }
+        })
+
+        await archiveEntity({
+            userId: user.id,
+            action: "updateEmail",
+            entityType: "User",
+            entityId: newUserUpdated.id,
+            data: newUserUpdated,
         })
         
         revalidatePath("/admin/settings");

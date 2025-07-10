@@ -10,7 +10,6 @@ const SectionFour = () => {
 
 
   const { overallAnalysis, overallAnalysisLoading } = useFinancialData();
-  console.log("Section Four:", overallAnalysis);
 
  
 
