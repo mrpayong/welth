@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useRef, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {Loader2, Search, Shield, CheckCircle, Users, UserX, LaptopMinimalCheck, UserRoundPlus, UserRound, MoreHorizontal, Trash, X, Bolt, Pen, Check } from 'lucide-react';
+import {Loader2, Search, Shield, CheckCircle, Users, UserX, LaptopMinimalCheck, UserRoundPlus, UserRound, MoreHorizontal, Trash, X, Bolt, Pen, Check, Mail } from 'lucide-react';
 import useFetch from '@/hooks/use-fetch';
-import { createUser, deleteUser, getUser, getUserForSysAdmin, updateUser, updateUserRole } from '@/actions/settings';
+import { createUser, deleteUser, getUser, getUserForSysAdmin, updateUser, updateUserEmail, updateUserRole } from '@/actions/settings';
 import {
     Card,
     CardContent,
@@ -274,6 +274,7 @@ useEffect(() => {
       });
   
       if (result.isConfirmed) {
+        console.log("deleting...: ", userIdDelete, deleteClerkId)
         await userDeleteFn(userIdDelete, deleteClerkId);
       }
     };
@@ -309,7 +310,7 @@ useEffect(() => {
     const [userNewLname, setUserNewLname] = useState("");
     const [udpateDialogOpen, setUpdateDialogOpen] = useState(false);
     const [userToUpdataId, setUserToUpdateId] = useState("")
-    const [emailUpdate, setEmailUpdate] = useState("")
+
 
     const handleUpdateData = (user) => {
       console.warn("user:", user)
@@ -354,12 +355,62 @@ useEffect(() => {
 
 
 
-
-const [confirmRole, setConfirmRole] = useState(null);
-
+    const [confirmRole, setConfirmRole] = useState(null);
 
 
+    const {
+      loading: updateEmailLoading,
+      fn: udpateEmailFn,
+      data: updatedEmail,
+      error: udpateError,
+    } = useFetch(updateUserEmail)
+    
+    const [emailUpdate, setEmailUpdate] = useState("")
+    const [userToUpdateEmailId, setUserToUpdateEmailId] = useState("");
+    const [openEmailDialog, setOpenEmailDialog] = useState(false);
 
+    const handleActiveEmailUpdate = (user) => {
+      setOpenEmailDialog(true)
+      if(emailUpdate === "" && userToUpdateEmailId === ""){
+        setUserToUpdateEmailId(user.id);
+        setEmailUpdate(user.email);
+      }
+    }
+
+    const handleCancelEmailUpdate = () => {
+      setOpenEmailDialog(false)
+      setUserToUpdateEmailId("");
+      setEmailUpdate("");
+    }
+
+    const handleEmailUpdate = () => {
+      if(!userToUpdateEmailId && !emailUpdate){
+        toast.error("Please fill the blank.");
+      }
+      console.log(userToUpdateEmailId, emailUpdate)
+      udpateEmailFn(userToUpdateEmailId, emailUpdate);
+    }
+
+    useEffect(() => {
+      if(updatedEmail && !updateEmailLoading){
+        fetchUsers();
+        setOpenEmailDialog(false)
+        toast.success("User updated.")
+        setUserToUpdateEmailId("");
+        setEmailUpdate("");
+        
+      }
+    }, [updatedEmail, updateEmailLoading])
+
+    useEffect(() => {
+      if(udpateError && !updateEmailLoading){
+        setOpenEmailDialog(false)
+        setUserToUpdateEmailId("");
+        setEmailUpdate("");
+        toast.error("User failed to udpate")
+        console.log("Error occured", udpateError)
+      }
+    }, [udpateError, updateEmailLoading])
 
 
 
@@ -513,111 +564,114 @@ const [confirmRole, setConfirmRole] = useState(null);
           </DialogContent>
         </Dialog>
 
-                        <Dialog open={udpateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Edit User</DialogTitle>
-                              <DialogDescription>
-                                Edit information of this user
-                              </DialogDescription>
-                            </DialogHeader>
-                              <form 
-                                onSubmit={e => {
-                                  e.preventDefault();
-                                  handleUpdateUser(userToUpdataId, userNewFname, userNewLname, userNewName);
-                                }}
-                                className="flex flex-col gap-4">
-                              
-                                <div className="flex flex-col gap-1">
-                                  <label htmlFor="email" className="text-sm font-medium text-gray-700">Email</label>
-                                  <Input
-                                    id="email"
-                                    type="email"
-                                    value={emailUpdate}
-                                    className="w-full"
-                                    disabled={true}
-                                  />
-                                </div>
+        <Dialog open={udpateDialogOpen || openEmailDialog} onOpenChange={setUpdateDialogOpen || setOpenEmailDialog}> 
+          <DialogContent className="[&>button]:hidden">
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>
+                Edit information of this user
+              </DialogDescription>
+            </DialogHeader>
+              <form 
+                onSubmit={e => {
+                  e.preventDefault();
+                  openEmailDialog
+                  ? handleEmailUpdate()
+                  : handleUpdateUser(userToUpdataId, userNewFname, userNewLname, userNewName);
+                }}
+                className="flex flex-col gap-4">
+              
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="email" className="text-sm font-medium text-gray-700">Email</label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={emailUpdate}
+                    onChange={(e) => setEmailUpdate(e.target.value)}
+                    className="w-full"
+                    disabled={updateEmailLoading || udpateDialogOpen}
+                  />
+                </div>
 
-                              
-                                <div className="flex flex-col gap-1">
-                                  <label htmlFor="username" className="text-sm font-medium text-gray-700">Username</label>
-                                  <Input
-                                    id="username"
-                                    placeholder="username"
-                                    value={userNewName}
-                                    className="w-full"
-                                    required
-                                    onChange={(e) => setUserNewName(e.target.value)}
-                                    disabled={updateUserLoading}
-                                  />
-                                </div>
+              
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="username" className="text-sm font-medium text-gray-700">Username</label>
+                  <Input
+                    id="username"
+                    placeholder="username"
+                    value={userNewName}
+                    className="w-full"
+                    required
+                    onChange={(e) => setUserNewName(e.target.value)}
+                    disabled={updateUserLoading || openEmailDialog}
+                  />
+                </div>
 
-                              
-                                <div className="flex flex-col md:flex-row gap-2">
-                                  <div className="flex flex-col gap-1 w-full">
-                                    <label htmlFor="Fname" className="text-sm font-medium text-gray-700">First Name</label>
-                                    <Input
-                                      id="Fname"
-                                      placeholder="First Name"
-                                      className="w-full"
-                                      required
-                                      onChange={(e) => setUserNewFname(e.target.value)}
-                                      value={userNewFname}
-                                      disabled={updateUserLoading}
-                                    />
-                                  </div>
-                                  <div className="flex flex-col gap-1 w-full">
-                                    <label htmlFor="Lname" className="text-sm font-medium text-gray-700">Last Name</label>
-                                    <Input
-                                      id="Lname"
-                                      placeholder="Last Name"
-                                      className="w-full"
-                                      required
-                                      onChange={(e) => setUserNewLname(e.target.value)}
-                                      value={userNewLname}
-                                      disabled={updateUserLoading}
-                                    />
-                                  </div>
-                                </div>
+              
+                <div className="flex flex-col md:flex-row gap-2">
+                  <div className="flex flex-col gap-1 w-full">
+                    <label htmlFor="Fname" className="text-sm font-medium text-gray-700">First Name</label>
+                    <Input
+                      id="Fname"
+                      placeholder="First Name"
+                      className="w-full"
+                      required
+                      onChange={(e) => setUserNewFname(e.target.value)}
+                      value={userNewFname}
+                      disabled={updateUserLoading || openEmailDialog}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1 w-full">
+                    <label htmlFor="Lname" className="text-sm font-medium text-gray-700">Last Name</label>
+                    <Input
+                      id="Lname"
+                      placeholder="Last Name"
+                      className="w-full"
+                      required
+                      onChange={(e) => setUserNewLname(e.target.value)}
+                      value={userNewLname}
+                      disabled={updateUserLoading || openEmailDialog}
+                    />
+                  </div>
+                </div>
 
-                                
-                                <DialogFooter className="flex flex-col-reverse md:flex-row gap-2 md:justify-end">
-                                <DialogClose asChild>
-                                  <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={() => setUpdateDialogOpen(false)}
-                                  disabled={updateUserLoading}
-                                  className="w-full md:w-auto
-                                  border-red-500 hover:border-0 hover:bg-red-500 hover:text-white"
-                                  >
-                                  Cancel
-                                </Button>
-                                </DialogClose>
+                
+                <DialogFooter className="flex flex-col-reverse md:flex-row gap-2 md:justify-end">
+                <DialogClose asChild>
+                  <Button
+                  type="button"
+                  variant="outline"
+                  onClick={ openEmailDialog
+                    ? () => handleCancelEmailUpdate()
+                    : () => setUpdateDialogOpen(false)
+                    }
+                  disabled={updateUserLoading || updateEmailLoading}
+                  className="w-full md:w-auto
+                  border-red-500 hover:border-0 hover:bg-red-500 hover:text-white"
+                  >
+                  Cancel
+                </Button>
+                </DialogClose>
 
-                                <Button 
-                                type="submit" 
-                                disabled={updateUserLoading} 
-                                variant="outline"
-                                // onClick={() => handleUpdateUser(userToUpdataId, userNewFname, userNewLname, userNewName)}
-                                className="w-full md:w-auto border-green-500 hover:border-0 hover:bg-green-500 hover:text-white">
-                                  {updateUserLoading ? (
-                                    <>
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                      Applying
-                                    </>
-                                  ) : (
-                                    "Apply Changes"
-                                  )}
-                                </Button>
-                                </DialogFooter>
-                              </form>
-                          </DialogContent>
-                        </Dialog>
-
-
-
+                <Button 
+                type="submit" 
+                disabled={updateUserLoading || updateEmailLoading} 
+                variant="outline"
+                // onClick={() => handleUpdateUser(userToUpdataId, userNewFname, userNewLname, userNewName)}
+                className="w-full md:w-auto border-green-500 hover:border-0 hover:bg-green-500 hover:text-white">
+                  {updateUserLoading || updateEmailLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Applying
+                    </>
+                  ) : (
+                    "Apply Changes"
+                  )}
+                </Button>
+                </DialogFooter>
+              </form>
+          </DialogContent>
+        </Dialog>
 
 
 
@@ -791,6 +845,16 @@ const [confirmRole, setConfirmRole] = useState(null);
                                     <span className="flex items-center">
                                       <Shield className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
                                       <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Change Role</span>
+                                    </span>
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2 border-violet-500 hover:bg-violet-500 hover:text-white hover:border-0"
+                                    onClick={() => handleActiveEmailUpdate(user)}
+                                  >
+                                    <span className="flex items-center">
+                                      <Mail className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                      <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Edit Email</span>
                                     </span>
                                   </Button>
                                 </div>

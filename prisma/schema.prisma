@@ -314,9 +314,9 @@ model Archive {
   entityId    String           // The unique id of the affected entity
   data        Json             // The full snapshot of the entity at the time of action
   createdAt   DateTime @default(now())
-  accountId   String
+  accountId   String?
   user        User     @relation(fields: [userId], references: [id])
-  account     Account  @relation(fields: [accountId], references: [id])
+  account     Account?  @relation(fields: [accountId], references: [id])
 
   @@index ([userId])
   @@index ([accountId])

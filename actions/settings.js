@@ -194,7 +194,7 @@ export async function deleteUser(userIdDelete, deleteClerkId) {
         if (currentUser.role !== "ADMIN" && currentUser.role !== "SYSADMIN") {
             throw new Error("Unauthorized");
         }
-
+        
         const userToDelete = await db.user.findUnique({
             where: {id: userIdDelete},
             select: {
@@ -205,30 +205,34 @@ export async function deleteUser(userIdDelete, deleteClerkId) {
                 Lname: true,
             }
         })
-        await archiveEntity({
+        
+        
+       await archiveEntity({
           userId: currentUser.id,
-          accountId: userToDelete.accountId,
           action: "deleteUser",
           entityType: "User",
           entityId: userToDelete.id,
           data: userToDelete,
         });
+        
 
         const client = await clerkClient();
-        console.log("[Del 1] IDs in the backend:", userIdDelete, deleteClerkId)
-        await client.users.deleteUser(deleteClerkId);
+        await client.users.deleteUser(userToDelete.clerkUserId);
 
         // Delete user from your database
         await db.user.delete({
-            where: { id: userIdDelete }
+            where: { id: userToDelete.id }
         });
 
+        revalidatePath("/admin/settings");
+        revalidatePath("/SysAdmin/settings")
         return { 
             success: true, 
             message: 'User deleted successfully'
         };
     } catch (error) {
-        throw new Error("Error deleting user: " + error.message);
+        console.log("Error user delete: ", error.message)
+        throw new Error("Error deleting user");
     }
 }
 
@@ -292,8 +296,94 @@ export async function updateUser(updateClerkId, newFname, newLname, newuserName)
             message: 'User udpated successfully'
         };
     } catch (error) {
-        throw new Error("Error updating user: " + error.message);
+        console.log("Error user delete: ", error.message)
+        throw new Error("Error updating user");
     }
 }
 
+export async function updateUserEmail(userToUpdateId, newUserEmail){
+    try {
+        const {userId} = await auth();
+        if(!userId){
+            throw new Error("Unauthorized");
+        }
 
+        const user = await db.user.findUnique({
+            where: { clerkUserId: userId }
+        });
+        if(!user){
+            console.log("Unauthorized");
+            return;
+        }
+
+        if (user.role !== "ADMIN" && user.role !== "SYSADMIN"){
+            console.log("Unauthorized");
+            return;
+        };
+
+        const userToUpdate = await db.user.findUnique({
+            where: { id: userToUpdateId },
+            select: {
+                id: true,
+                email: true,
+                clerkUserId: true,
+            }
+        });
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUserEmail)) {
+            throw new Error("Invalid email format.");
+        }
+
+        const client = await clerkClient();
+
+        // 1. Add new email address
+        console.log('[1]', userToUpdate)
+        const newEmailObj = await client.emailAddresses.createEmailAddress(
+            {
+            userId: userToUpdate.clerkUserId,
+            emailAddress: newUserEmail,
+            primary: true,
+            verified: true,
+        });
+
+        // 2. Set as primary
+        console.log("[2] ", newEmailObj)
+        await client.users.updateUser(
+            userToUpdate.clerkUserId, 
+            {
+                primaryEmailAddressId: newEmailObj.id,
+            }
+        );
+
+        // 3. Remove old email address
+        
+        const userClerk = await client.users.getUser(userToUpdate.clerkUserId);
+        console.log("[3] ", userClerk)
+        const oldEmailObj = userClerk.emailAddresses.find(
+            (e) => e.emailAddress !== newUserEmail
+        );
+        if (oldEmailObj) {
+             console.log("[4] oldEmail=True", oldEmailObj)
+            await client.emailAddresses.deleteEmailAddress(oldEmailObj.id);
+        }
+
+
+
+        console.log("[5] update db", oldEmailObj)
+        await db.user.update({
+            where: { id: userToUpdate.id },
+            data:{
+                email: newUserEmail,
+            }
+        })
+        
+        revalidatePath("/admin/settings");
+        revalidatePath("/SysAdmin/settings");
+        revalidatePath("/");
+        console.log("[6] Email updated")
+        return{ success: true };
+    } catch (error) {
+        console.log("Error updating email:", error.message);
+        throw new Error("Error updating email");
+    }
+}
