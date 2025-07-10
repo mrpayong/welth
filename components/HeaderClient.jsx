@@ -48,7 +48,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
     if (pathname.startsWith("/dashboard")) return "border-teal-400";
     if (pathname.startsWith("/SysAdmin")) return "border-green-500";
     if (pathname.startsWith("/sign-in")) return "border-black";
-    if (pathname.startsWith("/DecisionSupport")) return "from-blue-500 to-violet-500"
+    if (pathname.startsWith("/DecisionSupport")) return "border-purple-500"
     return "border-yellow-400"; // default
   }, [pathname]);
 

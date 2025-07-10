@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogTrigger,
@@ -27,13 +28,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import TaskForm from "./addTaskForm";
-import { ArrowDownNarrowWide, ArrowUpWideNarrow, ChevronLeft, ChevronRight, Plus, Trash } from "lucide-react";
+import { ArrowDownNarrowWide, ArrowUpWideNarrow, ChevronLeft, ChevronRight, Plus, Search, Trash } from "lucide-react";
 import useFetch from "@/hooks/use-fetch";
 import { bulkDeleteTask } from "@/actions/task";
 import Swal from "sweetalert2";
 import { toast } from "sonner";
 import { Fab, Tooltip } from "@mui/material";
 import { BarLoader } from "react-spinners";
+import { Input } from "@/components/ui/input";
 
 function getUrgencyBadgeClass(urgency) {
   switch (urgency) {
@@ -46,6 +48,19 @@ function getUrgencyBadgeClass(urgency) {
     default:
       return "bg-gray-100 text-gray-800 hover:bg-gray-100";
   }
+}
+
+function formatManilaDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  // Manila is UTC+8
+  const options = {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  };
+  return date.toLocaleDateString("en-PH", options);
 }
 
 const ROWS_PER_PAGE = 5; 
@@ -67,6 +82,57 @@ const TaskTable = ({ tasks, accounts }) => {
     setLocalTasks(prev => [newTask, ...prev]);
   }
 };
+
+
+
+  const [filterAccount, setFilterAccount] = useState(""); // taskCategory
+  const [filterUrgency, setFilterUrgency] = useState("");
+  const [searchTask, setSearchTask] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+
+  const isFilterActive =
+    filterAccount || filterUrgency || searchTask || filterDateFrom || filterDateTo;
+
+  const handleClearFilters = () => {
+    setFilterAccount("");
+    setFilterUrgency("");
+    setSearchTask("");
+    setFilterDateFrom("");
+    setFilterDateTo("");
+  };
+
+  const filteredTasks = React.useMemo(() => {
+    return localTasks.filter(task => {
+      // Account filter
+      if (filterAccount && task.taskCategory !== filterAccount) return false;
+      // Urgency filter
+      if (filterUrgency && task.urgency !== filterUrgency) return false;
+      // Search by task name (case-insensitive)
+      if (
+        searchTask &&
+        !task.taskName.toLowerCase().includes(searchTask.toLowerCase())
+      )
+        return false;
+      // Date range filter
+      if (filterDateFrom) {
+        const from = new Date(filterDateFrom + "T00:00:00+08:00");
+        const due = new Date(task.dueDate);
+        if (due < from) return false;
+      }
+      if (filterDateTo) {
+        const to = new Date(filterDateTo + "T23:59:59+08:00");
+        const due = new Date(task.dueDate);
+        if (due > to) return false;
+      }
+      return true;
+    });
+  }, [localTasks, filterAccount, filterUrgency, searchTask, filterDateFrom, filterDateTo]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterAccount, filterUrgency, searchTask, filterDateFrom, filterDateTo]);
+
 
   const {
     loading: bulkDeleteLoading,
@@ -120,7 +186,7 @@ const result = await Swal.fire({
   }, [bulkDeleteData, bulkDeleteLoading]);
 
   const sortedTasks = React.useMemo(() => {
-    let sorted = [...localTasks];
+    let sorted = [...filteredTasks];
     if (deadlineSort) {
       sorted.sort((a, b) => {
         const aDate = a.dueDate ? new Date(a.dueDate) : null;
@@ -134,10 +200,10 @@ const result = await Swal.fire({
       });
     }
     return sorted;
-  }, [localTasks, deadlineSort]);
+  }, [filteredTasks, deadlineSort]);
 
     const totalPages = Math.ceil(sortedTasks.length / ROWS_PER_PAGE);
-  const paginatedTasks = sortedTasks.slice(
+    const paginatedTasks = sortedTasks.slice(
     (currentPage - 1) * ROWS_PER_PAGE,
     currentPage * ROWS_PER_PAGE
   );
@@ -190,22 +256,98 @@ const result = await Swal.fire({
 
 
 
-
-
-
-
-
-
   return (
     <div className="w-full">
       {bulkDeleteLoading && (<BarLoader className="mt-4" width={"100%"} color="#9333ea"/>)}
       <div className="mt-8">
         <Card className="border-none shadow-md overflow-hidden">
           <CardHeader className="bg-white border-b border-gray-100">
-            <CardTitle>Task Table</CardTitle>
-            <CardDescription>
-              List of current tasks and their status.
-            </CardDescription>
+            <div className="flex flex-col lg:flex-row sm:justify-between sm:items-center gap-4">
+              <div className="flex flex-col lg:justify-start lg:items-start items-center justify-center">
+                <CardTitle>Task Table</CardTitle>
+                <CardDescription> 
+                  List of current tasks and their status.
+                </CardDescription>
+              </div>
+
+              <div className="
+                flex
+                
+                overflow-x-auto lg:overflow-x-hidden
+                sm:flex-nowrap md:flex-nowrap lg:flex-wrap
+                gap-2 items-center
+                max-w-full
+                scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent
+              ">
+                <div>
+                  <Select value={filterUrgency} onValueChange={setFilterUrgency}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Urgenct" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="HIGH">High</SelectItem>
+                        <SelectItem value="MEDIUM">Medium</SelectItem>
+                        <SelectItem value="LOW">Low</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Select value={filterAccount} onValueChange={setFilterAccount}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from(new Set(tasks.map(t => t.taskCategory))).map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-row gap-2 items-center">
+                  <div className='relative flex'>
+                    <Search className='absolute left-2 top-2.5 h-4 text-muted-foreground'/>
+                    <Input
+                      type="text"
+                      placeholder="Search task name"
+                      value={searchTask}
+                      onChange={e => setSearchTask(e.target.value)}
+                      className="w-[200px] pl-8 text-xs md:w-64 lg:w-50"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex flex-row gap-2">
+                  <Input
+                    type="date"
+                    value={filterDateFrom}
+                    onChange={e => setFilterDateFrom(e.target.value)}
+                    className="w-[150px]"
+                    placeholder="From"
+                    />
+                  <Input
+                    type="date"
+                    value={filterDateTo}
+                    onChange={e => setFilterDateTo(e.target.value)}
+                    className="w-[150px]"
+                    placeholder="To"
+                  />
+                </div>
+                {isFilterActive && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border border-rose-600 text-black 
+                    hover:bg-rose-600 hover:border-none hover:text-white 
+                    ml-2"
+                    onClick={handleClearFilters}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
