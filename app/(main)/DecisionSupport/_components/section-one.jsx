@@ -27,31 +27,19 @@ import { PieChart } from '@mui/x-charts';
 
 
 
-function GaugePointer() {
-  const { valueAngle, outerRadius, cx, cy } = useGaugeState();
-
-  if (valueAngle === null) {
-    // No value to display
-    return null;
+function getLast6Months() {
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      label: d.toLocaleString("default", { month: "short", year: "numeric" }),
+    });
   }
-
-  const target = {
-    x: cx + outerRadius * Math.sin(valueAngle),
-    y: cy - outerRadius * Math.cos(valueAngle),
-  };
-  return (
-    <g>
-      <circle cx={cx} cy={cy} r={5} fill="red" />
-      <path
-        d={`M ${cx} ${cy} L ${target.x} ${target.y}`}
-        stroke="red"
-        strokeWidth={3}
-      />
-    </g>
-  );
+  return months;
 }
 
-const PIE_COLORS = ["#4ade80", "#22d3ee", "#facc15", "#f472b6", "#818cf8"];
 
 function formatDateYYYYMMDD(date) {
   const d = new Date(date);
@@ -59,6 +47,21 @@ function formatDateYYYYMMDD(date) {
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
+}
+
+
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) setMatches(media.matches);
+    const listener = () => setMatches(media.matches);
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
+  }, [matches, query]);
+
+  return matches;
 }
 
 const SectionOne = ({accounts, transactions, tasks, AllTransactions, inflows, outflows}) => {
@@ -193,13 +196,53 @@ const barData =
     : getTopBarCategories(outflows);
 
 
+const last6Months = getLast6Months();
+
+const paddedMonthlyRevenueData = last6Months.map(({ key, label }) => {
+  const found = monthlyRevenueData.find(d => d.month === label);
+  return found
+    ? found
+    : { month: label, Income: 0 };
+});
 
 
 
+const summaryCards = [
+  {
+    title: "Clients",
+    description: "All clients of the firm",
+    value: accounts.data.length,
+    icon: <Users className="h-8 w-8 text-cyan-600" />,
+    iconBg: "bg-blue-100",
+    iconText: "text-blue-600",
+  },
+  {
+    title: "Tasks",
+    description: "Tasks that need to be done",
+    value: tasks.length,
+    icon: <ListCheck className="h-8 w-8 text-amber-500" />,
+    iconBg: "bg-amber-100",
+    iconText: "text-amber-600",
+  },
+  {
+    title: "Today's Entries",
+    description: "Entries from all accounts",
+    value: transactionsToday,
+    icon: <CalendarCheck className="h-8 w-8 text-emerald-600" />,
+    iconBg: "bg-green-100",
+    iconText: "text-green-600",
+  },
+  {
+    title: "Yesterday's Entries",
+    description: "Entries from all accounts",
+    value: transactionsYesterday,
+    icon: <CalendarClock className="h-8 w-8 text-violet-700" />,
+    iconBg: "bg-violet-200",
+    iconText: "text-violet-600",
+  },
+];
 
-
-
-
+const isSmallScreen = useMediaQuery("(max-width: 1280px)");
 
 
 
@@ -211,248 +254,305 @@ const barData =
 
   return (
     <div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
-             <div className='flex items-center flex-row justify-between px-2 py-2'>
-              <div>
-                <CardHeader className="pb-0 px-4">
-                  <CardTitle>
-                    Clients
-                  </CardTitle>
-                  <CardDescription className="text-xs text-gray-500">
-                    All clients of the firm
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0 px-4">
-                  <h3 className="text-3xl font-bold text-gray-900 mt-1">{accounts.data.length}</h3>
-                </CardContent>
-              </div>
-                <div className="h-14 w-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                  <Users 
-                    className="h-8 w-8 text-cyan-600"
-                  />
+      {/* <div className="w-full sm:overflow-x-auto lg:overflow-x-auto grid grid-rows-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
+          <div className='flex items-center flex-row justify-between px-2 py-2'>
+            <div>
+              <CardHeader className="pb-0 px-4">
+                <CardTitle>
+                  Clients
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-500">
+                  All clients of the firm
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 px-4">
+                <h3 className="text-3xl font-bold text-gray-900 mt-1">{accounts.data.length}</h3>
+              </CardContent>
+            </div>
+            <div className="h-14 w-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+              <Users className="h-8 w-8 text-cyan-600"
+              />
+            </div>
+          </div>
+        </Card>
+        <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
+          <div className='flex items-center flex-row justify-between px-2 py-2'>
+            <div>
+              <CardHeader className="pb-0 px-4">
+                <CardTitle>
+                  Tasks
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-500">
+                  Tasks that need to be done
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 px-4">
+                <h3 className="text-3xl font-bold text-gray-900 mt-1">{tasks.length}</h3>
+              </CardContent>
+            </div>
+            <div className="h-14 w-14 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
+              <ListCheck 
+                className="h-8 w-8 text-amber-500"
+              />
+            </div>
+          </div>
+        </Card>
+        
+        <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
+          <div className='flex items-center flex-row justify-between px-2 py-2'>
+            <div>
+              <CardHeader className="pb-0 px-4">
+                <CardTitle>
+                  Today's Entries
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-500">
+                  Entries from all accounts
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 px-4">
+                <h3 className="text-3xl font-bold text-gray-900 mt-1">{transactionsToday}</h3>
+              </CardContent>
+            </div>
+            <div className="h-14 w-14 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+              <CalendarCheck className='h-8 w-8 text-emerald-600'/>
+            </div>
+          </div>
+        </Card>
+        <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
+          <div className='flex items-center flex-row justify-between px-2 py-2'>
+            <div>
+              <CardHeader className="pb-0 px-4">
+                <CardTitle>
+                  Yesterday's Entries
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-500">
+                  Entries from all accounts
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 px-4">
+                <h3 className="text-3xl font-bold text-gray-900 mt-1">{transactionsYesterday}</h3>
+              </CardContent>
+            </div>
+            <div className="h-14 w-14 bg-violet-200 rounded-full flex items-center justify-center text-violet-600">
+              <CalendarClock className='h-8 w-8 text-violet-700'/>
+            </div>
+          </div>
+        </Card>
+      </div> */}
+      {/* <div className="w-full"> */}
+        {/* Mobile: horizontal scroll, Desktop: grid */}
+        <div className="w-full">
+          <div className={
+            isSmallScreen
+            ? "flex gap-6 mb-8 min-w-0 overflow-x-auto"
+            : "grid grid-cols-4 gap-6 mb-8 min-w-0"
+          }>
+            {summaryCards.map((card) => (
+              <Card
+                key={card.title}
+                className={
+                  isSmallScreen
+                    ? "border-none my-2 shadow-md hover:shadow-lg transition-shadow duration-300 min-w-[260px] max-w-xs flex-shrink-0"
+                    : "border-none my-2 shadow-md hover:shadow-lg transition-shadow duration-300"
+                }
+              >
+              <div className='flex items-center flex-row justify-between px-2'>
+                <div>
+                    <CardHeader className="pb-0 px-4">
+                      <CardTitle className="text-sm md:text-xl">
+                        <span>{card.title}</span>
+                      </CardTitle>
+                      <CardDescription className="text-xs text-gray-500">
+                        {card.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0 px-4">
+                      <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mt-1 break-words">
+                        {card.value}
+                      </h3>
+                    </CardContent>
+                  </div>
+                  <div
+                    className={`h-14 w-14 rounded-full flex items-center justify-center ${card.iconBg} ${card.iconText} mt-2 md:mt-0`}
+                  >
+                    {card.icon}
+                  </div>
                 </div>
-            </div>
-          </Card>
-          <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
-            <div className='flex items-center flex-row justify-between px-2 py-2'>
-              <div>
-                <CardHeader className="pb-0 px-4">
-                  <CardTitle>
-                    Tasks
-                  </CardTitle>
-                  <CardDescription className="text-xs text-gray-500">
-                    Tasks that need to be done
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0 px-4">
-                  <h3 className="text-3xl font-bold text-gray-900 mt-1">{tasks.length}</h3>
-                </CardContent>
-              </div>
-              <div className="h-14 w-14 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
-                  <ListCheck 
-                    className="h-8 w-8 text-amber-500"
-                  />
-                </div>
-            </div>
-          </Card>
-         
-          <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
-            <div className='flex items-center flex-row justify-between px-2 py-2'>
-              <div>
-                <CardHeader className="pb-0 px-4">
-                  <CardTitle>
-                    Today's Entries
-                  </CardTitle>
-                  <CardDescription className="text-xs text-gray-500">
-                    Entries from all accounts
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0 px-4">
-                  <h3 className="text-3xl font-bold text-gray-900 mt-1">{transactionsToday}</h3>
-                </CardContent>
-              </div>
-              <div className="h-14 w-14 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                <CalendarCheck className='h-8 w-8 text-emerald-600'/>
-              </div>
-            </div>
-          </Card>
-          <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300">
-            <div className='flex items-center flex-row justify-between px-2 py-2'>
-              <div>
-                <CardHeader className="pb-0 px-4">
-                  <CardTitle>
-                    Yesterday's Entries
-                  </CardTitle>
-                  <CardDescription className="text-xs text-gray-500">
-                    Entries from all accounts
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0 px-4">
-                  <h3 className="text-3xl font-bold text-gray-900 mt-1">{transactionsYesterday}</h3>
-                </CardContent>
-              </div>
-              <div className="h-14 w-14 bg-violet-200 rounded-full flex items-center justify-center text-violet-600">
-                <CalendarClock className='h-8 w-8 text-violet-700'/>
-              </div>
-            </div>
-          </Card>
+              </Card>
+            ))}
+          </div>
         </div>
+      {/* </div> */}
 
-        {/* pie chart and bar graph */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 items-stretch">
-          {/* Bar Chart Card */}
-          <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300 h-full min-h-[320px] flex flex-col">
-            <CardHeader>
-              <CardTitle>
-                Top 5 {barType === "INCOME" ? "Income" : "Expense"}
-              </CardTitle>
-              <CardDescription>
-                Account titles across all accounts with largest accumulated amounts.
-              </CardDescription>
-              <div className="mt-2 flex gap-2">
-                <button
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
-                    barType === "INCOME"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-500 hover:bg-green-50"
-                  }`}
-                  onClick={() => setBarType("INCOME")}
+
+
+
+
+
+
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 items-stretch">
+        {/* Top 5 Income Bar Chart Card */}
+        <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-300 h-full min-h-[320px] flex flex-col">
+          <CardHeader>
+            <CardTitle>
+              Top 5 {barType === "INCOME" ? "Income" : "Expense"}
+            </CardTitle>
+            <CardDescription>
+              Account titles across all accounts with largest accumulated amounts.
+            </CardDescription>
+            <div className="mt-2 flex gap-2">
+              <button
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
+                  barType === "INCOME"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-500 hover:bg-green-50"
+                }`}
+                onClick={() => setBarType("INCOME")}
+              >
+                Income
+              </button>
+              <button
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
+                  barType === "EXPENSE"
+                    ? "bg-red-100 text-red-700"
+                    : "bg-gray-100 text-gray-500 hover:bg-red-50"
+                }`}
+                onClick={() => setBarType("EXPENSE")}
+              >
+                Expense
+              </button>
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col justify-end">
+            <div className="w-full h-[320px] overflow-x-auto sm:overflow-x-visible">
+              <div className="min-w-[500px] sm:min-w-0 h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={barData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
-                  Income
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
-                    barType === "EXPENSE"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-gray-100 text-gray-500 hover:bg-red-50"
-                  }`}
-                  onClick={() => setBarType("EXPENSE")}
-                >
-                  Expense
-                </button>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="category"
+                    tick={{ fontSize: 14, fill: "#4B5563" }}
+                    interval={0}
+                    angle={-30} // Make labels horizontal
+                    textAnchor="end"
+                    height={60} // Adjust for label space
+                  />
+                  <YAxis
+                    tickFormatter={(value) => formatAmount(value)}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const { accountName, amount } = payload[0].payload;
+                        return (
+                          <div className="bg-white rounded shadow px-3 py-2 text-xs">
+                            <div className="font-semibold">{accountName}</div>
+                            <div>
+                              amount: <span className="font-bold">{formatAmount(amount)}</span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar
+                    dataKey="amount"
+                    fill={barType === "INCOME" ? "#4ade80" : "#ef4444"}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={40}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
               </div>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-end">
-              <div className="w-full h-[320px]"> {/* Increased height */}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Task Summary Card */}
+        <Card className="border-none shadow-md overflow-hidden h-full min-h-[320px] flex flex-col">
+          <CardHeader className="bg-white border-b border-gray-100">
+            <CardTitle>Task Summary</CardTitle>
+            <CardDescription>
+              Quantity of tasks per account with the respect to urgency levels.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col justify-end pt-6 pb-4">
+            <div className="w-full h-[320px] overflow-x-auto sm:overflow-x-visible">
+              <div className="min-w-[500px] sm:min-w-0 h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={barData}
+                    data={barChartData}
+                    layout="vertical"
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="category"
-                      tick={{ fontSize: 14, fill: "#4B5563" }}
-                      interval={0}
-                      angle={0} // Make labels horizontal
-                      textAnchor="middle"
-                      height={40} // Adjust for label space
-                    />
+                    <XAxis type="number" allowDecimals={false} />
                     <YAxis
-                      tickFormatter={(value) => formatAmount(value)}
-                      tick={{ fontSize: 12 }}
+                      type="category"
+                      dataKey="taskCategory"
+                      tick={{ fontSize: 12, fill: '#4B5563' }}
                     />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const { accountName, amount } = payload[0].payload;
-                          return (
-                            <div className="bg-white rounded shadow px-3 py-2 text-xs">
-                              <div className="font-semibold">{accountName}</div>
-                              <div>
-                                amount: <span className="font-bold">{formatAmount(amount)}</span>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Bar
-                      dataKey="amount"
-                      fill={barType === "INCOME" ? "#4ade80" : "#ef4444"}
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={40}
-                    />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="Low" stackId="a" fill="#22c55e" name="Low" />
+                    <Bar dataKey="Medium" stackId="a" fill="#fde047" name="Medium" />
+                    <Bar dataKey="High" stackId="a" fill="#ef4444" name="High" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Task Summary Card */}
-          <Card className="border-none shadow-md overflow-hidden h-full min-h-[320px] flex flex-col">
-            <CardHeader className="bg-white border-b border-gray-100">
-              <CardTitle>Task Summary</CardTitle>
-              <CardDescription>
-                Quantity of tasks per account with the respect to urgency levels.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-end pt-6 pb-4">
-              <div className="w-full h-[320px]"> {/* Match height with other chart */}
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={barChartData}
-          layout="vertical"
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis type="number" allowDecimals={false} />
-          <YAxis
-            type="category"
-            dataKey="taskCategory"
-            tick={{ fontSize: 12, fill: '#4B5563' }}
-          />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="Low" stackId="a" fill="#22c55e" name="Low" />
-          <Bar dataKey="Medium" stackId="a" fill="#fde047" name="Medium" />
-          <Bar dataKey="High" stackId="a" fill="#ef4444" name="High" />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Client Financial Summary */}
-        <Card className="mb-8 border-none shadow-md overflow-hidden">
-          <CardHeader className="bg-white border-b border-gray-100">
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Client Income Summary</CardTitle>
-                <CardDescription>
-                  Total income per month
-                </CardDescription>
-              </div>
-              <Select
-                value={selectedAccountId}
-                onValueChange={setSelectedAccountId}>
-
-                  <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Select Account"/>
-                  </SelectTrigger>
-
-                  <SelectContent>
-
-                      {accounts.data.map((account) => (
-                          <SelectItem key={account.id} value={account.id}>
-                              {account.name} 
-                          </SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
             </div>
-          </CardHeader>
-          <CardContent className="pt-6 pb-4">
-            <div
-              className="w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px]"
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Client Financial Summary */}
+      <Card className="mb-8 border-none shadow-md overflow-hidden">
+        <CardHeader className="bg-white border-b border-gray-100 pb-2">
+          <div className="
+            flex justify-between 
+            flex-col-reverse md:flex-row 
+            gap-2 md:gap-0
+            items-center">
+            <div>
+              <CardTitle className="text-center md:text-start">Client Income Summary</CardTitle>
+              <CardDescription>
+                Semiannual total income per month
+              </CardDescription>
+            </div>
+            <Select
+              value={selectedAccountId}
+              onValueChange={setSelectedAccountId}
             >
+              <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Select Account"/>
+              </SelectTrigger>
+              <SelectContent>
+                  {accounts.data.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                          {account.name} 
+                      </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-5 pb-4">
+          {/* <div
+            className="w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px]"
+          > */}
+          <div className="w-full h-[320px] lg:h-[400] overflow-x-auto sm:overflow-x-visible">
+            <div className="min-w-[500px] sm:min-w-0 h-full">
               {monthlyRevenueData.length > 0 
               ? (<ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={monthlyRevenueData}
+                  data={paddedMonthlyRevenueData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -474,13 +574,14 @@ const barData =
                     />
                 </LineChart>
               </ResponsiveContainer>) 
-              : ( <div className="flex items-center justify-center h-full text-gray-400">
+              : (<div className="flex items-center justify-center h-full text-gray-400">
                   No data available for this account.
-                </div>)}
-              
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

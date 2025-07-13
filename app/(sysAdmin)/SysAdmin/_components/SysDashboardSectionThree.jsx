@@ -64,7 +64,7 @@ const SysDashboardSectionThree = ({ UserRoleCount, recentSessions }) => {
         <CardHeader>
           <CardTitle>User roles</CardTitle>
           <CardDescription>
-            Breakdownd of user roles
+            Breakdown of user roles
           </CardDescription>
         </CardHeader>
         <CardContent>

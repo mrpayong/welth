@@ -107,7 +107,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
         {/* RIGHT: User button & mobile nav */}
         <div className="flex items-center gap-2 min-w-[60px] justify-end">
             <div className="hidden md:flex items-center space-x-4">
-            {pathname !== "/" && pathname !== "/sign-in/factor-one" && ( 
+            {pathname !== "/" && pathname.startsWith("/sign-in") || pathname.startsWith("/SysAdmin") && ( 
               // if no in home then visibile
               <Link href={"/"}>
                 <Button variant="outline" onClick={handleNavClick} disabled={loading}>
@@ -128,7 +128,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                     If not in Admin Page, 
                     if not Admin role, 
                     if not Staff role, */}
-                {isSysAdmin && pathname !== "/SysAdmin" && (
+                {isSysAdmin && !pathname.startsWith("/SysAdmin") && pathname === "/" && (
                   <Link href={"/SysAdmin"}>
                     <Button variant="outline" onClick={handleNavClick} disabled={loading}>
                       <UserRoundCog size={18} />
@@ -194,13 +194,19 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
 
 
             {/* LOGGED OUT */}
-            {!isSignedIn && !pathname !== "/sign-in" && (
+            {!isSignedIn && !pathname.startsWith("/sign-in") && (
               <div className="flex flex-row items-center justify-end gap-2 pr-3">
                 <span className="text-gray-600 font-semibold text-2xl hidden md:inline">
                   Ready to start?
                 </span>
               <Link href={"/sign-in"}>
-                <Button onClick={handleNavClick} disabled={loading}>
+                <Button 
+                  className="shine-effect transition 
+                  bg-white text-black border border-black
+                  hover:bg-black hover:text-white
+                  hover:border-0"
+                  onClick={handleNavClick} disabled={loading}
+                >
                   {loading
                     ? (<Loader2 className="w-4 h-4 animate-spin text-gray-400" />)
                     : (<LogIn size={18} />)

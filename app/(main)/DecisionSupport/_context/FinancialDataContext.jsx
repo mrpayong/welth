@@ -12,7 +12,7 @@ export function FinancialDataProvider({ children }) {
   const [inflowOutflowData, setInflowOutflowData] = useState(null);
   const [overallAnalysis, setOverallAnalysis] = useState(null);
   const [overallAnalysisLoading, setOverallAnalysisLoading] = useState(false);
-  const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [selectedAccountId, setSelectedAccountId] = useState("");
 
   return (
     <FinancialDataContext.Provider value={{

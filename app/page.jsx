@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import {
   Tooltip,
   TooltipContent,
@@ -24,38 +23,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import {
-  BookOpen,
-  ChevronRight,
-  Play,
-  HelpCircle,
-  ArrowRight,
-  Bookmark,
-  BookmarkCheck,
-  ExternalLink,
-  Printer,
-  Share2,
-  Video,
-  FileText,
-  Users,
-  MessageSquare,
-  Calendar,
-  Lightbulb,
-  CreditCard,
-  Twitter,
-  Linkedin,
-  Facebook,
-  Youtube,
-  ArrowUp,
-  Headset,
-  LineChart,
   Bot,
-  Layers,
-  Mail,
-  Book,
-  CalendarDays,
   ChartLine,
   Triangle,
   Brain,
@@ -127,10 +97,10 @@ const Home = () => {
         "Create an account for your client.",
       steps: [
         "Find the 'Add New Account' card in your dashboard.",
-        "Fill out the form with the information of the client.",
+        "Fill in the form with the information of the client.",
         "Review the information you entered in the blanks.",
-        "Click on Add Client button",
-        "You will see your created on the dashboard.",
+        "Click on Add Client button.",
+        "You will see the created account on the dashboard.",
       ],
     },
     {
@@ -191,6 +161,7 @@ const Home = () => {
         "Receive financial insights and recommendations through Hybrid Decision Support.",
       steps: [
         "Ensure you have transactions and cashflows.",
+        "Click the Forcasting button.",
         "Select a client at the top right of Client Income Summary card.",
         "For suggested schedule, ensure you created Tasks.",
         "Click on Generate AI Powered Forecast to see forecast.",
@@ -207,7 +178,7 @@ const Home = () => {
       ItemTrigger2: "Other helpful information",
       list: [
         "Only users with Staff role can have access to dashboard.",
-        "Each Staff will only see accounts of clients they created.",
+        "Each staff will only see accounts of clients they created.",
         "Review the information you entered in the blanks.",
         "The Business Name cannot be repeated.",
         "The hollow card is the toggle to open a form to create a new account for a client.",
@@ -289,7 +260,7 @@ const Home = () => {
         "Not selecting transactions and filling only the Parent's Group Name will keep Create Group disabled.",
         "Picking transaction and filling only the Parent's Group Name, inserts a transaction to existing group.",
         "You can select transaction and fill in the New Group Name.",
-        "Description is optional but highly encourage to provide clarity and context for reviewing and reporting.",
+        "Description is optional but highly encouraged to provide clarity and context for reviewing and reporting.",
       ],
     },
     {
@@ -415,9 +386,6 @@ const Home = () => {
                           }
                           
                           `}>
-                        {/* <i
-                          className={`${feature.icon} text-blue-600 text-xl`}
-                        ></i> */}
                         {feature.icon}
                       </div>
                       <div>
@@ -429,27 +397,6 @@ const Home = () => {
                         </CardDescription>
                       </div>
                     </div>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => toggleBookmark(feature.id)}
-                            className="cursor-pointer"
-                          >
-                            <Bookmark className={`${bookmarked.includes(feature.id) ? "text-amber-400" : "bg-white"}`}/>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>  
-                          <p>
-                            {bookmarked.includes(feature.id)
-                              ? "Remove bookmark"
-                              : "Bookmark this section"}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -527,187 +474,6 @@ const Home = () => {
 
 
 
-      {/* Additional resources section */}
-      {/* <section className="bg-blue-50 py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
-            Additional Resources
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="border-none shadow-md">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                  <i className="fa-solid fa-video text-green-600 text-xl"></i>
-                </div>
-                <CardTitle>Video Tutorials</CardTitle>
-                <CardDescription>
-                  Watch comprehensive video guides for each feature
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  <li className="flex items-center">
-                    <i className="fa-solid fa-play-circle text-green-500 mr-2"></i>
-                    <span className="text-gray-700">
-                      Getting Started (5:32)
-                    </span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fa-solid fa-play-circle text-green-500 mr-2"></i>
-                    <span className="text-gray-700">
-                      AI Transaction Recording (8:15)
-                    </span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fa-solid fa-play-circle text-green-500 mr-2"></i>
-                    <span className="text-gray-700">
-                      Advanced Filtering (6:47)
-                    </span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  variant="outline"
-                  className="w-full !rounded-button whitespace-nowrap cursor-pointer"
-                >
-                  View All Videos
-                </Button>
-              </CardFooter>
-            </Card>
-            <Card className="border-none shadow-md">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-4">
-                  <i className="fa-solid fa-file-alt text-purple-600 text-xl"></i>
-                </div>
-                <CardTitle>Documentation</CardTitle>
-                <CardDescription>
-                  Detailed guides and reference materials
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  <li className="flex items-center">
-                    <i className="fa-solid fa-file-pdf text-purple-500 mr-2"></i>
-                    <span className="text-gray-700">User Manual (PDF)</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fa-solid fa-file-code text-purple-500 mr-2"></i>
-                    <span className="text-gray-700">API Documentation</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fa-solid fa-file-alt text-purple-500 mr-2"></i>
-                    <span className="text-gray-700">
-                      Frequently Asked Questions
-                    </span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  variant="outline"
-                  className="w-full !rounded-button whitespace-nowrap cursor-pointer"
-                >
-                  Browse Documentation
-                </Button>
-              </CardFooter>
-            </Card>
-            <Card className="border-none shadow-md">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mb-4">
-                  <i className="fa-solid fa-users text-orange-600 text-xl"></i>
-                </div>
-                <CardTitle>Community Support</CardTitle>
-                <CardDescription>
-                  Connect with other users and experts
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  <li className="flex items-center">
-                    <i className="fa-solid fa-comments text-orange-500 mr-2"></i>
-                    <span className="text-gray-700">Discussion Forums</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fa-solid fa-calendar-alt text-orange-500 mr-2"></i>
-                    <span className="text-gray-700">Upcoming Webinars</span>
-                  </li>
-                  <li className="flex items-center">
-                    <i className="fa-solid fa-lightbulb text-orange-500 mr-2"></i>
-                    <span className="text-gray-700">Feature Requests</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  variant="outline"
-                  className="w-full !rounded-button whitespace-nowrap cursor-pointer"
-                >
-                  Join Community
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-        </div>
-      </section> */}
-
-
-      
-      {/* FAQ Section */}
-      {/* <section className="py-16 bg-gray-800">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-white mb-12">
-            Frequently Asked Questions
-          </h2>
-          <div className="max-w-3xl mx-auto">
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="faq-1">
-                <AccordionTrigger className="text-lg font-medium text-white">
-                  FAQ #1?
-                </AccordionTrigger>
-                <AccordionContent className="text-white">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien id laoreet varius, risus nunc viverra libero, at dignissim justo magna in nisi. Curabitur vulputate, ex non interdum fermentum, enim nunc feugiat nulla, at cursus arcu sapien in metus. Fusce a turpis vel est elementum vehicula. Integer malesuada eros vitae odio congue, quis porttitor metus vulputate.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq-2">
-                <AccordionTrigger className="text-lg font-medium text-white">
-                  FAQ #2?
-                </AccordionTrigger>
-                <AccordionContent className="text-white">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien id laoreet varius, risus nunc viverra libero, at dignissim justo magna in nisi. Curabitur vulputate, ex non interdum fermentum, enim nunc feugiat nulla, at cursus arcu sapien in metus. Fusce a turpis vel est elementum vehicula. Integer malesuada eros vitae odio congue, quis porttitor metus vulputate.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq-3">
-                <AccordionTrigger className="text-lg font-medium text-white">
-                  FAQ #3?
-                </AccordionTrigger>
-                <AccordionContent className="text-white">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien id laoreet varius, risus nunc viverra libero, at dignissim justo magna in nisi. Curabitur vulputate, ex non interdum fermentum, enim nunc feugiat nulla, at cursus arcu sapien in metus. Fusce a turpis vel est elementum vehicula. Integer malesuada eros vitae odio congue, quis porttitor metus vulputate.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq-4">
-                <AccordionTrigger className="text-lg font-medium text-white">
-                  FAQ #3?
-                </AccordionTrigger>
-                <AccordionContent className="text-white">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien id laoreet varius, risus nunc viverra libero, at dignissim justo magna in nisi. Curabitur vulputate, ex non interdum fermentum, enim nunc feugiat nulla, at cursus arcu sapien in metus. Fusce a turpis vel est elementum vehicula. Integer malesuada eros vitae odio congue, quis porttitor metus vulputate.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq-5">
-                <AccordionTrigger className="text-lg font-medium text-white">
-                  FAQ #4?
-                </AccordionTrigger>
-                <AccordionContent className="text-white">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, sapien id laoreet varius, risus nunc viverra libero, at dignissim justo magna in nisi. Curabitur vulputate, ex non interdum fermentum, enim nunc feugiat nulla, at cursus arcu sapien in metus. Fusce a turpis vel est elementum vehicula. Integer malesuada eros vitae odio congue, quis porttitor metus vulputate.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        </div>
-      </section>
- */}
-
-
 
 
 
@@ -738,40 +504,7 @@ const Home = () => {
 
 
 
-      {/* Bookmarks panel */}
-      {bookmarked.length > 0 && (
-        <div className="fixed top-32 right-6 z-10">
-          <Card className="w-64 shadow-lg border-none">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Your Bookmarks
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <ScrollArea className="h-[200px]">
-                <ul className="space-y-1">
-                  {bookmarked.map((id) => {
-                    const feature = features.find((f) => f.id === id);
-                    return feature ? (
-                      <li key={id} className="flex items-center py-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start text-blue-600 cursor-pointer"
-                          onClick={() => scrollToSection(id)}
-                        >
-                          <i className={`${feature.icon} mr-2`}></i>
-                          <span className="truncate">{feature.title}</span>
-                        </Button>
-                      </li>
-                    ) : null;
-                  })}
-                </ul>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+
     </div>
  
   );

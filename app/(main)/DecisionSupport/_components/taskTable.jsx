@@ -272,7 +272,6 @@ const result = await Swal.fire({
 
               <div className="
                 flex
-                
                 overflow-x-auto lg:overflow-x-hidden
                 sm:flex-nowrap md:flex-nowrap lg:flex-wrap
                 gap-2 items-center
@@ -319,13 +318,16 @@ const result = await Swal.fire({
                 </div>
                 
                 <div className="flex flex-row gap-2">
+                  <label className="my-1">From:</label>
                   <Input
+                    htmlFor="dateFilterFrom"
                     type="date"
                     value={filterDateFrom}
                     onChange={e => setFilterDateFrom(e.target.value)}
                     className="w-[150px]"
                     placeholder="From"
                     />
+                  <label className="my-1">To:</label>
                   <Input
                     type="date"
                     value={filterDateTo}

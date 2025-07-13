@@ -111,7 +111,7 @@ const ClientCard = ({ account }) => {
           className="hover:shadow-md transition-shadow group relative border border-gray-800 cursor-pointer"
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium capitalize">{name}</CardTitle>
+            <CardTitle className="text-sm font-medium capitalize">{city}, {province}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold flex items-center gap-2">
@@ -130,16 +130,13 @@ const ClientCard = ({ account }) => {
         </Card>
       </DialogTrigger>
 
-<DialogContent className="w-[95vw] max-w-full sm:max-w-2xl p-0 sm:p-6 overflow-hidden max-h-[90vh] rounded-lg">
+<DialogContent className="[&>button]:hidden w-[95vw] max-w-full sm:max-w-2xl p-0 sm:p-6 overflow-hidden max-h-[90vh] rounded-lg">
   <DialogHeader>
     <DialogTitle className="capitalize text-2xl">{name}</DialogTitle>
     <DialogDescription className="text-sm">
       Details of the client's business.
     </DialogDescription>
   </DialogHeader>
-
-
-
 
 
   {/* Mobile: Carousel */}
@@ -290,7 +287,11 @@ const ClientCard = ({ account }) => {
           <DialogClose asChild>
             <Button
               variant="outline"
-              className=" border-black max-w-xs sm:w-auto"
+              className=" 
+              text-rose-600 hover:text-white
+              bg-white hover:bg-rose-600
+              border-rose-600 hover:border-0 
+              max-w-xs sm:w-auto"
             >
               Close
             </Button>

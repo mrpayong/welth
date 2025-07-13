@@ -45,35 +45,35 @@ import { userSchema } from '@/app/lib/schema';
 import Swal from 'sweetalert2';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { BarLoader } from 'react-spinners';
-import { Skeleton } from '@mui/material';
+import { Divider, Skeleton } from '@mui/material';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-
+import { useUser } from '@clerk/nextjs';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, useCarousel } from "@/components/ui/carousel";
 
 
 
 const roles = [
   {
     name: "STAFF",
-    icon: <UserRound className="w-6 h-6 text-blue-500" />,
-    description: "Staff can manage and analyze data for their assigned client accounts. They have access to client dashboards, can create transactions (including AI-powered receipt scanning), and manage cashflow statements and sub-accounts.",
+    icon: <UserRound className="lg:w-6 lg:h-6 sm:w-5 sm:h-5 text-blue-500" />,
+    description: "Staff can manage and analyze data for their assigned client accounts. They have access to client dashboards, can create transactions, and manage cashflow statements.",
     accesses: [
       "Dashboard with analytics for assigned client",
       "Clickable client cards to access account pages",
       "Create transactions (AI-powered receipt scanning)",
-      "View and edit account transactions",
+      "View and edit transactions",
       "Edit Cashflow Statements (CFS)",
       "Access Disbursement & Cash Receipt Books",
-      "Manage sub-accounts",
-      "Download CFS as PDF"
+      "Download Cashflow Statement as PDF"
     ]
   },
   {
     name: "ADMIN",
-    icon: <Shield className="w-6 h-6 text-green-600" />,
+    icon: <Shield className="lg:w-6 lg:h-6 sm:w-5 sm:h-5 text-green-600" />,
     description: "Admins have access to decision support tools, advanced analytics, and user management. They can forecast, schedule tasks, and oversee all client and user activity.",
     accesses: [
       "Decision Support System (DSS) with analytics",
@@ -87,7 +87,7 @@ const roles = [
   },
   {
     name: "SYSTEM ADMIN",
-    icon: <LaptopMinimalCheck className="w-6 h-6 text-yellow-600" />,
+    icon: <LaptopMinimalCheck className="lg:w-6 lg:h-6 sm:w-5 sm:h-5 text-yellow-600" />,
     description: "System Admins have the highest level of access, focusing on system-wide user and session management.",
     accesses: [
       "System Admin portal dashboard (recent reports)",
@@ -97,33 +97,120 @@ const roles = [
   }
 ];
 
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) setMatches(media.matches);
+    const listener = () => setMatches(media.matches);
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
+  }, [matches, query]);
+
+  return matches;
+}
+
+function CarouselDots() {
+  const { selectedIndex, slideCount, api } = useCarousel()
+  if (!slideCount) return null
+  return (
+    <div className="flex justify-center mt-2 gap-2">
+      {Array.from({ length: slideCount }).map((_, idx) => (
+        <button
+          key={idx}
+          className={`h-2 w-2 rounded-full transition-colors duration-200 ${
+            idx === selectedIndex ? 'bg-zinc-300' : 'bg-neutral-200'
+          }`}
+          aria-label={`Go to slide ${idx + 1}`}
+          onClick={() => api && api.scrollTo(idx)}
+          type="button"
+        />
+      ))}
+    </div>
+  )
+}
+
 function RoleInfoTab() {
+   const isSmallScreen = useMediaQuery("(max-width: 1080px)");
+   
   return (
     <div className="w-full max-w-5xl mx-auto py-6 px-2 sm:px-4">
-      <h2 className="text-3xl font-bold mb-2 text-gray-900">Roles & Access Overview</h2>
-      <p className="text-gray-600 mb-8 max-w-2xl">
-        Below is a summary of each role in the platform and the features they can access. This helps clarify permissions and responsibilities for each user type.
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {roles.map((role) => (
-          <Card key={role.name} className="flex flex-col h-full">
-            <CardHeader className="flex flex-row items-center gap-3 pb-2">
-              <div className="flex-shrink-0">{role.icon}</div>
-              <div>
-                <CardTitle className="text-xl">{role.name}</CardTitle>
-                <CardDescription className="text-gray-500">{role.description}</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <ul className="list-disc pl-5 space-y-1 text-gray-800 text-sm">
-                {role.accesses.map((item, idx) => (
-                  <li key={idx}>{item}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <h2 className="text-3xl font-bold pb-1 text-gray-900">Roles & Access</h2>
+      <Divider className='w-auto'/>
+      <span className="text-gray-400 text-sm *:pt-1">
+        Information of each role and their accesses. This helps clarify permissions for each role.
+      </span>
+      {isSmallScreen ? (
+        <Carousel className="mt-4">
+          <CarouselContent>
+            {roles.map((role) => (
+              <CarouselItem key={role.name} className="p-2">
+                <Card className={
+                  isSmallScreen
+                    ? `flex flex-col h-auto ${role.name === "SYSTEM ADMIN"
+                        ? "bg-gradient-to-r from-white to-yellow-300/35"
+                        : role.name === "ADMIN"
+                          ? "bg-gradient-to-r from-white to-green-300/35"
+                          : "bg-gradient-to-r from-white to-blue-500/35"
+                        }`
+                    : "flex flex-col h-auto"
+                }>
+                  <CardHeader className="flex justify-evenly gap-2 p-4">
+                    <div className="flex flex-col gap-1 m-0 p-0 h-36">
+                      <div className='flex flex-row items-start justify-start gap-2'>
+                        <div className="flex-shrink-0">{role.icon}</div>
+                        <CardTitle className="text-xl">{role.name}</CardTitle>
+                      </div>
+                      <CardDescription className="text-gray-500">{role.description}</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-2">
+                    <ul className="list-disc pl-5 space-y-1 text-gray-800 text-sm">
+                      {role.accesses.map((item, idx) => (
+                        <li key={idx}>{item}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselDots/>
+        </Carousel>
+        ) : (
+        <div className="grid grid-cols-1 pt-4 md:grid-cols-3 gap-6">
+          {roles.map((role) => (
+            <Card key={role.name} className={
+                  role.name
+                    ? `flex flex-col h-auto ${role.name === "SYSTEM ADMIN"
+                        ? "bg-gradient-to-r from-white to-yellow-300/35"
+                        : role.name === "ADMIN"
+                          ? "bg-gradient-to-r from-white to-green-300/35"
+                          : "bg-gradient-to-r from-white to-blue-500/35"
+                        }`
+                    : "flex flex-col h-auto"
+                }>
+              <CardHeader className="flex justify-evenly gap-2 p-4">
+                <div className="flex flex-col gap-1 m-0 p-0 h-36">
+                  <div className='flex flex-row items-center justify-start gap-2'>
+                    <div className="flex-shrink-0">{role.icon}</div>
+                    <CardTitle className="lg:text-xl">{role.name}</CardTitle>
+                  </div>
+                  <CardDescription className="text-gray-500">{role.description}</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-2">
+                <ul className="list-disc pl-5 space-y-1 text-gray-800 text-sm">
+                  {role.accesses.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -399,9 +486,10 @@ const [confirmRole, setConfirmRole] = useState(null);
 
 
 
+    
 
-
-
+  const { user } = useUser();
+  const currentClerkUserId = user?.id;
 
 
 
@@ -430,7 +518,8 @@ const [confirmRole, setConfirmRole] = useState(null);
   return (
  <div className='space-y-6'>
     <Tabs defaultValue="admins">
-      <TabsList>
+      <TabsList className="w-full justify-start 
+              overflow-x-auto overflow-y-hidden py-2 space-x-2 h-auto">
           <TabsTrigger value="Something">
               <LaptopMinimalCheck className='h-4 w-4 mr-2'/>
               Role information & accesses tab
@@ -450,8 +539,8 @@ const [confirmRole, setConfirmRole] = useState(null);
 
 
 
-      <Dialog open={createUserDialog} >
-        <DialogContent>
+      <Dialog open={createUserDialog}>
+        <DialogContent className="[&>button]:hidden rounded-xl">
           <DialogHeader>
             <DialogTitle>Create New User</DialogTitle>
             <DialogDescription>
@@ -538,28 +627,33 @@ const [confirmRole, setConfirmRole] = useState(null);
 
               {/* Actions */}
               <DialogFooter className="flex flex-col-reverse md:flex-row gap-2 md:justify-end">
-              <DialogClose asChild>
-                <Button
-                type="button"
-                variant="outline"
-                onClick={() => setCreateUserDialog(false)}
-                disabled={createUserLoading}
-                className="w-full md:w-auto"
-                >
-                Cancel
-              </Button>
-              </DialogClose>
+                <DialogClose asChild>
+                  <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setCreateUserDialog(false)}
+                  disabled={createUserLoading}
+                  className="w-full md:w-auto hover:bg-rose-600 hover:text-white"
+                  >
+                  Cancel
+                </Button>
+                </DialogClose>
 
-              <Button type="submit" disabled={createUserLoading} className="w-full md:w-auto">
-                {createUserLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating
-                  </>
-                ) : (
-                  "Create"
-                )}
-              </Button>
+                <Button type="submit" disabled={createUserLoading} 
+                  className="w-full md:w-auto
+                    bg-black hover:bg-white 
+                    text-white hover:text-black
+                    border-0 hover:border hover:border-black hover:shadow-lg
+                  ">
+                  {createUserLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating
+                    </>
+                  ) : (
+                    "Create"
+                  )}
+                </Button>
               </DialogFooter>
             </form>
         </DialogContent>
@@ -647,7 +741,7 @@ const [confirmRole, setConfirmRole] = useState(null);
                     : () => setUpdateDialogOpen(false)
                     }
                   disabled={updateUserLoading || updateEmailLoading}
-                  className="w-full md:w-auto
+                  className="w-full md:w-auto text-red-500
                   border-red-500 hover:border-0 hover:bg-red-500 hover:text-white"
                   >
                   Cancel
@@ -659,7 +753,7 @@ const [confirmRole, setConfirmRole] = useState(null);
                 disabled={updateUserLoading || updateEmailLoading} 
                 variant="outline"
                 // onClick={() => handleUpdateUser(userToUpdataId, userNewFname, userNewLname, userNewName)}
-                className="w-full md:w-auto border-green-500 hover:border-0 hover:bg-green-500 hover:text-white">
+                className="w-full text-green-500 md:w-auto border-green-500 hover:border-0 hover:bg-green-500 hover:text-white">
                   {updateUserLoading || updateEmailLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -677,15 +771,15 @@ const [confirmRole, setConfirmRole] = useState(null);
 
 
       <TabsContent value="admins" className="space-y-6 mt-6">
-        <Card>
+        <Card className="bg-gradient-to-r from-white via-indigo-300/65 to-white">
           <CardHeader className="flex flex-row items-center justify-between gap-4">
             <div>
-              <CardTitle>User List</CardTitle>
+              <CardTitle>User Table</CardTitle>
               <CardDescription>
                 Manage your users in here.
               </CardDescription>
             </div>
-            <Button variant="outline" className="h-10 border border-black" onClick={() => setCreateUserDialog(true)}>
+            <Button variant="outline" className="h-10 border border-black bg-opacity-35 hover:bg-white/25" onClick={() => setCreateUserDialog(true)}>
               <UserRoundPlus className="mr-2 h-4 w-4" /> Create User
             </Button>
           </CardHeader>
@@ -704,7 +798,7 @@ const [confirmRole, setConfirmRole] = useState(null);
             </div>
 
             {fetchingUsers ? (
-              <div className="space-y-4">
+              <div className="space-y-4 overflow-x-auto lg:overflow-x-hidden">
                 {[...Array(3)].map((_, i) => (
                   <div
                     key={i}
@@ -746,7 +840,7 @@ const [confirmRole, setConfirmRole] = useState(null);
                 ))}
               </div>
             ) : usersData?.success && filteredUsers.length > 0 ? (
-              <div className="overflow-x-auto">
+              <div className="lg:overflow-x-hidden overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -759,7 +853,7 @@ const [confirmRole, setConfirmRole] = useState(null);
                   </TableHeader>
                   <TableBody>
                     {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
+                      <TableRow key={user.id} className="w-auto">
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
@@ -824,30 +918,37 @@ const [confirmRole, setConfirmRole] = useState(null);
                                     </span>
                                   </span>
                                 </Button>
-                                <Button
-                                    variant="outline"
-                                    className="flex items-center gap-2 border-rose-600 hover:bg-rose-600 hover:text-white hover:border-0"
-                                    onClick={() => handleSingleDelete(user.id, user.clerkUserId)}
-                                  >
-                                    <span className="flex items-center">
-                                      <Trash className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
-                                      <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Delete</span>
-                                    </span>
-                                  </Button>
-                                  {/* Change Role Button */}
-                                  <Button
-                                    variant="outline"
-                                    className="flex items-center gap-2 border-black hover:bg-black hover:text-white hover:border-0"
-                                    onClick={() => {
-                                      setUserToChangeRole(user);
-                                      setChangeRoleDialog(true);
-                                    }}
-                                  >
-                                    <span className="flex items-center">
-                                      <Shield className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
-                                      <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Change Role</span>
-                                    </span>
-                                  </Button>
+                                  {user.clerkUserId !== currentClerkUserId && (
+                                    <>
+                                      <Button
+                                        variant="outline"
+                                        className="flex items-center gap-2 border-rose-600 hover:bg-rose-600 hover:text-white hover:border-0"
+                                        onClick={() => handleSingleDelete(user.id, user.clerkUserId)}
+                                      >
+                                        <span className="flex items-center">
+                                          <Trash className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                          <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Delete</span>
+                                        </span>
+                                      </Button>
+                                      {/* Change Role Button */}
+                                      <Button
+                                        variant="outline"
+                                        className="flex items-center gap-2 border-black hover:bg-black hover:text-white hover:border-0"
+                                        onClick={() => {
+                                          setUserToChangeRole(user);
+                                          setChangeRoleDialog(true);
+                                        }}
+                                      >
+                                        <span className="flex items-center">
+                                          <Shield className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" aria-hidden="true" />
+                                          <span className="ml-2 text-xs sm:text-sm md:text-base font-medium">Change Role</span>
+                                        </span>
+                                      </Button>
+                                    </>
+                                  )}
+                                 
+
+
                                   <Button
                                     variant="outline"
                                     className="flex items-center gap-2 border-violet-500 hover:bg-violet-500 hover:text-white hover:border-0"

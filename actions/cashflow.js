@@ -680,25 +680,6 @@ export async function getCashflowEnding(accountId){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // export async function getCashflowById(cfsID) {
 //   try {
 //     const cashflow = await db.cashFlow.findUnique({
@@ -1561,7 +1542,7 @@ async function isTransactionInCashflow(cashflowId, transactionId) {
 
 export async function updateCashflowTransaction(cfsId, transactionId, amount) {
   try {
-    console.log("[1] Auth")
+
     const { userId } = await auth();
 
     const user = await db.user.findUnique({ 
@@ -1574,7 +1555,7 @@ export async function updateCashflowTransaction(cfsId, transactionId, amount) {
       throw new Error("Unavailable action");
     }
 
-    console.log("[2] Fetch data")
+    
     const currCashflow = await db.cashFlow.findUnique({
       where: {id: cfsId},
       select: {
@@ -1605,14 +1586,14 @@ export async function updateCashflowTransaction(cfsId, transactionId, amount) {
       throw new Error("[2] Data not found.");
     }
 
-    console.log("[3] Relation check")
+
     const isRelated = await isTransactionInCashflow(currCashflow.id, transaction.id);
 
     if (!isRelated.success) {
       throw new Error("[3] Transaction is not related to this cashflow.");
     }
 
-    console.log("[4] Update amount", amount)
+   
     let newType = amount < 0 
       ? "EXPENSE" 
       : "INCOME";
@@ -1650,11 +1631,6 @@ export async function updateCashflowTransaction(cfsId, transactionId, amount) {
     return { success: false, error: error.message };
   }
 }
-
-
-
-
-
 
 
 

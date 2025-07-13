@@ -436,22 +436,24 @@ const forecastStartMonth = firstForecast ? firstForecast.month : null;
 
 
   return (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Financial Forecasts */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Financial Forecast Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Forecast of Cashflow</CardTitle>
-                <CardDescription>
-                  Forecasting growth rate from average gross based on provided cashflow records.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full md:px-4">
-                  {cfsForecastLoading || forecastLoading ? (
-                      <ChartSkeleton height="h-[350px]" />
-                    ) : (
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    {/* Left Column: Financial Forecasts */}
+    <div className="lg:col-span-2 space-y-6">
+      {/* Financial Forecast Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Forecast of Cashflow</CardTitle>
+          <CardDescription>
+            Forecasting growth rate from average gross based on provided cashflow records.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full md:px-4">
+            {cfsForecastLoading || forecastLoading ? (
+                <ChartSkeleton height="h-[350px]" />
+              ) : (
+              <div className="w-full h-[350px] overflow-x-auto sm:overflow-x-visible">
+                <div className="min-w-[600px] sm:min-w-0 h-full">
                   <ResponsiveContainer width="100%" height={350}>
                     <AreaChart
                       data={areaChartData}
@@ -521,51 +523,55 @@ const forecastStartMonth = firstForecast ? firstForecast.month : null;
                         />
                       )}
                     </AreaChart>
-                  </ResponsiveContainer> )}
+                  </ResponsiveContainer> 
                 </div>
-              </CardContent>
-              <CardFooter className="flex justify-end bg-gray-50 border-t border-gray-100 py-4">
-                
-                <Button 
-                  className="
-                  !rounded-button whitespace-nowrap 
-                  shine-effect
-                  flex items-center gap-1
-                  bg-black text-white
-                  text-sm font-semibold
-                  transition
-                  hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
-                  hover:shadow-lg hover:shadow-blue-500/60
-                  cursor-pointer
-                  relative
-                  overflow-hidden
-                  
-                  "
-                  type="button"
-                  disabled={cfsForecastLoading}
-                  onClick={cfsForecastHandler}>
-                    {cfsForecastLoading
-                      ? <Loader2 className="animate-spin h-4 w-4 mr-2"/>
-                      : <Brain/> 
-                    }
-                    {cfsForecastData ? "Regenerate" : "Generate"} AI powered forecast
-                </Button>
-              </CardFooter>
-            </Card>
+              </div>
+            )}
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-end bg-gray-50 border-t border-gray-100 py-4">
+          
+          <Button 
+            className="
+            !rounded-button whitespace-nowrap 
+            shine-effect
+            flex items-center gap-1
+            bg-black text-white
+            text-sm font-semibold
+            transition
+            hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
+            hover:shadow-lg hover:shadow-blue-500/60
+            cursor-pointer
+            relative
+            overflow-hidden
+            "
+            type="button"
+            disabled={cfsForecastLoading}
+            onClick={cfsForecastHandler}>
+              {cfsForecastLoading
+                ? <Loader2 className="animate-spin h-4 w-4 mr-2"/>
+                : <Brain/> 
+              }
+              {cfsForecastData ? "Regenerate" : "Generate AI powered forecast"} 
+          </Button>
+        </CardFooter>
+      </Card>
 
-            {/* Cash Flow Projection */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Inflow and Outflow Forecast</CardTitle>
-                <CardDescription>
-                  The forecast inflow and outflow of cash based on historical data.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full px-2 md:px-4 h-[350px]">
-                  {inflowOutflowloading || forecastLoading ? (
-                      <ChartSkeleton height="h-[350px]" />
-                    ) : (
+      {/* Cash Flow Projection */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Inflow and Outflow Forecast</CardTitle>
+          <CardDescription>
+            The forecast inflow and outflow of cash based on historical data.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full px-2 md:px-4 h-[350px]">
+            {inflowOutflowloading || forecastLoading ? (
+                <ChartSkeleton height="h-[350px]" />
+              ) : (
+              <div className="w-full h-[350px] overflow-x-auto sm:overflow-x-visible">
+                <div className="min-w-[600px] sm:min-w-0 h-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={barChartData}>
                       <XAxis dataKey="month" 
@@ -619,164 +625,167 @@ const forecastStartMonth = firstForecast ? firstForecast.month : null;
                         />
                       )}
                     </BarChart>
-                  </ResponsiveContainer> )}
+                  </ResponsiveContainer> 
                 </div>
-              </CardContent>
-              <CardFooter>
-                <span className='text-sm text-neutral-500 p-1'>Forecast starts at blue broken line</span>
-              </CardFooter>
-            </Card>
-          </div>
-
-          {/* Right Column: Urgency Meters and Calendar */}
-          <div className="space-y-6 flex flex-col h-full lg:min-h-[700px]">
-            {/* AI CFS forecast insight */}
-  <div className="flex flex-col gap-4 h-auto lg:min-h-[340px]">
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Insight on the Forecast</CardTitle>
-        <CardDescription className="text-xs">
-          {cfsForecastData
-            ? "Here's what the AI thinks base on the historical data and it's forecast."
-            : "Generate the forecast to see AI's insights."
-          }
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {cfsForecastData?.insight && (
-          <Alert className="mt-4 bg-blue-50 border-blue-200 h-full">
-            <AlertTitle className="flex flex-row items-center"><Brain className='h-4 w-4 mr-2'/> AI Insight</AlertTitle>
-            <AlertDescription>{cfsForecastData.insight}</AlertDescription>
-            {cfsForecastData.issuesOrImprovements && cfsForecastData.issuesOrImprovements.length > 0 && (
-              <div className="mt-2">
-                <ul className="list-disc list-inside space-y-1">
-                  {cfsForecastData.issuesOrImprovements.map((issue, index) => (
-                    <li key={index}>
-                      {issue}
-                    </li>
-                  ))}
-                </ul>
               </div>
             )}
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
-    <Alert className="bg-sky-200 border-sky-500 h-full">
-      <AlertTitle className="text-zinc-500 flex items-center gap-2">
-        <Info className="h-6 w-6 text-sky-500" />
-        {AIschedData
-          ? "AI says the ideal priority today:"
-          : "Ideal Priority Today"
-        }
-      </AlertTitle>
-      <AlertDescription className="text-zinc-500">
-        {aiInsight}
-      </AlertDescription>
-    </Alert>
-  </div>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <span className='text-sm text-neutral-500 p-1'>Forecast starts at blue broken line</span>
+        </CardFooter>
+      </Card>
+    </div>
 
-            {/* Weekly Calendar */}
-<Card className="flex-1 flex flex-col">
-  <CardHeader>
-    <CardTitle>Weekly Schedule</CardTitle>
-    <CardDescription>
-      Your tasks and appointments for this week
-    </CardDescription>
-  </CardHeader>
-  {/* Make CardContent take all available vertical space and arrange children in a column */}
-  <CardContent className="flex-1 flex flex-col p-0">
-    <ScrollArea className="flex-1 min-h-[300px] max-h-[500px] pr-4">
-      <div className="space-y-4 px-6 pt-4 pb-2">
-        {schedLoading ? (
-          Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center space-x-4">
-              <Skeleton className="w-10 h-10 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-40" />
-              </div>
-            </div>
-          ))
-        ) : (
-          displayedWeekDays.map((day) => (
-            <div key={day.dayName} className="space-y-2">
-              <div className={`flex items-center ${day.isToday ? "text-blue-600 font-bold" : "text-gray-700"}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${day.isToday ? "bg-blue-100" : "bg-gray-100"}`}>
-                  <div className="text-center">
-                    <div className="text-xs">{day.dayName}</div>
-                    <div className="text-base font-semibold">{day.dayNumber}</div>
+    {/* Right Column: Urgency Meters and Calendar */}
+    <div className="space-y-6 flex flex-col h-full lg:min-h-[700px]">
+        {/* AI CFS forecast insight */}
+      <div className="flex flex-col gap-4 h-auto lg:min-h-[340px]">
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle>Insight on the Forecast</CardTitle>
+            <CardDescription className="text-xs">
+              {cfsForecastData
+                ? "Here's what the AI thinks base on the historical data and it's forecast."
+                : "Generate the forecast to see AI's insights."
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {cfsForecastData?.insight && (
+              <Alert className="mt-4 bg-blue-50 border-blue-200 h-full">
+                <AlertTitle className="flex flex-row items-center"><Brain className='h-4 w-4 mr-2'/> AI Insight</AlertTitle>
+                <AlertDescription>{cfsForecastData.insight}</AlertDescription>
+                {cfsForecastData.issuesOrImprovements && cfsForecastData.issuesOrImprovements.length > 0 && (
+                  <div className="mt-2">
+                    <ul className="list-disc list-inside space-y-1">
+                      {cfsForecastData.issuesOrImprovements.map((issue, index) => (
+                        <li key={index}>
+                          {issue}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
-                <span className="font-medium text-base">{formatDatePH(day.date)}</span>
-                {day.isToday && (
-                  <Badge className="ml-2 bg-blue-100 text-blue-800 hover:bg-blue-100">
-                    Today
-                  </Badge>
                 )}
-              </div>
-              {day.tasks.length > 0 ? (
-                <div className="ml-13 pl-10 border-l-2 border-gray-200 space-y-3">
-                  {day.tasks.map((task) => (
-                    <div key={task.id} className="bg-white rounded-lg border p-3 shadow-sm">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge className={`${task.color} mb-1`}>
-                                  {task.urgencyLabel}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-xs text-xs">
-                                {task.description}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <p className="text-sm font-medium">{task.taskName}</p>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+        <Alert className="bg-sky-200 border-sky-500 h-full">
+          <AlertTitle className="text-zinc-500 flex items-center gap-2">
+            <Info className="h-6 w-6 text-sky-500" />
+            {AIschedData
+              ? "AI says the ideal priority today:"
+              : "Ideal Priority Today"
+            }
+          </AlertTitle>
+          <AlertDescription className="text-zinc-500">
+            {aiInsight}
+          </AlertDescription>
+        </Alert>
+      </div>
+
+        {/* Weekly Calendar */}
+      <Card className="flex-1 flex flex-col">
+        <CardHeader>
+          <CardTitle>Weekly Schedule</CardTitle>
+          <CardDescription>
+            Your tasks and appointments for this week
+          </CardDescription>
+        </CardHeader>
+        {/* Make CardContent take all available vertical space and arrange children in a column */}
+        <CardContent className="flex-1 flex flex-col p-0">
+          <ScrollArea className="flex-1 min-h-[300px] max-h-[500px] pr-4">
+            <div className="space-y-4 px-6 pt-4 pb-2">
+              {schedLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-40" />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                displayedWeekDays.map((day) => (
+                  <div key={day.dayName} className="space-y-2">
+                    <div className={`flex items-center ${day.isToday ? "text-blue-600 font-bold" : "text-gray-700"}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${day.isToday ? "bg-blue-100" : "bg-gray-100"}`}>
+                        <div className="text-center">
+                          <div className="text-xs">{day.dayName}</div>
+                          <div className="text-base font-semibold">{day.dayNumber}</div>
                         </div>
                       </div>
+                      <span className="font-medium text-base">{formatDatePH(day.date)}</span>
+                      {day.isToday && (
+                        <Badge className="ml-2 bg-blue-100 text-blue-800 hover:bg-blue-100">
+                          Today
+                        </Badge>
+                      )}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="ml-13 pl-10 border-l-2 border-gray-200 py-2">
-                  <p className="text-sm text-gray-500 italic">No scheduled tasks</p>
-                </div>
+                    {day.tasks.length > 0 ? (
+                      <div className="ml-13 pl-10 border-l-2 border-gray-200 space-y-3">
+                        {day.tasks.map((task) => (
+                          <div key={task.id} className="bg-white rounded-lg border p-3 shadow-sm">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge className={`${task.color} mb-1`}>
+                                        {task.urgencyLabel}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-xs text-xs">
+                                      {task.description}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <p className="text-sm font-medium">{task.taskName}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="ml-13 pl-10 border-l-2 border-gray-200 py-2">
+                        <p className="text-sm text-gray-500 italic">No scheduled tasks</p>
+                      </div>
+                    )}
+                  </div>
+                ))
               )}
             </div>
-          ))
-        )}
-      </div>
-    </ScrollArea>
-  </CardContent>
-  <CardFooter className="pt-0">
-    <Button 
-      type="button"
-      onClick={AIgenerateSchedHandler}
-      disabled={schedLoading}
-      className="
-        w-full !rounded-button whitespace-nowrap 
-        shine-effect
-        flex items-center gap-1
-        bg-black text-white
-        text-sm font-semibold
-        transition
-        hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
-        hover:shadow-lg hover:shadow-blue-500/60
-        cursor-pointer
-        relative
-        overflow-hidden
-      ">
-      {schedLoading
-        ? <Loader2 className="animate-spin h-4 w-4 mr-2"/>
-        : <Bot className='mr-2'/> 
-      } Schedule task with AI
-    </Button>
-  </CardFooter>
-</Card>
-          </div>
-        </div>
+          </ScrollArea>
+        </CardContent>
+        <CardFooter className="pt-0">
+          <Button 
+            type="button"
+            onClick={AIgenerateSchedHandler}
+            disabled={schedLoading}
+            className="
+              w-full !rounded-button whitespace-nowrap 
+              shine-effect
+              flex items-center gap-1
+              bg-black text-white
+              text-sm font-semibold
+              transition
+              hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
+              hover:shadow-lg hover:shadow-blue-500/60
+              cursor-pointer
+              relative
+              overflow-hidden
+            ">
+            {schedLoading
+              ? <Loader2 className="animate-spin h-4 w-4 mr-2"/>
+              : <Bot className='mr-2'/> 
+            } Schedule task with AI
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
+  </div>
   )
 }
 

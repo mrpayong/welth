@@ -537,33 +537,8 @@ const SectionThree = () => {
     }
   ];
 
-  // AI insights data
-  const aiInsights = [
-    {
-      title: 'Cash Flow Optimization',
-      description: 'Based on current trends, consider advising ABC Corp to optimize their accounts receivable process to improve cash flow by an estimated 15%.',
-      impact: 'High',
-      impactColor: 'bg-red-100 text-red-800'
-    },
-    {
-      title: 'Tax Saving Opportunity',
-      description: 'XYZ Inc qualifies for R&D tax credits that could reduce their tax liability by approximately $45,000 this fiscal year.',
-      impact: 'High',
-      impactColor: 'bg-red-100 text-red-800'
-    },
-    {
-      title: 'Compliance Risk Alert',
-      description: 'Global Traders may face compliance issues with their current inventory valuation method. Recommend switching to FIFO method.',
-      impact: 'Medium',
-      impactColor: 'bg-yellow-100 text-yellow-800'
-    },
-    {
-      title: 'Expense Anomaly Detected',
-      description: 'Unusual increase in operational expenses for Tech Solutions in the last quarter. Detailed analysis recommended.',
-      impact: 'Medium',
-      impactColor: 'bg-yellow-100 text-yellow-800'
-    }
-  ];
+  
+
 
   if (!mounted) {
     return (

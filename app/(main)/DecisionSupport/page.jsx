@@ -9,6 +9,10 @@ import { FinancialDataProvider } from './_context/FinancialDataContext';
 import { getAllInflows, getAllOutflows, getAllTransactions} from '@/actions/decisionSupport';
 import { getUserAccount } from '@/actions/admin';
 
+
+
+
+
 async function DecisionSupport () {
       const accounts = await getUserAccount();
       const task = await getTask()

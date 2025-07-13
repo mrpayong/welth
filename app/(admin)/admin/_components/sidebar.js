@@ -50,7 +50,7 @@ const Sidebar = () => {
    return (
         <>
             {/* Desktop sidebar */}
-            <div className="hidden pt-7 md:flex h-full flex-col overflow-y-auto bg-white shadow-sm border-r">
+            <div className="hidden md:flex pt-7  h-full flex-col overflow-y-auto bg-white shadow-sm border-r">
                 <div className="flex flex-col w-full">
                     {routes.map((route) => {
                         const isLoading = loadingHref === route.href;

@@ -18,20 +18,23 @@ const SectionFour = () => {
   return (
    <div className="mt-6">
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className="p-4">
+          <div className="flex flex-col-reverse md:flex-row md:justify-between gap-2 items-center">
             <div>
-              <CardTitle>Overall Financial Data Analysis</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-center md:text-start">Overall Financial Data Analysis</CardTitle>
+              <CardDescription className="text-center md:text-start">
                 Recommendations based on AI's financial data analysis.
               </CardDescription>
             </div>
             <Badge
-              className="
+               className="
                 shine-effect
                 flex items-center gap-1
                 bg-black text-white
-                px-3 py-1 rounded-full text-sm font-semibold
+                px-2 py-0.5
+                rounded-full
+                text-xs sm:text-sm md:text-base
+                font-semibold
                 transition
                 hover:bg-gradient-to-r hover:from-blue-500 hover:to-violet-500
                 hover:shadow-lg hover:shadow-blue-500/60
@@ -40,7 +43,8 @@ const SectionFour = () => {
                 overflow-hidden
               "
             >
-              <Brain className='h-4 w-4 mr-2'/>AI Generated
+              <Brain className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 mr-1 sm:mr-2" />
+              <span className="truncate">AI Generated</span>
             </Badge>
           </div>
         </CardHeader>
@@ -64,33 +68,50 @@ const SectionFour = () => {
               </div>
             </div>
           ) : overallAnalysis?.success ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {overallAnalysis.insights?.map((insight, index) => (
-                <Card key={insight.id || index} className="border-l-4 border-l-blue-500 transition hover:shadow-xl hover:-translate-y-1 duration-200 bg-white rounded-xl cursor-pointer">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-base">
-                        {insight.recommendationTitle}
-                      </CardTitle>
-                      <Badge className={
-                        insight.impactLevel === "HIGH IMPACT"
-                          ? "bg-red-100 text-red-800"
-                          : insight.impactLevel === "MEDIUM IMPACT"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-blue-100 text-blue-800"
-                      }>
-                        {insight.impactLevel}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pb-4">
-                    <p className="text-sm text-gray-600">
-                      {insight.detail}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+           
+<div className="w-full overflow-x-auto lg:overflow-x-visible">
+  <div
+    className="
+      grid gap-4
+      grid-flow-col grid-rows-1 auto-cols-[85vw] sm:auto-cols-[340px]
+      lg:grid-cols-2 lg:grid-rows-2 lg:auto-cols-fr
+    "
+  >
+        {overallAnalysis.insights?.map((insight, index) => (
+          <Card
+            key={insight.id || index}
+            className="
+              border-l-4 border-l-blue-500
+              transition hover:shadow-xl hover:-translate-y-1
+              duration-200 bg-white rounded-xl cursor-pointer
+              h-full
+            "
+          >
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-base sm:text-lg lg:text-xl">
+                  {insight.recommendationTitle}
+                </CardTitle>
+                <Badge className={
+                  insight.impactLevel === "HIGH IMPACT"
+                    ? "bg-red-100 text-red-800 text-center"
+                    : insight.impactLevel === "MEDIUM IMPACT"
+                      ? "bg-yellow-100 text-yellow-800 text-center"
+                      : "bg-blue-100 text-blue-800 text-center"
+                }>
+                  {insight.impactLevel}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <p className="text-xs sm:text-sm lg:text-base text-gray-600">
+                {insight.detail}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-40">
               <span className="text-gray-400">No analysis generated yet.</span>

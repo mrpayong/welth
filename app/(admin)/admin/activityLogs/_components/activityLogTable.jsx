@@ -46,7 +46,7 @@ function getActionLabel(action) {
     case "updateCashflow":
       return "Cashflow updated";
     case "udpateBalanceQuick":
-      return "Updated Cashflow Balance";
+      return "Quick Edit Cashflow";
     // Delete
     case "deleteUser":
       return "User deleted";
@@ -63,8 +63,34 @@ function getActionLabel(action) {
       return "Updated Email";
     case "updateUser":
       return "Updated User";
+    case "getUserForSysAdmin":
+      return "Visited User List";
+    case "getUser":
+      return "Visited User List";
+    case "n":
+      return "Visited User List";
+    case "getOverallFinancialDataAnalysis":
+      return "Overall Financial Analysis";
+    case "getInflowOutflowForecast":
+      return "Inflow & Outflow Forecast";
+    case "getCashflowForecast":
+      return "Cashflow Forecast";
+    case "updateCashflowTransaction":
+      return "Edited Cashflow";
+    case "updateTotalOperating":
+      return "Edited Operating Total";
+    case "udpateNetchange":
+      return "Edited Gross";
+    case "updateStartBalance":
+      return "Edited Beginning Balance";
+    case "updateEndBalance":
+      return "Edited Ending Balance";
+    case "updateTotalInvesting":
+      return "Edited Investing Total";
+    case "updateTotalFinancing":
+      return "Edited Financing Total";
     default:
-      return "Visited a page";
+      return action;
   }
 }
 
@@ -87,21 +113,22 @@ const ActivityLogTable = ({activities = {}}) => {
 
 
   const actionOptions = useMemo(() => {
-  const actions = Array.from(new Set(activityArray.map((a) => a.action)));
-  const grouped = [];
-  let hasGet = false;
-  actions.forEach(action => {
-    if (typeof action === "string" && action.startsWith("get")) {
-      hasGet = true;
-    } else {
-      grouped.push(action);
-    }
-  });
-  // "all" is always first
-  const result = ["all", ...grouped.sort()];
-  if (hasGet) result.push("get*"); // Use a special value for all "get" actions
-  return result;
-}, [activityArray]);
+    const actions = Array.from(new Set(activityArray.map((a) => a.action)));
+    const grouped = [];
+    let hasGet = false;
+    actions.forEach(action => {
+      if (typeof action === "string" && action.startsWith("get")) {
+        hasGet = true;
+      } else {
+        grouped.push(action);
+      }
+    });
+    // "all" is always first
+    const result = ["all", ...grouped.sort()];
+    // if (hasGet) result.push("get*"); 
+    // Use a special value for all "get" actions
+    return result;
+  }, [activityArray]);
 
 
   // Filtering
@@ -163,8 +190,16 @@ const filtered = useMemo(() => {
     }
   };
 
-  // Responsive Table
-  console.log(activities)
+
+
+
+
+
+
+
+
+
+
   return (
     <div className="w-full  py-4">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
@@ -178,9 +213,7 @@ const filtered = useMemo(() => {
                 <SelectItem key={action} value={action}>
                   {action === "all"
                     ? "All Actions"
-                    : action === "get*"
-                      ? "Visited a page"
-                      : getActionLabel(action)}
+                    :  getActionLabel(action)}
                 </SelectItem>
               ))}
               
