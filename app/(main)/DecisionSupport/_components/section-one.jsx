@@ -547,7 +547,7 @@ const isSmallScreen = useMediaQuery("(max-width: 1280px)");
           {/* <div
             className="w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px]"
           > */}
-          <div className="w-full h-[320px] lg:h-[400] overflow-x-auto sm:overflow-x-visible">
+          <div className="w-full h-[400] overflow-x-auto sm:overflow-x-visible">
             <div className="min-w-[500px] sm:min-w-0 h-full">
               {monthlyRevenueData.length > 0 
               ? (<ResponsiveContainer width="100%" height="100%">
