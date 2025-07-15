@@ -76,7 +76,19 @@ export const platforms = [
   },
 ];
 
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(false);
 
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) setMatches(media.matches);
+    const listener = () => setMatches(media.matches);
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
+  }, [matches, query]);
+
+  return matches;
+}
 
 
 const DashboardOverview = ({accounts, transactions}) => {
@@ -247,7 +259,7 @@ const areaChartData = Object.entries(groupedTransactions)
     };
     
 
-    
+    const isSmallScreen = useMediaQuery("(max-width: 1280px)");
 
 
       
@@ -279,7 +291,7 @@ const areaChartData = Object.entries(groupedTransactions)
     <div  className='flex flex-col gap-5'>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardHeader className="flex flex-col-reverse gap-1 md:gap-0 md:flex-row items-center justify-between space-y-0 pb-4">
                     <CardTitle className="font-verdana text-sm sm:text-base md:text-lg lg:text-xl">
                         Highest source of income last month
                     </CardTitle>
@@ -332,7 +344,7 @@ const areaChartData = Object.entries(groupedTransactions)
                                         dataKey="category"
                                         tick={{
                                             fontFamily: "Verdana, sans-serif",
-                                            fontSize: "14px", // Default font size for small screens
+                                            fontSize: isSmallScreen ? "10px" : "14px", // Default font size for small screens
                                             fontWeight: "400",
                                             className: "text-xs sm:text-sm md:text-base", // Tailwind responsive classes
                                         }}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 
 const regionOptions = [
@@ -22,9 +22,13 @@ const regionOptions = [
     "NIR (Negros Island Region)"
   ];
 
-const RegionSelector = ({ register, setValue, errors }) => {
+const RegionSelector = ({ register, setValue, errors, initialValue }) => {
   const [query, setQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("");
+
+  useEffect(() => {
+    setSelectedRegion(initialValue || "");
+  }, [initialValue]);
 
   const filteredRegions =
     query === ""

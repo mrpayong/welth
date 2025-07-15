@@ -567,7 +567,6 @@ const AccountChart = ({ transactions }) => {
     return allDates;
   }, [transactions, dateRange]);
 
-  console.log("filtered DAta:", filteredData.length)
   // Calculate totals
   const totals = useMemo(() => {
     return filteredData.reduce(

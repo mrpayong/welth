@@ -54,6 +54,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const RECURRING_INTERVALS = {
     DAILY: "Daily",
@@ -75,8 +77,20 @@ function useIsSmallScreen(breakpoint = 640) { // Tailwind's 'sm' is 640px
   return isSmall;
 }
 
-
+function formatManilaDate(date) {
+  if (!date) return "";
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleString("en-PH", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+}
   
+
+
+
 const TransactionTable = ({transactions, id, subAccounts, recentCashflows}) => { 
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState([]);
@@ -91,7 +105,6 @@ const TransactionTable = ({transactions, id, subAccounts, recentCashflows}) => {
     const [currentSubAccountPage, setCurrentSubAccountPage] = useState(1);
     const [activityFilter, setActivityFilter] = useState("");
     const isSmallScreen = useIsSmallScreen();
-console.log("subAccounts", subAccounts)
 // Removed duplicate declaration of rowsPerPage
 const rowsPerPage = 10; // Default rows per page
 
@@ -297,43 +310,7 @@ const rowsPerPage = 10; // Default rows per page
             setResponse(event.target.value)
     }
 
-    // const handleSubmit = async (e, data) => {
-    //     e.preventDefault();
 
-
-    //     try {
-    //          if(response === 0 || response < 0){
-    //         toast.error(`Invalid beginning balance.`)
-    //         return;
-    //         } 
-
-    //         if (selectedIds === null || selectedIds.length === 0){
-    //             toast.error(`Select transactions. Beginning balance is ${response}`)
-    //             return;
-    //         }
-
-    //         if (response !== null || selectedIds.length !== 0){
-    //             console.log("TAKEN DATA: ", "start balance: ", response)
-    //             console.log("Selected Transactions: ", selectedIds);
-    //             await cfsFn(selectedIds, parseFloat(response));
-    //         }
-
-    //         if (forCfs && forCfs.success === true){
-    //             toast.success("Cashflow statement done.")
-    //             console.log("CFS data: ", forCfs)
-    //             setIsModalLoading(true);
-                
-    //             setIsModalOpen(true);
-    //         } else {
-    //             toast.success("No data returned") && console.log("CFS data: ", forCfs)
-    //         }
-    //     } catch (error) {
-    //         console.error("Error while producing CFS.", error)
-    //         toast.error("Error: ", error)
-    //     }
-
-        
-    // }
     const resetForm = () => {
         setResponse(0.00);
       };
@@ -756,8 +733,6 @@ const rowsPerPage = 10; // Default rows per page
       } = useFetch(deleteSubAccount)
 
       const handleGroupToDeleteId = (id) => {
-        console.log("subAccount", id)
-        console.log('subAccount ID:', id)
         setGroupToDeleteId(id);
         if(groupToDeleteId !== ""){
           setGroupDeleteDialog(true);
@@ -796,11 +771,124 @@ const rowsPerPage = 10; // Default rows per page
         }
       }, [deleteGroupError, deleteGroupLoading])
 
+const selectedSoloTransactions = useMemo(() => {
+  // Only include transactions from the Transaction model that are selected
+  return filteredAndSortedTransactions.filter(txn => selectedIds.includes(txn.id));
+}, [filteredAndSortedTransactions, selectedIds]);
 
+// function generateCDBCsv(transactions) {
+//   // Get all unique categories from selected transactions
+//   const dbCategories = [...new Set(transactions.map(txn => txn.category))];
 
+//   const header = [
+//     "Date",
+//     "Description",
+//     "Particular",
+//     "Reference Number",
+//     "Cash In Bank",
+//     ...dbCategories
+//   ];
 
+//   const formatNumber = (val) => {
+//     if (typeof val === "number" || (!isNaN(val) && val !== "" && val !== null)) {
+//       return Number(val).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+//     }
+//     return val;
+//   };
 
+//   const rows = transactions.map(txn => {
+//     const dbCols = dbCategories.map(cat => (txn.category === cat ? txn.amount : ""));
+//     return [
+//       formatManilaDate(txn.date),
+//       txn.description || "",
+//       txn.particular || "",
+//       txn.refNumber,
+//       txn.amount, // Cash In Bank
+//       ...dbCols
+//     ];
+//   });
 
+//   const totalCashInBank = transactions.reduce((sum, txn) => sum + Number(txn.amount), 0);
+//   const totalDBs = dbCategories.map(cat =>
+//     transactions
+//       .filter(txn => txn.category === cat)
+//       .reduce((sum, txn) => sum + Number(txn.amount), 0)
+//   );
+//   const totalsRow = ["", "", "", "TOTAL", totalCashInBank, ...totalDBs];
+
+//   const csvArray = [header, ...rows, totalsRow];
+
+//   return csvArray.map(row =>
+//     row.map(val => `"${val}"`).join(",")
+//   ).join("\r\n");
+// }
+
+// const handleDownloadCDB = () => {
+//   const csv = generateCDBCsv(selectedSoloTransactions); // Only selected, non-group rows
+//   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+//   const url = URL.createObjectURL(blob);
+//   const link = document.createElement("a");
+//   link.href = url;
+//   link.setAttribute("download", "cash_disbursement_book.csv");
+//   document.body.appendChild(link);
+//   link.click();
+//   document.body.removeChild(link);
+//   URL.revokeObjectURL(url);
+// };
+
+const handleDownloadCDBExcel = () => {
+  const dbCategories = [...new Set(selectedSoloTransactions.map(txn => txn.category))];
+  const header = [
+    "Date",
+    "Description",
+    "Particular",
+    "Reference Number",
+    "Cash In Bank",
+    ...dbCategories
+  ];
+
+  // Only format date, not numbers
+  const rows = selectedSoloTransactions.map(txn => {
+    const dbCols = dbCategories.map(cat => (txn.category === cat ? txn.amount : ""));
+    return [
+      formatManilaDate(txn.date),
+      txn.description || "",
+      txn.particular || "",
+      txn.refNumber,
+      txn.amount, // raw number
+      ...dbCols
+    ];
+  });
+
+  const totalCashInBank = selectedSoloTransactions.reduce((sum, txn) => sum + Number(txn.amount), 0);
+  const totalDBs = dbCategories.map(cat =>
+    selectedSoloTransactions
+      .filter(txn => txn.category === cat)
+      .reduce((sum, txn) => sum + Number(txn.amount), 0)
+  );
+  const totalsRow = ["", "", "", "TOTAL", totalCashInBank, ...totalDBs];
+
+  const data = [header, ...rows, totalsRow];
+
+  // Create worksheet and workbook
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "CDB");
+
+  // Auto-width columns
+  const wscols = header.map((h, i) => ({
+    wch: Math.max(
+      h.length,
+      ...rows.map(row => (row[i] ? row[i].toString().length : 0)),
+      totalsRow[i] ? totalsRow[i].toString().length : 0
+    ) + 2 // add some padding
+  }));
+  ws["!cols"] = wscols;
+
+  // Export
+  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  saveAs(new Blob([wbout], { type: "application/octet-stream" }), "cash_disbursement_book.xlsx");
+};
 
 
 
@@ -1156,7 +1244,11 @@ const rowsPerPage = 10; // Default rows per page
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        className="
+                        bg-white hover:bg-blue-600 
+                          text-black hover:text-white
+                          border border-blue-600 hover:border-0
+                          hover:shadow-lg hover:shadow-blue-800/20"
                         disabled={isDialogOpen || subAccountLoading || deleteGroupLoading} 
                         >
                         Group transactions
@@ -1216,12 +1308,17 @@ const rowsPerPage = 10; // Default rows per page
                   </Dialog>
 
                   {selectedIds.length > 0 && (
+                    <>
                     <Dialog open={isBulkEdit} onOpenChange={setIsBulkEdit}>
                       <DialogTrigger asChild>
                           <Button
-                          className="bg-yellow-300 
-                          text-black px-4 py-2 rounded 
-                          hover:bg-yellow-200 hover:text-slate-700"
+                          className="
+                          bg-white hover:bg-yellow-300
+                          text-black hover:text-white
+                          border border-yellow-300 hover:border-0
+                          hover:shadow-lg hover:shadow-yellow-500/20
+                          px-4 py-2 rounded "
+
                           disabled={isDialogOpen || subAccountLoading || deleteGroupLoading} // Disable if no transactions are selected
                           >
                           Edit Activity type
@@ -1266,7 +1363,18 @@ const rowsPerPage = 10; // Default rows per page
                           </form>
                       </DialogContent>
                     </Dialog>
-                  )}
+
+                    <Button
+                      onClick={handleDownloadCDBExcel}
+                      className="
+                        bg-white hover:bg-green-600 
+                          text-black hover:text-white
+                          border border-green-600 hover:border-0
+                          hover:shadow-lg hover:shadow-green-800/20">
+                      <Download className="mr-2 h-4 w-4" />
+                      Download .xlsx
+                    </Button>
+                  </>)}
                 </div>
               </div>
           </div>
@@ -1292,6 +1400,7 @@ const rowsPerPage = 10; // Default rows per page
               </div>
             )}
           </div>
+
         </div> 
 
 

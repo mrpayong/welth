@@ -759,134 +759,7 @@ async function fetchSubAccountWithChildren(account, visited = new Set()) {
   
   return transformedAccount;
 }
-// export async function getSubAccounts(accountId) {
-//   try {
-//     // Authenticate the user
-//     const { userId } = await auth();
-//     if (!userId) throw new Error("Unauthorized");
 
-//     // Fetch the user
-//     const user = await db.user.findUnique({
-//       where: { clerkUserId: userId },
-//     });
-
-//     if (!user) throw new Error("User not found");
-
-//     // Fetch sub-accounts with recursive relationships
-//     const subAccounts = await db.subAccount.findMany({
-//       where: { accountId },
-//       include: {
-//         parentOf: {
-//           include: {
-//             child: {
-//               include: {
-//                 parentOf: {
-//                   include: {
-//                     child: {
-//                       include: {
-//                         parentOf: {
-//                           include: {
-//                             child: {
-//                               include: {
-//                                 transactions: {
-//                                   include: {
-//                                     transaction: true,
-//                                   },
-//                                 },
-//                               },
-//                             },
-//                           },
-//                         },
-//                         transactions: {
-//                           include: {
-//                             transaction: true,
-//                           },
-//                         },
-//                       },
-//                     },
-//                   },
-//                 },
-//                 transactions: {
-//                   include: {
-//                     transaction: true,
-//                   },
-//                 },
-//               },
-//             },
-//           },
-//         },
-//         transactions: {
-//           include: {
-//             transaction: true,
-//           },
-//         },
-//       },
-//     });
-
-//     // Handle empty or undefined results
-//     if (!subAccounts || subAccounts.length === 0) {
-//       return { success: true, data: [] };
-//     }
-
-//     // Transform the data to match the expected structure
-//     const transformSubAccounts = (accounts, visited = new Map()) => {
-//       if (!accounts) return [];
-      
-//       return accounts.map((account) => {
-//         if (!account) return null;
-
-//         // Check for circular references
-//         if (visited.has(account.id)) {
-//           return visited.get(account.id);
-//         }
-
-//         // Create transformed account object
-//         const transformedAccount = {
-//           id: account.id,
-//           name: account.name,
-//           description: account.description,
-//           balance: account.balance ? account.balance.toNumber() : null,
-//           transactions: [],
-//           children: [],
-//         };
-
-//         // Store reference to avoid circular dependencies
-//         visited.set(account.id, transformedAccount);
-
-//         // Transform transactions
-//         if (account.transactions && account.transactions.length > 0) {
-//           transformedAccount.transactions = account.transactions.map((subAccountTransaction) => ({
-//             id: subAccountTransaction.transaction.id,
-//             type: subAccountTransaction.transaction.type,
-//             description: subAccountTransaction.transaction.description,
-//             amount: subAccountTransaction.transaction.amount
-//               ? subAccountTransaction.transaction.amount.toNumber()
-//               : null,
-//             date: subAccountTransaction.transaction.date,
-//           }));
-//         }
-
-//         // Process children recursively
-//         if (account.parentOf && account.parentOf.length > 0) {
-//           const childAccounts = account.parentOf
-//             .filter(relation => relation.child)
-//             .map(relation => relation.child);
-          
-//           transformedAccount.children = transformSubAccounts(childAccounts, visited);
-//         }
-
-//         return transformedAccount;
-//       }).filter(Boolean); // Remove null entries
-//     };
-
-//     const transformedData = transformSubAccounts(subAccounts);
-
-//     return { success: true, data: transformedData };
-//   } catch (error) {
-//     console.error("Error in getSubAccounts:", error.message);
-//     return { success: false, error: error.message };
-//   }
-// }
 
 
 export async function updateSubAccountBalance(newBalance, subAccountId){
@@ -1066,3 +939,41 @@ export async function deleteSubAccount(subAccountId) {
   }
 }
 
+export async function updateClientInfo(data, accountId){
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+    if (!user){
+      throw new Error("User not found");
+    }
+    if (user.role !== "STAFF"){ 
+      throw new Error("Unavailable action");
+    }
+
+    const accountToUpdate = await db.account.findUnique({
+      where: {id: accountId},
+    });
+
+    if(!accountToUpdate){
+      throw new Error("Account not found.");
+    }
+
+    await db.account.update({
+      where: {id: accountToUpdate.id},
+      data: {
+        ...data,
+      },
+    });
+
+    revalidatePath(`/ClientInfo/${accountToUpdate.id}`);
+
+    return {success: true};
+  } catch (error) {
+    console.log("Error editing client info: ", error.message)
+    throw new Error("Error editing client information.")
+  }
+}

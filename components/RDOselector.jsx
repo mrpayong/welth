@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 
 const rdoOptions = [
@@ -127,10 +127,14 @@ const rdoOptions = [
     "RDO 115",
   ];
 
-const RDOSelector = ({ register, setValue, errors }) => {
+const RDOSelector = ({ register, setValue, errors, initialValue }) => {
     const [query, setQuery] = useState("");
     const [selectedRDO, setSelectedRDO] = useState("");
   
+  useEffect(() => {
+    setSelectedRDO(initialValue || "");
+  }, [initialValue]);
+
     const filteredRDOs =
       query === ""
         ? rdoOptions

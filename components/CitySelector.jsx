@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 
 const cityOptions = [
@@ -144,9 +144,13 @@ const cityOptions = [
   "Zamboanga City",
 ];
 
-const CitySelector = ({ register, setValue, errors }) => {
+const CitySelector = ({ register, setValue, errors, initialValue}) => {
   const [query, setQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+
+  useEffect(() => {
+    setSelectedCity(initialValue || "");
+  }, [initialValue]);
 
   const filteredCities =
     query === ""

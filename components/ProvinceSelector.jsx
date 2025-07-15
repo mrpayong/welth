@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 
 const provinceOptions = [
@@ -86,10 +86,14 @@ const provinceOptions = [
     "Zamboanga Sibugay",
   ];
 
-  const ProvinceSelector = ({ register, setValue, errors }) => {
+  const ProvinceSelector = ({ register, setValue, errors, initialValue }) => {
     const [query, setQuery] = useState(""); // Query for filtering
     const [selectedProvince, setSelectedProvince] = useState(""); // Selected province
   
+      useEffect(() => {
+        setSelectedProvince(initialValue || "");
+      }, [initialValue]);
+
     const filteredProvinces =
       query === ""
         ? provinceOptions

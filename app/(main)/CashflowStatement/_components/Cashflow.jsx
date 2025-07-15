@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import Swal from "sweetalert2";
 
 
 function Cashflow ({cashflows, name}) {
@@ -139,6 +140,23 @@ const accumulatedAmounts = cashflowRecords.reduce(
 const handleSwitchChange = (checked) => {
   setEditButtonShow(checked);
   setEditButton(checked);
+    if (checked) {
+    toast.warning("Turn off Quick Edit Mode to view individual cashflow statement.", {
+      duration: 180000,
+      actionButtonStyle: {
+        backgroundColor: "transparent",
+        color: "#d97706",
+        border: "1px solid #d97706",
+        padding: "8px 16px",
+        borderRadius: "4px",
+      },
+      icon: <Pen className="text-amber-600 h-4 w-4"/>,
+      action: {
+        label: "Okay",
+        onClick: () => toast.dismiss(), // Dismiss toast on button click
+      }
+    });
+  }
   if (!checked) {
     setUpdateBalanceField(false); // Reset input field state
     setCfsId("");                 // Reset editing card state
@@ -286,10 +304,26 @@ const handleSwitchChange = (checked) => {
   }
 
 
+  // const [unclickableNotify, setUnclickableNotify] = useState(false);
 
-
-
-
+  // const handleUnclickable = () => {
+  //   if(unclickableNotify){
+  //     toast.info("Turn off Quick Edit Mode to access individual cashflow statement.", {
+  //     duration: 180000,
+  //     actionButtonStyle: {
+  //       backgroundColor: "transparent", // Green background
+  //       color: "blue", // White text
+  //       border: "1px solid skyblue", 
+  //       padding: "8px 16px", // Padding for the button
+  //       borderRadius: "4px", // Rounded corners
+  //     },
+  //     action: {
+  //       label: "Okay",
+  //     }
+  //     })
+  //   }
+  //   return;
+  // }
 
 
 
@@ -490,7 +524,7 @@ const handleSwitchChange = (checked) => {
                                               <DialogTrigger asChild>
                                                 <Button 
                                                   className="border-0 bg-none rounded-full hover:bg-sky-100 
-                                                  bg-opacity-100" 
+                                                  bg-opacity-100 z-10" 
                                                   onClick={() => handleDeleteCfsId(record.id)}
                                                   variant="ghost">
                                                     <Trash className="h-6 w-6 text-red-600 cursor-pointer"/>

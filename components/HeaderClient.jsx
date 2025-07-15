@@ -107,7 +107,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
         {/* RIGHT: User button & mobile nav */}
         <div className="flex items-center gap-2 min-w-[60px] justify-end">
             <div className="hidden md:flex items-center space-x-4">
-            {pathname !== "/" && pathname.startsWith("/sign-in") || pathname.startsWith("/SysAdmin") && ( 
+            {(pathname !== "/" || pathname.startsWith("/sign-in")) &&  ( 
               // if no in home then visibile
               <Link href={"/"}>
                 <Button variant="outline" onClick={handleNavClick} disabled={loading}>
@@ -157,7 +157,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                     </Button>
                   </Link>
                 )}
-                {isAdmin && pathname !== "/admin" && (
+                {isAdmin && !pathname.startsWith("/admin") && (
                   <Link href={"/admin"}>
                     <Button variant="outline" onClick={handleNavClick} disabled={loading} className="flex items-center gap-2">
                       <Layout size={18} />

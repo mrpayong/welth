@@ -512,7 +512,7 @@ const result = await Swal.fire({
               </DialogTrigger>
               <DialogContent
                 id="add-task-dialog-content"
-                className="max-w-4xl w-full bg-gray-100 rounded-2xl shadow-2xl border border-gray-200 p-0 flex flex-col items-center"
+                className="[&>button]:hidden max-w-4xl w-full bg-gray-100 rounded-2xl shadow-2xl border border-gray-200 p-0 flex flex-col items-center"
                 style={{
                   maxHeight: "90vh",
                   overflowY: "auto",

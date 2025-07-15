@@ -15,12 +15,12 @@ export const accountSchema = z.object({
 
         "OTHERS"
     ],{ required_error: "Please select a business type." }),
-    isIndividual: z.boolean({required_error: "isActive is required"}).default(false),
+    isIndividual: z.boolean({required_error: "required"}).default(false),
 
     
     street: z.string().min(1, "Street is required."),
     buildingNumber: z.string().min(1, "House/Building number is required."),
-    town: z.string().min(1, "Town is required."),
+    town: z.string().min(1, "Barangay is required."),
     city: z.string().min(1, "City is required."),
     zip: z.string().min(1, "Zip code is required."),
     province: z.string().min(1, "Province is required."),

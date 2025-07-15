@@ -33,6 +33,14 @@ const subtractDays = (date, days) => {
   return newDate;
 };
 
+
+
+
+
+
+
+
+
 const AccountLineChart = ({ transactions }) => {
   // Default to last 30 days
   const [dateRange, setDateRange] = useState({

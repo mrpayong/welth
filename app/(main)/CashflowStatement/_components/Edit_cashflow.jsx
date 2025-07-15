@@ -419,7 +419,16 @@ const ACTIVITY_LABELS = {
 
 
 
-  
+  const GroupAccountId = cashflow.accountId;
+  const [isRoutLoad, setIsRouteLoad] = useState(false);
+  const handleRouteSubAccount = () => {
+    setIsRouteLoad(true);
+  }
+
+
+
+
+
 
 
 
@@ -518,13 +527,20 @@ const ACTIVITY_LABELS = {
             {cashflow.subAccounts.map((subAccount) => (
               <li key={subAccount.id} className="flex flex-row justify-between items-center hover:bg-green-400">
                 <span>{subAccount.name} - {formatTableAmount(subAccount.balance)}</span>
-                
-                <Link
-                  href={`/sub-account/edit/${subAccount.id}`}
-                  className="text-yellow-500 hover:text-purple-600 mr-4"
-                >
-                <SquarePen className="w-5 h-5"/>
-                </Link>
+                {isRoutLoad 
+                  ?(
+                  <Loader2 className="animate-spin h-4 w-4"/>
+                  ) 
+                  : (
+                    <Link
+                      href={`/SubAccounts/${GroupAccountId}`}
+                      onClick={handleRouteSubAccount}
+                      className="text-yellow-500 hover:text-purple-600 mr-4"
+                    >
+                    <SquarePen className="w-5 h-5"/>
+                    </Link>                    
+                  )}
+
               </li>
             ))}
           </ul>

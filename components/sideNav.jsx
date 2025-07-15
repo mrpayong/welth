@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { AlignJustify, ArchiveX, Book, BookMinus, BookPlus, ChartBarBig, ChevronDown, ChevronUp, Inbox, InboxIcon, Loader2, MailIcon, Table, X } from "lucide-react";
+import { AlignJustify, ArchiveX, Book, BookMinus, BookPlus, ChartBarBig, ChevronDown, ChevronUp, IdCard, Inbox, InboxIcon, Loader2, MailIcon, Table, X } from "lucide-react";
 import Link from "next/link";
 import { Box, Collapse, Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, useMediaQuery, useTheme } from "@mui/material";
 
@@ -132,6 +132,23 @@ const SideNavBar = ({ accountId }) => {
                 )}
               </ListItemIcon>
               <ListItemText primary="Archive" />
+            </ListItemButton>
+          </ListItem>
+
+          <ListItem disablePadding>
+            <ListItemButton
+              disabled={loadingLink}
+              href={`/ClientInfo/${accountId}`}
+              onClick={() => handleLinkClick("clientInfo")}
+            >
+              <ListItemIcon>
+                {loadingLink === "clientInfo" ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <IdCard />
+                )}
+              </ListItemIcon>
+              <ListItemText primary="Client Profile" />
             </ListItemButton>
           </ListItem>
         </List>
