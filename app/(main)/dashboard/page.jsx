@@ -12,7 +12,6 @@ import { AccountCardProvider } from '@/components/loadingCard';
 
 async function DashboardPage () {
   const accounts = await getUserAccounts();
-  console.log("The account",accounts)
   
 
 
