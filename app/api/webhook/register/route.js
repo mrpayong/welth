@@ -79,8 +79,8 @@ export async function POST(data) {
 
     
    
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    await fetch(`/api/sessionLog`, {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    await fetch(`${baseUrl}/api/sessionLog`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
