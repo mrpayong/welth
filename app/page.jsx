@@ -347,7 +347,7 @@ const Home = () => {
       </header>
 
       {/* Hero section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-cyan-600/25 via-yellow-400/35 to-cyan-600/25">
+      <div className="relative overflow-hidden bg-gradient-to-r from-sky-50 to-transparent">
         <div className="container mx-auto px-4 py-16 flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 z-10 animate-slide-in-left">
             <Badge
