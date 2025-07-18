@@ -251,7 +251,13 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
           <Button
           variant="outline"
           type="button"
-          className="border border-black md:flex-1"
+          disabled={taskLoading}
+          className="
+          bg-white hover:bg-black
+          text-black hover:text-white
+          border border-black hover:border-0
+          hover:shadow-lg hover:shadow-black/20
+          md:flex-1"
         >
           Cancel
         </Button>
@@ -260,13 +266,24 @@ export default function TaskForm({ onSubmit, onSuccess, initialValues, users, ac
         <Button
           type="button"
           onClick={handleClear}
-          className="bg-yellow-400 hover:bg-yellow-500 text-black md:flex-1"
+          disabled={taskLoading}
+          className=" 
+          hover:bg-yellow-400 bg-white
+          text-black hover:text-white
+          border border-yellow-400 hover:border-0
+          hover:shadow-lg hover:shadow-yellow-400/50
+          md:flex-1"
         >
           Clear all
         </Button>
         <Button
           type="submit"
-          className="bg-black hover:bg-gray-900 text-white md:flex-1"
+          className="
+          bg-black hover:bg-white
+          text-white hover:text-black
+          hover:border hover:border-black border-0
+          hover:shadow-lg hover:shadow-black/20
+           md:flex-1"
           disabled={taskLoading}
           onClick={() => {console.log("tested")}}
         >

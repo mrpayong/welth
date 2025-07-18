@@ -506,7 +506,12 @@ const result = await Swal.fire({
           <CardFooter className="bg-gray-50 border-t border-gray-100 py-4 flex flex-col md:flex-row gap-2 md:gap-0 justify-end">
             <Dialog open={addNew} onOpenChange={setAddNew}>
               <DialogTrigger asChild>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 !rounded-button whitespace-nowrap cursor-pointer">
+                <Button className="
+                hover:bg-black bg-white
+                hover:text-white text-black
+                border border-black hover:border-0
+                hover:shadow-lg hover:shadow-black/20
+                !rounded-button whitespace-nowrap cursor-pointer">
                   <Plus/> Add New Task
                 </Button>
               </DialogTrigger>

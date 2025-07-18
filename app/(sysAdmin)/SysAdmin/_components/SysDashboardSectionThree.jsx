@@ -103,43 +103,43 @@ const SysDashboardSectionThree = ({ UserRoleCount, recentSessions }) => {
       </Card>
 
       {/* Recent Sessions List */}
-<Card className="w-full">
-  <CardHeader>
-    <CardTitle>Recent Sessions</CardTitle>
-    <CardDescription>
-      Most recent sessions by users.
-    </CardDescription>
-  </CardHeader>
-  <CardContent>
-    <ul className="divide-y divide-gray-200">
-      {recentSessions && recentSessions.length > 0 ? (
-        recentSessions.map((session, idx) => (
-          <li
-            key={idx}
-            className="flex items-center gap-3 py-3"
-          >
-            <CircleUserRound className="w-7 h-7 text-gray-400 shrink-0" aria-hidden="true" />
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                <span className="font-medium text-gray-900 truncate">
-                  {session.Fname} {session.Lname}
-                </span>
-                <span className="text-xs text-gray-500 mt-1 sm:mt-0 whitespace-nowrap">
-                  {formatToPhilippinesTime(session.localizedTimestamp)}
-                </span>
-              </div>
-              <span className="text-xs text-blue-500 font-semibold uppercase tracking-wide">
-                {formatSessionAction(session.action)}
-              </span>
-            </div>
-          </li>
-        ))
-      ) : (
-        <li className="py-3 text-gray-400 text-center text-sm">No recent sessions found.</li>
-      )}
-    </ul>
-  </CardContent>
-</Card>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Recent Sessions</CardTitle>
+          <CardDescription>
+            Most recent sessions by users. (PHT).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="divide-y divide-gray-200">
+            {recentSessions && recentSessions.length > 0 ? (
+              recentSessions.map((session, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-center gap-3 py-3"
+                >
+                  <CircleUserRound className="w-7 h-7 text-gray-400 shrink-0" aria-hidden="true" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                      <span className="font-medium text-gray-900 truncate">
+                        {session.Fname} {session.Lname}
+                      </span>
+                      <span className="text-xs text-gray-500 mt-1 sm:mt-0 whitespace-nowrap">
+                        {formatToPhilippinesTime(session.localizedTimestamp)}
+                      </span>
+                    </div>
+                    <span className="text-xs text-blue-500 font-semibold uppercase tracking-wide">
+                      {formatSessionAction(session.action)}
+                    </span>
+                  </div>
+                </li>
+              ))
+            ) : (
+              <li className="py-3 text-gray-400 text-center text-sm">No recent sessions found.</li>
+            )}
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   )
 }

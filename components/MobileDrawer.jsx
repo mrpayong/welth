@@ -4,6 +4,15 @@ import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
 import { Drawer, DrawerTrigger, DrawerContent, DrawerTitle, DrawerHeader } from "./ui/drawer";
 import { House, LayoutDashboard, AtomIcon, ArrowLeft, Layout, Loader2, UserRoundCog, AlignJustify } from "lucide-react";
+import { PT_Serif } from "next/font/google";
+
+
+const PTserif = PT_Serif({
+  subsets:["latin"],
+  weight: '700',
+})
+
+
 
 const MobileNavDrawer = ({ 
   isAdminPage = false,
@@ -41,7 +50,7 @@ const MobileNavDrawer = ({
           {/* Home */}
           {pathname !== "/" && (
             <Link href="/" passHref>
-              <Button disabled={loading} onClick={onNavClick} variant="outline" className="border border-black w-full justify-start">
+              <Button disabled={loading} onClick={onNavClick} variant="outline" className={`border border-black w-full justify-start ${PTserif.className}`}>
                 <House size={18} /> <span className="ml-2">Home</span>
               </Button>
             </Link>
@@ -50,7 +59,7 @@ const MobileNavDrawer = ({
           {/* SysAdmin User Management */}
           {isSysAdmin && isSignedIn && !isAdminPage && !isAdmin && !isStaff && pathname !== "/SysAdmin" && (
             <Link href="/SysAdmin" passHref>
-              <Button disabled={loading} onClick={onNavClick}  variant="outline" className="border border-black w-full justify-start">
+              <Button disabled={loading} onClick={onNavClick}  variant="outline" className={`border border-black w-full justify-start ${PTserif.className}`}>
                 <UserRoundCog size={18} /> <span className="ml-2">User Management</span>
               </Button>
             </Link>
@@ -61,14 +70,14 @@ const MobileNavDrawer = ({
             <>
               {pathname !== "/DecisionSupport" && (
                 <Link href="/DecisionSupport" passHref>
-                  <Button disabled={loading} onClick={onNavClick}  variant="outline" className="border border-black w-full justify-start">
+                  <Button disabled={loading} onClick={onNavClick}  variant="outline" className={`border border-black w-full justify-start ${PTserif.className}`}>
                     <AtomIcon size={18} /> <span className="ml-2">Forecasting</span>
                   </Button>
                 </Link>
               )}
               {pathname !== "/admin" && (
                 <Link href="/admin" passHref>
-                  <Button  disabled={loading} onClick={onNavClick} variant="outline" className="border border-black w-full justify-start">
+                  <Button  disabled={loading} onClick={onNavClick} variant="outline" className={`border border-black w-full justify-start ${PTserif.className}`}>
                     <Layout size={18} /> <span className="ml-2">Admin Portal</span>
                   </Button>
                 </Link>
@@ -79,7 +88,7 @@ const MobileNavDrawer = ({
           {/* Staff Dashboard */}
           {isStaff && isSignedIn && !isAdmin && !isAdminPage && !isSysAdmin && !SysAdminPage && pathname !== "/dashboard" && (
             <Link href="/dashboard" passHref>
-              <Button variant="outline" disabled={loading} className="border border-black w-full justify-start" onClick={onNavClick}>
+              <Button variant="outline" disabled={loading} className={`border border-black w-full justify-start ${PTserif.className}`} onClick={onNavClick}>
                 <LayoutDashboard size={18} /> <span className="ml-2">Dashboard</span>
               </Button>
             </Link>
@@ -88,7 +97,7 @@ const MobileNavDrawer = ({
           {/* Back to App (for admin page) */}
           {isAdminPage && pathname !== "/dashboard" && (
             <Link href="/dashboard" passHref>
-              <Button variant="outline" disabled={loading} onClick={onNavClick}  className="border border-black w-full justify-start">
+              <Button variant="outline" disabled={loading} onClick={onNavClick}  className={`border border-black w-full justify-start ${PTserif.className}`}>
                 <ArrowLeft size={18} /> <span className="ml-2">Back to App</span>
               </Button>
             </Link>
@@ -97,7 +106,7 @@ const MobileNavDrawer = ({
           {/* Log In */}
           {!isSignedIn && pathname !== "/sign-in" && (
             <Link href="/sign-in" passHref>
-              <Button disabled={loading} onClick={onNavClick}  className="w-full justify-start">
+              <Button disabled={loading} onClick={onNavClick}  className={`w-full justify-start ${PTserif.className}`}>
                 Log In
                 {loading && <Loader2 className="w-4 h-4 animate-spin"/>}
               </Button>

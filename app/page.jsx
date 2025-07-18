@@ -30,9 +30,30 @@ import {
   Triangle,
   Brain,
   Folders,
-  IdCard
+  IdCard,
+  Weight
 } from "lucide-react";
+import {Oswald, Overpass_Mono, Poppins, PT_Serif} from "next/font/google";
 
+const fontOwsald = Oswald({
+  subsets: ["latin"],
+  weight: ["200", "400"]
+})
+
+const fontOverpassMono = Overpass_Mono({
+  subsets: ['latin'],
+  weight:["400", "500", "600"]
+})
+
+const fontPoppins = Poppins({
+  subsets: ['latin'],
+  weight:["100", "200", "300"]
+})
+
+const PTserif = PT_Serif({
+  subsets:["latin"],
+  weight: '700',
+})
 
 
 const Home = () => {
@@ -300,20 +321,20 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header with progress bar */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm pt-11">
+      <header className="sticky top-0 z-50 bg-transparent border-b border-gray-200 shadow-sm pt-11">
 
 
         {/* Navigation tabs */}
-        <div className="container mx-auto px-4">
-          <Tabs className="mt-10 pt-2">
-              <TabsList className="w-full justify-between 
-              overflow-x-auto overflow-y-hidden py-2 space-x-2 h-auto">
+        <div className="container mx-auto px-4 bg-transparent backdrop-blur-lg">
+          <Tabs className="mt-10 pt-2 bg-transparent">
+              <TabsList className="w-full justify-between  bg-transparent
+              overflow-x-auto overflow-y-hidden py-2 space-x-2 h-auto ">
             {features.map((feature) => (
               <TabsTrigger
                 key={feature.id}
                 value={feature.id}
                 onClick={() => scrollToSection(feature.id)}
-                className={`${activeSection === feature.id ? "bg-blue-100 text-blue-700" : ""} cursor-pointer whitespace-nowrap`}
+                className={`${activeSection === feature.id ? "backdrop-blur-lg text-blue-700" : ""} ${fontPoppins.className} gap-1 cursor-pointer whitespace-nowrap`}
               >
                 {/* <i className={`${feature.icon} mr-2`}></i> */}
                 {feature.icon}
@@ -322,25 +343,24 @@ const Home = () => {
             ))}
           </TabsList>
           </Tabs>
-        
         </div>
       </header>
 
       {/* Hero section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-50 to-transparent">
+      <div className="relative overflow-hidden bg-gradient-to-r from-cyan-600/25 via-yellow-400/35 to-cyan-600/25">
         <div className="container mx-auto px-4 py-16 flex flex-col md:flex-row items-center">
-          <div className="md:w-1/2 z-10">
+          <div className="md:w-1/2 z-10 animate-slide-in-left">
             <Badge
               variant="outline"
-              className="mb-4 px-3 py-1 bg-blue-100 text-blue-700 border-blue-200"
+              className='lg:text-xs text-[0.5rem]/[1] mb-4 px-3 py-1 bg-blue-100 text-blue-700 border-blue-200'
             >
               Getting Started Guide
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Teruel Accounting Financial Management System
+            <h1 className={`text-3xl lg:text-[4rem]/[1] break-words tracking-wider font-extralight text-gray-900 mb-4 w-full ${fontOwsald.className}`}>
+              Teruel Accounting Financial<br/> Management System
             </h1>
-            <p className="text-lg text-gray-600 mb-6">
-              Welcome to your comprehensive guide to <br/>using our
+            <p className={`text-xs lg:text-base text-gray-600 mb-6 ${fontOverpassMono.className}`}>
+              Welcome to your assistive guide to using our
               Web-Based Financial Management System.
             </p>
             {/* <div className="flex flex-col sm:flex-row gap-4">
@@ -358,7 +378,7 @@ const Home = () => {
               </Button>
             </div> */}
           </div>
-          <div className="md:w-1/2 mt-8 md:mt-0">
+          <div className="md:w-1/2 mt-8 md:mt-0 animate-slide-in-right">
             <img
               // src="https://readdy.ai/api/search-image?query=Modern%20financial%20dashboard%20interface%20with%20AI%20assistant%20helping%20user%20navigate%20through%20various%20financial%20tools%20and%20features%2C%20showing%20clean%20UI%20with%20data%20visualization%20elements%2C%20charts%20and%20helpful%20tooltips%20on%20a%20light%20background%20with%20blue%20accents&width=600&height=400&seq=hero1&orientation=landscape"
               src="dashSS(1).png"
@@ -389,10 +409,10 @@ const Home = () => {
                         {feature.icon}
                       </div>
                       <div>
-                        <CardTitle className="text-2xl font-bold text-gray-800">
+                        <CardTitle className={`text-xl md:text-4xl font-light text-gray-800 ${fontPoppins.className}`}>
                           {feature.title}
                         </CardTitle>
-                        <CardDescription className="text-gray-600 mt-1">
+                        <CardDescription className="text-[0.65rem]/[1] md:text-sm text-gray-600 mt-1">
                           {feature.description}
                         </CardDescription>
                       </div>
@@ -402,21 +422,21 @@ const Home = () => {
                 <CardContent className="p-0">
                   <div className="grid md:grid-cols-2 gap-0">
                     <div className="p-6">
-                      <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                      <h3 className={`text-lg font-semibold mb-4 text-gray-800 ${fontOverpassMono.className}`}>
                         Step-by-Step Guide
                       </h3>
                       <ol className="space-y-4">
                         {feature.steps.map((step, stepIndex) => (
                           <li key={stepIndex} className="flex items-start">
-                            <span className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 font-medium">
+                            <span className={`flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 font-medium ${fontOverpassMono.className}`}>
                               {stepIndex + 1}
                             </span>
-                            <span className="text-gray-700 pt-1">{step}</span>
+                            <span className={`text-gray-700 pt-1 ${fontOverpassMono.className}`}>{step}</span>
                           </li>
                         ))}
                       </ol>
                       <div className="mt-8">
-                        <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                        <h3 className={`text-lg font-semibold mb-4 text-gray-800 ${fontOverpassMono.className}`}>
                           Be informed with the following: 
                         </h3>
                       
@@ -424,11 +444,11 @@ const Home = () => {
                         {BestPractices.filter(bp => bp.id === feature.bestPracticeId).map((practice) => (
                           <Accordion key={practice.id} type="single" collapsible className="w-full">
                             <AccordionItem value={`list1-${practice.id}`}>
-                              <AccordionTrigger className="text-blue-600">
+                              <AccordionTrigger className={`text-blue-600 font-medium ${fontOverpassMono.className}`}>
                                 {practice.ItemTrigger1}
                               </AccordionTrigger>
                               <AccordionContent>
-                                <ul className="list-disc pl-5 space-y-2 text-gray-700">
+                                <ul className={`list-disc pl-5 space-y-2 text-gray-700 ${fontOverpassMono.className}`}>
                                   {practice.list.map((item, idx) => (
                                     <li key={idx}>{item}</li>
                                   ))}
@@ -436,11 +456,11 @@ const Home = () => {
                               </AccordionContent>
                             </AccordionItem>
                             <AccordionItem value={`list2-${practice.id}`}>
-                              <AccordionTrigger className="text-blue-600">
+                              <AccordionTrigger className={`text-blue-600 font-medium ${fontOverpassMono.className}`}>
                                 {practice.ItemTrigger2}
                               </AccordionTrigger>
                               <AccordionContent>
-                                <ul className="list-disc pl-5 space-y-2 text-gray-700 mt-4">
+                                <ul className={`list-disc pl-5 space-y-2 text-gray-700 mt-4 ${fontOverpassMono.className}`}>
                                   {practice.list2.map((item, idx) => (
                                     <li key={idx}>{item}</li>
                                   ))}
@@ -480,7 +500,6 @@ const Home = () => {
 
 
       {/* Floating action button */}
-     
       {showButton && (
         <div className="fixed bottom-6 right-6 z-10">
           <TooltipProvider>

@@ -779,7 +779,12 @@ const [confirmRole, setConfirmRole] = useState(null);
                 Manage your users in here.
               </CardDescription>
             </div>
-            <Button variant="outline" className="h-10 border border-black bg-opacity-35 hover:bg-white/25" onClick={() => setCreateUserDialog(true)}>
+            <Button variant="outline" 
+              className="h-10 
+              hover:border hover:border-black/10 
+              border border-black
+              bg-opacity-35 hover:bg-opacity-35 hover:bg-indigo-300/5
+              hover:shadow-lg hover:shadow-black/20" onClick={() => setCreateUserDialog(true)}>
               <UserRoundPlus className="mr-2 h-4 w-4" /> Create User
             </Button>
           </CardHeader>

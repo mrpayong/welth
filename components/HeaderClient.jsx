@@ -7,6 +7,15 @@ import { Button } from "./ui/button";
 import { ArrowLeft, AtomIcon, House, Layout, LayoutDashboard, Loader2, LogIn, Settings, UserRoundCog } from "lucide-react";
 import MobileNavDrawer from "./MobileDrawer";
 import { SignInButton, SignOutButton, UserButton, useSession } from "@clerk/nextjs";
+import { PT_Serif } from "next/font/google";
+
+
+
+
+const PTserif = PT_Serif({
+  subsets:["latin"],
+  weight: '700',
+})
 
 export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn, SysAdminPage, isSysAdmin }) {
   const pathname = usePathname();
@@ -23,25 +32,6 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
 
 
 
-  //   useEffect(() => {
-  //   // Detect transition from sign-in to admin
-  //   if (
-  //     prevPath.current === "/sign-in" &&
-  //     pathname.startsWith("/admin")
-  //   ) {
-  //     // Call your activityLog endpoint
-  //     fetch("/api/activityLog", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         action: "SIGN-IN",
-  //         result: { message: "User navigated from sign-in to admin" },
-  //         timestamp: new Date().toISOString(),
-  //       }),
-  //     });
-  //   }
-  //   prevPath.current = pathname;
-  // }, [pathname]);
 
   const navBorderClass = useMemo(() => {
     if (pathname.startsWith("/admin")) return "border-blue-500";
@@ -69,7 +59,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
     >
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between gap-4 ">
         {/* LEFT: Logo + Name */}
-        <div className="flex items-center min-w-[220px]">
+        <div className="flex items-center min-w-[220px] shine-effect transition ">
           <Link href={isAdminPage ? "/admin" : "/"} className="flex items-center">
             <Image
               className="h-16 w-auto object-contain"
@@ -79,10 +69,10 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
               height={200}
             />
             <div className="flex flex-col items-start ml-2">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 via-gray-300 to-gray-500 bg-clip-text text-transparent">
+              <h1 className={`text-3xl tracking-widest font-bold bg-gradient-to-r from-yellow-400 via-gray-300 to-gray-500 bg-clip-text text-transparent ${PTserif.className}`}>
                 Teruel
               </h1>
-              <h1 className="text-xl font-semibold bg-gradient-to-r from-gray-400 via-gray-300 to-yellow-500 bg-clip-text text-transparent">
+              <h1 className={`text-xl tracking-wide font-semibold bg-gradient-to-r from-gray-400 via-gray-300 to-yellow-500 bg-clip-text text-transparent ${PTserif.className}`} >
                 Accounting
               </h1>
             </div>
@@ -112,7 +102,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
               <Link href={"/"}>
                 <Button variant="outline" onClick={handleNavClick} disabled={loading}>
                   <House size={18} />
-                  <span className="hidden md:inline">Home</span>
+                  <span className={`hidden md:inline ${PTserif.className}`}>Home</span>
                 </Button>
               </Link>
             )}
@@ -132,7 +122,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                   <Link href={"/SysAdmin"}>
                     <Button variant="outline" onClick={handleNavClick} disabled={loading}>
                       <UserRoundCog size={18} />
-                      <span className="hidden md:inline">User Management</span>
+                      <span className={`hidden md:inline ${PTserif.className}`}>User Management</span>
                     </Button>
                   </Link>
                 )}
@@ -153,7 +143,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                   <Link href={"/DecisionSupport"}>
                     <Button variant="outline" onClick={handleNavClick} disabled={loading}> 
                       <AtomIcon size={18} />
-                      <span className="hidden md:inline">Forecasting</span>
+                      <span className={`hidden md:inline ${PTserif.className}`}>Forecasting</span>
                     </Button>
                   </Link>
                 )}
@@ -161,7 +151,7 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                   <Link href={"/admin"}>
                     <Button variant="outline" onClick={handleNavClick} disabled={loading} className="flex items-center gap-2">
                       <Layout size={18} />
-                      <span className="hidden md:inline">Admin Portal</span>
+                      <span className={`hidden md:inline ${PTserif.className}`}>Admin Portal</span>
                     </Button>
                   </Link>
                 )}
@@ -181,16 +171,12 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                     <Link href={"/dashboard"}>
                       <Button variant="outline" onClick={handleNavClick} disabled={loading}>
                         <LayoutDashboard size={18} />
-                        <span className="hidden md:inline">Dashboard</span>
+                        <span className={`hidden md:inline ${PTserif.className}`}>Dashboard</span>
                       </Button>
                     </Link>
                   )}
               </>
             )}
-
-
-
-
 
 
             {/* LOGGED OUT */}
@@ -201,10 +187,10 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
                 </span>
               <Link href={"/sign-in"}>
                 <Button 
-                  className="shine-effect transition 
+                  className={`shine-effect transition 
                   bg-white text-black border border-black
                   hover:bg-black hover:text-white
-                  hover:border-0"
+                  hover:border-0 ${PTserif.className}`}
                   onClick={handleNavClick} disabled={loading}
                 >
                   {loading
@@ -236,14 +222,12 @@ export default function HeaderClient({ isAdminPage, isStaff, isAdmin, isSignedIn
             loading 
             ? (<Loader2 className="w-10 h-10 animate-spin text-gray-400" />) 
             : (
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "w-10 h-10",
-                },}}
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-10 h-10",
+                  },}}
                 />
-
-                
               )
           )}
         </div>

@@ -66,20 +66,49 @@ function useMediaQuery(query) {
 
 const SectionOne = ({accounts, transactions, tasks, AllTransactions, inflows, outflows}) => {
 const barChartData = React.useMemo(() => {
-  const categoryMap = {};
+  // const categoryMap = {};
+  // tasks.forEach(task => {
+  //   const category = task.taskCategory || "Uncategorized";
+  //   const urgency = task.urgency || "LOW";
+  //   if (!categoryMap[category]) {
+  //     categoryMap[category] = { taskCategory: category, Low: 0, Medium: 0, High: 0 };
+  //   }
+  //   if (urgency === "LOW") categoryMap[category].Low += 1;
+  //   else if (urgency === "MEDIUM") categoryMap[category].Medium += 1;
+  //   else if (urgency === "HIGH") categoryMap[category].High += 1;
+  // });
+  // return Object.values(categoryMap);
+
+    // Step 1: Count tasks per company
+  const companyTaskCounts = {};
   tasks.forEach(task => {
-    const category = task.taskCategory || "Uncategorized";
-    const urgency = task.urgency || "LOW";
-    if (!categoryMap[category]) {
-      categoryMap[category] = { taskCategory: category, Low: 0, Medium: 0, High: 0 };
-    }
-    if (urgency === "LOW") categoryMap[category].Low += 1;
-    else if (urgency === "MEDIUM") categoryMap[category].Medium += 1;
-    else if (urgency === "HIGH") categoryMap[category].High += 1;
+    const company = task.taskCategory || "Uncategorized";
+    companyTaskCounts[company] = (companyTaskCounts[company] || 0) + 1;
   });
-  return Object.values(categoryMap);
+
+  // Step 2: Sort companies by task count, get top 3
+  const topCompanies = Object.entries(companyTaskCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([company]) => company);
+
+  // Step 3: Aggregate urgency counts for top companies
+  const summary = {};
+  tasks.forEach(task => {
+    const company = task.taskCategory || "Uncategorized";
+    if (!topCompanies.includes(company)) return;
+    if (!summary[company]) {
+      summary[company] = { taskCategory: company, Low: 0, Medium: 0, High: 0 };
+    }
+    if (task.urgency === "LOW") summary[company].Low += 1;
+    else if (task.urgency === "MEDIUM") summary[company].Medium += 1;
+    else if (task.urgency === "HIGH") summary[company].High += 1;
+  });
+
+  return Object.values(summary);
 }, [tasks]);
 
+console.log("tasks", tasks)
   
   
 
